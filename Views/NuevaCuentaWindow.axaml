@@ -1,0 +1,57 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SistemaCambio.Views.NuevaCuentaWindow"
+        Title="Nueva Cuenta"
+        Width="500" Height="400"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="#161b22">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="20">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#21262d" BorderBrush="#30363d" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,20">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <icon:MaterialIcon Kind="BankPlus" Foreground="#238636" Width="24" Height="24"/>
+                <TextBlock Text="Crear Nueva Cuenta" FontWeight="Bold" FontSize="14" Foreground="#e6edf3" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Formulario -->
+        <StackPanel Grid.Row="1" Spacing="15">
+            
+            <Grid ColumnDefinitions="120, *">
+                <TextBlock Text="Nombre" VerticalAlignment="Center" Foreground="#8b949e"/>
+                <TextBox x:Name="txtNombre" Grid.Column="1" Watermark="Nombre de la cuenta"/>
+            </Grid>
+
+            <Grid ColumnDefinitions="120, *">
+                <TextBlock Text="Tipo" VerticalAlignment="Center" Foreground="#8b949e"/>
+                <ComboBox x:Name="cmbTipo" Grid.Column="1" HorizontalAlignment="Stretch" SelectedIndex="0">
+                    <ComboBoxItem>Caja</ComboBoxItem>
+                    <ComboBoxItem>Banco</ComboBoxItem>
+                    <ComboBoxItem>Cliente</ComboBoxItem>
+                    <ComboBoxItem>Proveedor</ComboBoxItem>
+                </ComboBox>
+            </Grid>
+
+            <Grid ColumnDefinitions="120, *">
+                <TextBlock Text="Moneda" VerticalAlignment="Center" Foreground="#8b949e"/>
+                <ComboBox x:Name="cmbMoneda" Grid.Column="1" HorizontalAlignment="Stretch"/>
+            </Grid>
+
+            <Grid ColumnDefinitions="120, *">
+                <TextBlock Text="Saldo Inicial" VerticalAlignment="Center" Foreground="#8b949e"/>
+                <TextBox x:Name="txtSaldoInicial" Grid.Column="1" Text="0.00" TextAlignment="Right"/>
+            </Grid>
+
+        </StackPanel>
+
+        <!-- Botones -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Guardar" Background="#238636" Foreground="White" Width="110" Height="36" HorizontalContentAlignment="Center" Click="BtnGuardar_Click"/>
+            <Button Content="Cancelar" Background="Transparent" BorderBrush="#30363d" BorderThickness="1" Foreground="#e6edf3" Width="110" Height="36" HorizontalContentAlignment="Center" Click="BtnCancelar_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

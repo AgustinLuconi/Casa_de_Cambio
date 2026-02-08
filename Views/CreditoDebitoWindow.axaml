@@ -1,0 +1,139 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SistemaCambio.Views.CreditoDebitoWindow"
+        Title="Crédito/Débito"
+        Width="750" Height="580"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="#161b22">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="15">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#21262d" BorderBrush="#30363d" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,15">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <icon:MaterialIcon Kind="SwapHorizontal" Foreground="#a371f7" Width="24" Height="24"/>
+                <TextBlock Text="Crédito / Débito entre Cuentas" FontWeight="Bold" FontSize="14" Foreground="#e6edf3" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Tabs -->
+        <TabControl Grid.Row="1" Background="Transparent">
+            <TabControl.Styles>
+                <Style Selector="TabItem">
+                    <Setter Property="Background" Value="#21262d"/>
+                    <Setter Property="Foreground" Value="#8b949e"/>
+                    <Setter Property="Padding" Value="20,10"/>
+                </Style>
+                <Style Selector="TabItem:selected">
+                    <Setter Property="Background" Value="#0d1117"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Style>
+            </TabControl.Styles>
+
+            <!-- Tab 1: Crédito/Débito -->
+            <TabItem Header="Credito/Debito">
+                <Grid Margin="10" RowDefinitions="Auto, Auto, Auto, Auto, *">
+                    
+                    <!-- Moneda -->
+                    <Grid Grid.Row="0" ColumnDefinitions="100, 80, *" Margin="0,10">
+                        <TextBlock Text="Moneda" VerticalAlignment="Center" Foreground="#8b949e"/>
+                        <TextBox x:Name="txtCodigoMoneda" Grid.Column="1" Text="" Watermark="COD" Width="60"/>
+                        <Border Grid.Column="2" Background="#1f6feb" CornerRadius="4" Margin="10,0,0,0" Padding="10,5">
+                            <TextBlock x:Name="txtNombreMoneda" Text="" Foreground="White" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Crédito -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*, *" Margin="0,10">
+                        <StackPanel Grid.Column="0" Spacing="8">
+                            <TextBlock Text="Crédito" Foreground="#8b949e" FontSize="12"/>
+                            <Border Background="#da3633" CornerRadius="6" Padding="8">
+                                <ComboBox x:Name="cmbCredito" HorizontalAlignment="Stretch" Background="Transparent" Foreground="White" BorderThickness="0"/>
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="8" Margin="15,0,0,0">
+                            <Grid ColumnDefinitions="Auto, *">
+                                <TextBlock Text="Importe crédito" Foreground="#8b949e" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtImporteCredito" Grid.Column="1" Text="0.00" TextAlignment="Right" Margin="10,0,0,0" KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto, *">
+                                <TextBlock Text="Cotización" Foreground="#8b949e" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtCotizacion" Grid.Column="1" Text="0.00000" TextAlignment="Right" Margin="10,0,0,0"/>
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto, *">
+                                <TextBlock Text="Pesos" Foreground="#8b949e" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtPesosCredito" Grid.Column="1" Text="0.00" TextAlignment="Right" Margin="10,0,0,0" IsReadOnly="True"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Débito -->
+                    <Grid Grid.Row="2" ColumnDefinitions="*, *" Margin="0,10">
+                        <StackPanel Grid.Column="0" Spacing="8">
+                            <TextBlock Text="Débito" Foreground="#8b949e" FontSize="12"/>
+                            <Border Background="#238636" CornerRadius="6" Padding="8">
+                                <ComboBox x:Name="cmbDebito" HorizontalAlignment="Stretch" Background="Transparent" Foreground="White" BorderThickness="0"/>
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="8" Margin="15,0,0,0">
+                            <Grid ColumnDefinitions="Auto, *">
+                                <TextBlock Text="Importe débito" Foreground="#8b949e" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtImporteDebito" Grid.Column="1" Text="0.00" TextAlignment="Right" Margin="10,0,0,0" GotFocus="TextBox_GotFocus"/>
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto, *">
+                                <TextBlock Text="Cotización" Foreground="#8b949e" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtCotizacionDebito" Grid.Column="1" Text="0.00000" TextAlignment="Right" Margin="10,0,0,0"/>
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto, *">
+                                <TextBlock Text="Pesos" Foreground="#8b949e" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBox x:Name="txtPesosDebito" Grid.Column="1" Text="0.00" TextAlignment="Right" Margin="10,0,0,0" IsReadOnly="True"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Observaciones -->
+                    <Grid Grid.Row="3" ColumnDefinitions="100, *" Margin="0,10">
+                        <TextBlock Text="Observ." VerticalAlignment="Top" Foreground="#8b949e" Margin="0,5,0,0"/>
+                        <TextBox x:Name="txtObservaciones" Grid.Column="1" Height="40" AcceptsReturn="True"/>
+                    </Grid>
+
+                    <!-- Botón grande -->
+                    <Button Grid.Row="4" Content="CREDITO/DEBITO" Background="#4c4c4c" Foreground="White" 
+                            FontSize="18" FontWeight="Bold" Height="50" HorizontalAlignment="Stretch" 
+                            HorizontalContentAlignment="Center" Margin="0,15" Click="BtnEjecutar_Click"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Tab 2: Cliente -->
+            <TabItem Header="Cliente">
+                <StackPanel Margin="20" Spacing="15">
+                    <TextBlock Text="Asociar Cliente (Opcional)" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                    
+                    <Grid ColumnDefinitions="100, *">
+                        <TextBlock Text="Cliente" VerticalAlignment="Center" Foreground="#8b949e"/>
+                        <ComboBox x:Name="cmbCliente" Grid.Column="1" HorizontalAlignment="Stretch"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="100, *">
+                        <TextBlock Text="Documento" VerticalAlignment="Center" Foreground="#8b949e"/>
+                        <TextBox x:Name="txtDocumento" Grid.Column="1" IsReadOnly="True"/>
+                    </Grid>
+
+                    <Border Background="#21262d" CornerRadius="6" Padding="15" Margin="0,20,0,0">
+                        <TextBlock Text="El cliente seleccionado se asociará a la operación de crédito/débito." 
+                                   Foreground="#8b949e" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <!-- Footer -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="Siguiente >>" Background="#21262d" Foreground="#e6edf3" Width="120" Height="36" HorizontalContentAlignment="Center"/>
+            <Button Content="Aceptar" Background="#238636" Foreground="White" Width="100" Height="36" HorizontalContentAlignment="Center" Click="BtnAceptar_Click"/>
+            <Button Content="Cancelar" Background="Transparent" BorderBrush="#30363d" BorderThickness="1" Foreground="#e6edf3" Width="100" Height="36" HorizontalContentAlignment="Center" Click="BtnCancelar_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

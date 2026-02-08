@@ -1,0 +1,101 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SistemaCambio.Views.DetalleMovimientosWindow"
+        x:CompileBindings="False"
+        Title="Detalle Movimientos de una Cuenta"
+        Width="900" Height="650"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="#161b22">
+
+    <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="15">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#21262d" BorderBrush="#30363d" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,15">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <icon:MaterialIcon Kind="History" Foreground="#79c0ff" Width="24" Height="24"/>
+                <TextBlock Text="Detalle Movimientos de una Cuenta" FontWeight="Bold" FontSize="14" Foreground="#e6edf3" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Filtros -->
+        <Border Grid.Row="1" Background="#0d1117" CornerRadius="6" Padding="15" Margin="0,0,0,15">
+            <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="100, *, 100, *">
+                
+                <!-- Fila 1 -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Cuenta" VerticalAlignment="Center" Foreground="#8b949e"/>
+                <ComboBox x:Name="cmbCuenta" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,20,10"/>
+                
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Cuenta Externa" VerticalAlignment="Center" Foreground="#8b949e"/>
+                <ComboBox x:Name="cmbCuentaExterna" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Stretch" Margin="0,0,0,10"/>
+                
+                <!-- Fila 2 -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Desde" VerticalAlignment="Center" Foreground="#8b949e"/>
+                <DatePicker x:Name="dpDesde" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,20,10"/>
+                
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="Hasta" VerticalAlignment="Center" Foreground="#8b949e"/>
+                <DatePicker x:Name="dpHasta" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Stretch" Margin="0,0,0,10"/>
+                
+                <!-- Fila 3 -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Moneda" VerticalAlignment="Center" Foreground="#8b949e"/>
+                <ComboBox x:Name="cmbMoneda" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,20,0">
+                    <ComboBoxItem Content="Todas" Tag=""/>
+                </ComboBox>
+                
+                <CheckBox x:Name="chkHistoricos" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Content="Buscar movimientos históricos" Foreground="#8b949e" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- DataGrid de resultados -->
+        <DataGrid Grid.Row="2" x:Name="dgMovimientos" AutoGenerateColumns="False" 
+                  Background="#0d1117" 
+                  RowBackground="#0d1117" 
+                  Foreground="#e6edf3"
+                  BorderThickness="1" 
+                  BorderBrush="#30363d" 
+                  GridLinesVisibility="Horizontal"
+                  HeadersVisibility="Column"
+                  IsReadOnly="True"
+                  CornerRadius="6">
+            
+            <DataGrid.Styles>
+               <Style Selector="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#161b22"/>
+                    <Setter Property="Foreground" Value="#8b949e"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Padding" Value="12,10"/>
+                    <Setter Property="FontSize" Value="11"/>
+               </Style>
+            </DataGrid.Styles>
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60" Foreground="#8b949e"/>
+                <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="140"/>
+                <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}" Width="120"/>
+                <DataGridTextColumn Header="CUENTA" Binding="{Binding CuentaNombre}" Width="*"/>
+                <DataGridTextColumn Header="DÉBITO" Binding="{Binding Debito, StringFormat='{}{0:N2}'}" Width="120" Foreground="#da3633"/>
+                <DataGridTextColumn Header="CRÉDITO" Binding="{Binding Credito, StringFormat='{}{0:N2}'}" Width="120" Foreground="#238636"/>
+                <DataGridTextColumn Header="OBSERVACIONES" Binding="{Binding Observaciones}" Width="200"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Footer -->
+        <Grid Grid.Row="3" ColumnDefinitions="*, Auto, Auto" Margin="0,15,0,0">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
+                <TextBlock x:Name="txtResultados" Text="0 movimientos encontrados" Foreground="#8b949e" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                <Button Content="Buscar" Background="#1f6feb" Foreground="White" Width="110" Height="36" HorizontalContentAlignment="Center" Click="BtnBuscar_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icon:MaterialIcon Kind="Magnify" Width="16" Height="16"/>
+                        <TextBlock Text="Buscar"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" Margin="15,0,0,0">
+                <Button Content="Cancelar" Background="Transparent" BorderBrush="#30363d" BorderThickness="1" Foreground="#e6edf3" Width="100" Height="36" HorizontalContentAlignment="Center" Click="BtnCancelar_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

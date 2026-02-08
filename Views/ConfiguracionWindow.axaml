@@ -1,0 +1,137 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SistemaCambio.Views.ConfiguracionWindow"
+        x:CompileBindings="False"
+        Title="Configuración"
+        Width="800" Height="600"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="#161b22">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="15">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#21262d" BorderBrush="#30363d" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,15">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <icon:MaterialIcon Kind="Cog" Foreground="#8b949e" Width="24" Height="24"/>
+                <TextBlock Text="Configuración del Sistema" FontWeight="Bold" FontSize="14" Foreground="#e6edf3" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Tabs -->
+        <TabControl Grid.Row="1" Background="Transparent">
+            <TabControl.Styles>
+                <Style Selector="TabItem">
+                    <Setter Property="Background" Value="#21262d"/>
+                    <Setter Property="Foreground" Value="#8b949e"/>
+                    <Setter Property="Padding" Value="20,10"/>
+                </Style>
+                <Style Selector="TabItem:selected">
+                    <Setter Property="Background" Value="#0d1117"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Style>
+            </TabControl.Styles>
+
+            <!-- Tab: General -->
+            <TabItem Header="General">
+                <StackPanel Margin="20" Spacing="20">
+                    
+                    <!-- Tema -->
+                    <Border Background="#0d1117" CornerRadius="6" Padding="20">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Tema de la Aplicación" FontWeight="Bold" Foreground="#e6edf3" FontSize="14"/>
+                                <TextBlock Text="Alterna entre tema oscuro y claro" Foreground="#8b949e" Margin="0,5,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
+                                <TextBlock Text="Oscuro" Foreground="#8b949e" VerticalAlignment="Center"/>
+                                <ToggleSwitch x:Name="toggleTema" IsChecked="True" OnContent="" OffContent="" IsCheckedChanged="ToggleTema_Changed"/>
+                                <TextBlock Text="Claro" Foreground="#8b949e" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Información del Sistema -->
+                    <Border Background="#0d1117" CornerRadius="6" Padding="20">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Información del Sistema" FontWeight="Bold" Foreground="#e6edf3" FontSize="14"/>
+                            <Grid ColumnDefinitions="150, *" RowDefinitions="Auto, Auto, Auto, Auto" Margin="0,10,0,0">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Versión:" Foreground="#8b949e"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="1.0.0" Foreground="#e6edf3"/>
+                                
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Base de datos:" Foreground="#8b949e" Margin="0,5,0,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="PostgreSQL" Foreground="#e6edf3" Margin="0,5,0,0"/>
+                                
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Framework:" Foreground="#8b949e" Margin="0,5,0,0"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="Avalonia UI 11.0" Foreground="#e6edf3" Margin="0,5,0,0"/>
+                                
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text=".NET:" Foreground="#8b949e" Margin="0,5,0,0"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text=".NET 8.0" Foreground="#e6edf3" Margin="0,5,0,0"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </TabItem>
+
+            <!-- Tab: Monedas -->
+            <TabItem Header="Monedas">
+                <Grid Margin="10" RowDefinitions="Auto, *">
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,10,0,15">
+                        <Button Content="Nueva Moneda" Background="#238636" Foreground="White" Click="BtnNuevaMoneda_Click"/>
+                        <Button Content="Refrescar" Background="#21262d" Foreground="#e6edf3" Click="BtnRefrescarMonedas_Click"/>
+                    </StackPanel>
+                    
+                    <DataGrid Grid.Row="1" x:Name="dgMonedas" AutoGenerateColumns="False"
+                              Background="#0d1117" RowBackground="#0d1117" Foreground="#e6edf3"
+                              BorderThickness="1" BorderBrush="#30363d" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
+                            <DataGridTextColumn Header="CÓDIGO" Binding="{Binding Codigo}" Width="100"/>
+                            <DataGridTextColumn Header="NOMBRE" Binding="{Binding Nombre}" Width="*"/>
+                            <DataGridCheckBoxColumn Header="ACTIVA" Binding="{Binding Activa}" Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- Tab: Cotizaciones -->
+            <TabItem Header="Cotizaciones del Día">
+                <Grid Margin="10" RowDefinitions="Auto, Auto, *">
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,10,0,15">
+                        <TextBlock Text="Fecha:" VerticalAlignment="Center" Foreground="#8b949e"/>
+                        <DatePicker x:Name="dpFechaCotizacion" Width="200"/>
+                        <Button Content="Cargar" Background="#1f6feb" Foreground="White" Click="BtnCargarCotizaciones_Click"/>
+                    </StackPanel>
+                    
+                    <Border Grid.Row="1" Background="#0d1117" CornerRadius="6" Padding="15" Margin="0,0,0,15">
+                        <Grid ColumnDefinitions="100, 150, 100, 150, Auto">
+                            <TextBlock Grid.Column="0" Text="Moneda:" VerticalAlignment="Center" Foreground="#8b949e"/>
+                            <ComboBox x:Name="cmbMonedaCotiz" Grid.Column="1" HorizontalAlignment="Stretch"/>
+                            <TextBlock Grid.Column="2" Text="Compra:" VerticalAlignment="Center" Foreground="#8b949e" Margin="15,0,0,0"/>
+                            <TextBox x:Name="txtCotizCompra" Grid.Column="3" Text="0.00000" TextAlignment="Right"/>
+                            <Button Grid.Column="4" Content="Guardar" Background="#238636" Foreground="White" Margin="15,0,0,0" Click="BtnGuardarCotizacion_Click"/>
+                        </Grid>
+                    </Border>
+                    
+                    <DataGrid Grid.Row="2" x:Name="dgCotizaciones" AutoGenerateColumns="False"
+                              Background="#0d1117" RowBackground="#0d1117" Foreground="#e6edf3"
+                              BorderThickness="1" BorderBrush="#30363d" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="MONEDA" Binding="{Binding MonedaCodigo}" Width="100"/>
+                            <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
+                            <DataGridTextColumn Header="COMPRA" Binding="{Binding CotizacionCompra, StringFormat='{}{0:N5}'}" Width="150"/>
+                            <DataGridTextColumn Header="VENTA" Binding="{Binding CotizacionVenta, StringFormat='{}{0:N5}'}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- Footer -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="Cerrar" Background="Transparent" BorderBrush="#30363d" BorderThickness="1" Foreground="#e6edf3" Width="100" Height="36" Click="BtnCerrar_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

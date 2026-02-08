@@ -1,0 +1,102 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SistemaCambio.Views.VentaWindow"
+        Title="Venta de Divisa"
+        Width="800" Height="520"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="#161b22">
+
+    <Grid RowDefinitions="Auto, *" Margin="15">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#21262d" BorderBrush="#30363d" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,15">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <icon:MaterialIcon Kind="CartArrowUp" Foreground="#da3633" Width="24" Height="24"/>
+                <TextBlock Text="Registrar Venta (Salida de Divisa)" FontWeight="Bold" FontSize="14" Foreground="#e6edf3" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Contenido -->
+        <Grid Grid.Row="1" ColumnDefinitions="1.2*, 1.5*">
+            
+            <!-- Columna Izquierda: Campos -->
+            <StackPanel Grid.Column="0" Spacing="12" Margin="0,0,20,0">
+                
+                <Grid ColumnDefinitions="120, *">
+                    <TextBlock Text="Moneda" VerticalAlignment="Center" Foreground="#8b949e"/>
+                    <ComboBox x:Name="cmbMoneda" Grid.Column="1" HorizontalAlignment="Stretch" SelectedIndex="0" SelectionChanged="CmbMoneda_SelectionChanged"/>
+                </Grid>
+
+                <Grid ColumnDefinitions="120, *">
+                    <TextBlock Text="Mon. Extranjera" VerticalAlignment="Center" Foreground="#e6edf3" FontWeight="Bold"/>
+                    <TextBox x:Name="txtMontoExtranjera" Grid.Column="1" Text="0.00" TextAlignment="Right" FontWeight="Bold" KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
+                </Grid>
+
+                <Grid ColumnDefinitions="120, *">
+                    <TextBlock Text="Cotización" VerticalAlignment="Center" Foreground="#8b949e"/>
+                    <TextBox x:Name="txtCotizacion" Grid.Column="1" Text="0.00000" TextAlignment="Right" KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
+                </Grid>
+
+                <Grid ColumnDefinitions="120, *">
+                    <TextBlock Text="Pesos" VerticalAlignment="Center" Foreground="#e6edf3" FontWeight="Bold"/>
+                    <TextBox x:Name="txtPesos" Grid.Column="1" Text="0.00" TextAlignment="Right" FontWeight="Bold" IsReadOnly="True"/>
+                </Grid>
+
+                <Grid ColumnDefinitions="120, *">
+                    <TextBlock Text="Ingresa" VerticalAlignment="Center" Foreground="#8b949e"/>
+                    <TextBox x:Name="txtIngresa" Grid.Column="1" Text="0.00" TextAlignment="Right" KeyUp="CalcularVuelto_KeyUp" GotFocus="TextBox_GotFocus"/>
+                </Grid>
+
+                <Grid ColumnDefinitions="120, *">
+                    <TextBlock Text="Vuelto" VerticalAlignment="Center" Foreground="#8b949e"/>
+                    <TextBox x:Name="txtVuelto" Grid.Column="1" Text="0.00" TextAlignment="Right" IsReadOnly="True"/>
+                </Grid>
+
+                <Grid ColumnDefinitions="120, *">
+                    <TextBlock Text="Observaciones" VerticalAlignment="Top" Margin="0,5,0,0" Foreground="#8b949e"/>
+                    <TextBox x:Name="txtObservaciones" Grid.Column="1" Height="50" AcceptsReturn="True"/>
+                </Grid>
+
+                <Grid ColumnDefinitions="120, *">
+                    <TextBlock Text="Tipo Operación" VerticalAlignment="Center" Foreground="#8b949e"/>
+                    <ComboBox x:Name="cmbTipoOperacion" Grid.Column="1" HorizontalAlignment="Stretch" SelectedIndex="0">
+                        <ComboBoxItem>Normal</ComboBoxItem>
+                        <ComboBoxItem>Interbancaria</ComboBoxItem>
+                    </ComboBox>
+                </Grid>
+
+            </StackPanel>
+
+            <!-- Columna Derecha: Cuentas -->
+            <StackPanel Grid.Column="1" Spacing="20">
+                
+                <!-- Cuenta a Debitar (rojo - de donde sale la divisa) -->
+                <Grid RowDefinitions="Auto, Auto">
+                    <TextBlock Grid.Row="0" Text="Debitar en cuenta (Sale divisa)" Margin="0,0,0,5" Foreground="#8b949e" FontSize="12"/>
+                    <Border Grid.Row="1" Background="#da3633" CornerRadius="6" Padding="8">
+                        <ComboBox x:Name="cmbDebitar" HorizontalAlignment="Stretch" Background="Transparent" Foreground="White" BorderThickness="0"/>
+                    </Border>
+                </Grid>
+
+                <!-- Cuenta a Acreditar (verde - donde entran los pesos) -->
+                <Grid RowDefinitions="Auto, Auto">
+                    <TextBlock Grid.Row="0" Text="Acreditar de cuenta (Entran pesos)" Margin="0,0,0,5" Foreground="#8b949e" FontSize="12"/>
+                    <Border Grid.Row="1" Background="#238636" CornerRadius="6" Padding="8">
+                        <ComboBox x:Name="cmbAcreditar" HorizontalAlignment="Stretch" Background="Transparent" Foreground="White" BorderThickness="0"/>
+                    </Border>
+                </Grid>
+
+                <Panel Height="60"/>
+
+                <!-- Botones -->
+                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                    <Button Content="Aceptar" Background="#238636" Foreground="White" Width="110" Height="36" HorizontalContentAlignment="Center" Click="BtnAceptar_Click"/>
+                    <Button Content="Cancelar" Background="Transparent" BorderBrush="#30363d" BorderThickness="1" Foreground="#e6edf3" Width="110" Height="36" HorizontalContentAlignment="Center" Click="BtnCancelar_Click"/>
+                </StackPanel>
+
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

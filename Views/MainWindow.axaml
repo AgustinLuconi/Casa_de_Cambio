@@ -1,0 +1,321 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SistemaCambio.ViewModels"
+        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SistemaCambio.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Sistema Casa de Cambio"
+        Background="{DynamicResource AppBackgroundBrush}"
+        WindowStartupLocation="CenterScreen"
+        Width="1400" Height="900">
+
+    <Window.KeyBindings>
+        <KeyBinding Gesture="F1" Command="{Binding AbrirDashboardCommand}"/>
+        <KeyBinding Gesture="F3" Command="{Binding AbrirCompraCommand}"/>
+        <KeyBinding Gesture="F4" Command="{Binding AbrirVentaCommand}"/>
+        <KeyBinding Gesture="F5" Command="{Binding AbrirCreditoDebitoCommand}"/>
+        <KeyBinding Gesture="F6" Command="{Binding AbrirArqueoCommand}"/>
+        <KeyBinding Gesture="F7" Command="{Binding AbrirMovimientosCommand}"/>
+    </Window.KeyBindings>
+
+    <Grid RowDefinitions="Auto, *, Auto">
+        
+        <!-- HEADER -->
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="15,10">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <!-- Logo y Título -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="15">
+                    <icon:MaterialIcon Kind="CurrencyUsd" Width="32" Height="32" Foreground="#2f81f7"/>
+                    <TextBlock Text="Treasury ERP" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <Border Background="#238636" CornerRadius="4" Padding="8,4" VerticalAlignment="Center" Margin="20,0,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Ellipse Width="8" Height="8" Fill="#7ee787"/>
+                            <TextBlock Text="LIVE MARKET" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Atajos de Teclado -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
+                        <TextBlock Text="F1 Dashboard" FontSize="11" Foreground="#8b949e"/>
+                    </Border>
+                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
+                        <TextBlock Text="F3 Compra" FontSize="11" Foreground="#8b949e"/>
+                    </Border>
+                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
+                        <TextBlock Text="F4 Venta" FontSize="11" Foreground="#8b949e"/>
+                    </Border>
+                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
+                        <TextBlock Text="F5 Créd/Déb" FontSize="11" Foreground="#8b949e"/>
+                    </Border>
+                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
+                        <TextBlock Text="F6 Arqueo" FontSize="11" Foreground="#8b949e"/>
+                    </Border>
+                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
+                        <TextBlock Text="F7 Movimientos" FontSize="11" Foreground="#8b949e"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- Usuario -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+                    <Border Background="#30363d" CornerRadius="20" Width="36" Height="36">
+                        <icon:MaterialIcon Kind="Account" Width="20" Height="20" Foreground="#e6edf3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Admin User" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
+                        <TextBlock Text="Treasury Manager" FontSize="10" Foreground="#8b949e"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <Grid Grid.Row="1" ColumnDefinitions="240, *">
+            
+            <!-- SIDEBAR -->
+            <Border Grid.Column="0" Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                <ScrollViewer>
+                    <StackPanel Margin="10">
+                        <!-- Sección Principal -->
+                        <TextBlock Text="PRINCIPAL" FontSize="10" FontWeight="Bold" Foreground="#8b949e" Margin="10,15,0,8"/>
+                        
+                        <Button x:Name="btnDashboard" Classes="SidebarButton" Click="BtnDashboard_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="ViewDashboard" Width="20" Height="20"/>
+                                <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button x:Name="btnCuentas" Classes="SidebarButtonActive" Click="BtnCuentas_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="Bank" Width="20" Height="20"/>
+                                <TextBlock Text="Cuentas" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Sección Operaciones -->
+                        <TextBlock Text="OPERACIONES" FontSize="10" FontWeight="Bold" Foreground="#8b949e" Margin="10,25,0,8"/>
+                        
+                        <Button x:Name="btnCompra" Classes="SidebarButton" Click="BtnCompra_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="CartArrowDown" Width="20" Height="20" Foreground="#238636"/>
+                                <TextBlock Text="Compra (F3)" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button x:Name="btnVenta" Classes="SidebarButton" Click="BtnVenta_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="CartArrowUp" Width="20" Height="20" Foreground="#da3633"/>
+                                <TextBlock Text="Venta (F4)" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button x:Name="btnCreditoDebito" Classes="SidebarButton" Click="BtnCreditoDebito_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="SwapHorizontal" Width="20" Height="20" Foreground="#a371f7"/>
+                                <TextBlock Text="Crédito/Débito (F5)" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Sección Auditoría -->
+                        <TextBlock Text="AUDITORÍA" FontSize="10" FontWeight="Bold" Foreground="#8b949e" Margin="10,25,0,8"/>
+                        
+                        <Button x:Name="btnArqueo" Classes="SidebarButton" Click="BtnArqueo_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="Calculator" Width="20" Height="20" Foreground="#f0883e"/>
+                                <TextBlock Text="Arqueo (F6)" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button x:Name="btnMovimientos" Classes="SidebarButton" Click="BtnMovimientos_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="History" Width="20" Height="20" Foreground="#79c0ff"/>
+                                <TextBlock Text="Movimientos (F7)" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Sección Configuración -->
+                        <TextBlock Text="SISTEMA" FontSize="10" FontWeight="Bold" Foreground="#8b949e" Margin="10,25,0,8"/>
+                        
+                        <Button Classes="SidebarButton" Click="BtnReportes_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="ChartLine" Width="20" Height="20" Foreground="#a371f7"/>
+                                <TextBlock Text="Reportes" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Classes="SidebarButton" Click="BtnConfiguracion_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="Cog" Width="20" Height="20"/>
+                                <TextBlock Text="Configuración" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- ÁREA PRINCIPAL -->
+            <Grid Grid.Column="1" Margin="20" RowDefinitions="Auto, Auto, *">
+                
+                <!-- Título y Acciones -->
+                <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
+                    <TextBlock x:Name="txtMainTitle" Text="Cuentas Overview" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                        <Button Background="#238636" Foreground="White" Padding="12,8" Click="BtnNuevaCuenta_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icon:MaterialIcon Kind="Plus" Width="16" Height="16"/>
+                                <TextBlock Text="Nueva Cuenta"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="Secondary" Padding="12,8" Click="BtnExportar_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icon:MaterialIcon Kind="Download" Width="16" Height="16"/>
+                                <TextBlock Text="Exportar"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- DASHBOARD PANEL -->
+                <StackPanel x:Name="dashboardPanel" Grid.Row="1" IsVisible="False" Margin="0,15,0,0">
+                    <!-- Stats Cards -->
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <Border Background="#238636" CornerRadius="8" Padding="20" MinWidth="220">
+                            <StackPanel>
+                                <TextBlock Text="Total Cuentas" FontSize="12" Foreground="White" Opacity="0.8"/>
+                                <TextBlock x:Name="txtTotalCuentas" Text="0" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#1f6feb" CornerRadius="8" Padding="20" MinWidth="220">
+                            <StackPanel>
+                                <TextBlock Text="Operaciones Hoy" FontSize="12" Foreground="White" Opacity="0.8"/>
+                                <TextBlock x:Name="txtOperacionesHoy" Text="0" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#a371f7" CornerRadius="8" Padding="20" MinWidth="220">
+                            <StackPanel>
+                                <TextBlock Text="Saldo Total (USD)" FontSize="12" Foreground="White" Opacity="0.8"/>
+                                <TextBlock x:Name="txtSaldoUSD" Text="$0.00" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#f0883e" CornerRadius="8" Padding="20" MinWidth="220">
+                            <StackPanel>
+                                <TextBlock Text="Saldo Total (ARS)" FontSize="12" Foreground="White" Opacity="0.8"/>
+                                <TextBlock x:Name="txtSaldoARS" Text="$0.00" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    
+                    <!-- Recent Operations -->
+                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="8" Padding="20" Margin="0,20,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Últimas Operaciones" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,15"/>
+                            <DataGrid x:Name="dgUltimasOperaciones" AutoGenerateColumns="True" 
+                                      Background="#0d1117" RowBackground="#0d1117" Foreground="#e6edf3"
+                                      BorderThickness="1" BorderBrush="#30363d" IsReadOnly="True" MaxHeight="300"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- CUENTAS PANEL -->
+                <StackPanel x:Name="cuentasPanel" Grid.Row="1" Margin="0,15,0,0">
+                    <!-- Filtros -->
+                    <Border Background="#161b22" CornerRadius="8" Padding="15">
+                        <StackPanel Orientation="Horizontal" Spacing="15">
+                            <TextBox Watermark="Buscar por ID o Nombre..." Width="250" Background="#0d1117" Foreground="#e6edf3" BorderBrush="#30363d"/>
+                            <ComboBox Width="150" SelectedIndex="0" Background="#0d1117" Foreground="#e6edf3">
+                                <ComboBoxItem>Todos los Tipos</ComboBoxItem>
+                                <ComboBoxItem>Caja</ComboBoxItem>
+                                <ComboBoxItem>Banco</ComboBoxItem>
+                                <ComboBoxItem>Cliente</ComboBoxItem>
+                            </ComboBox>
+                            <ComboBox Width="150" SelectedIndex="0" Background="#0d1117" Foreground="#e6edf3">
+                                <ComboBoxItem>Todas las Monedas</ComboBoxItem>
+                                <ComboBoxItem>USD</ComboBoxItem>
+                                <ComboBoxItem>EUR</ComboBoxItem>
+                                <ComboBoxItem>ARS</ComboBoxItem>
+                            </ComboBox>
+                            <Button Background="#21262d" BorderThickness="0" Padding="10">
+                                <icon:MaterialIcon Kind="Refresh" Width="18" Height="18" Foreground="#8b949e"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- DataGrid de Cuentas -->
+                <DataGrid Grid.Row="2" ItemsSource="{Binding Cuentas}" AutoGenerateColumns="False" 
+                          Background="#0d1117" 
+                          RowBackground="#0d1117" 
+                          Foreground="#e6edf3"
+                          BorderThickness="1" 
+                          BorderBrush="#30363d" 
+                          GridLinesVisibility="Horizontal"
+                          HeadersVisibility="Column"
+                          IsReadOnly="True"
+                          CornerRadius="8">
+                    
+                    <DataGrid.Styles>
+                       <Style Selector="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#161b22"/>
+                            <Setter Property="Foreground" Value="#8b949e"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Padding" Value="12,10"/>
+                            <Setter Property="FontSize" Value="11"/>
+                       </Style>
+                       <Style Selector="DataGridRow">
+                            <Setter Property="Padding" Value="0,5"/>
+                       </Style>
+                    </DataGrid.Styles>
+
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80" Foreground="#8b949e"/>
+                        <DataGridTextColumn Header="CUENTA" Binding="{Binding Nombre}" Width="*" FontWeight="SemiBold"/>
+                        <DataGridTextColumn Header="TIPO" Binding="{Binding Tipo}" Width="120" Foreground="#a5d6ff"/>
+                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="100" FontWeight="Bold"/>
+                        <DataGridTextColumn Header="SALDO" 
+                                            Binding="{Binding Saldo, StringFormat='{}{0:N2}'}" 
+                                            Width="180" 
+                                            FontWeight="Bold"
+                                            Foreground="#2ea043"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Grid>
+
+        <!-- FOOTER -->
+        <Border Grid.Row="2" Background="#0d1117" BorderBrush="#30363d" BorderThickness="0,1,0,0" Padding="20,10">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <!-- Info del Sistema -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
+                    <TextBlock Text="Sistema v1.0.0" FontSize="11" Foreground="#8b949e"/>
+                    <TextBlock Text="Server: Local" FontSize="11" Foreground="#8b949e"/>
+                </StackPanel>
+
+                <!-- Estadísticas -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center">
+                    <TextBlock Text="Cuentas:" FontSize="11" Foreground="#8b949e"/>
+                    <TextBlock Text="{Binding CuentasCount}" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                </StackPanel>
+
+                <!-- Totales -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="30">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="TOTAL DÉBITO" FontSize="10" Foreground="#8b949e" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalDebito, StringFormat='{}{0:N2}'}" FontSize="14" FontWeight="Bold" Foreground="#da3633" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="TOTAL CRÉDITO" FontSize="10" Foreground="#8b949e" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalCredito, StringFormat='{}{0:N2}'}" FontSize="14" FontWeight="Bold" Foreground="#238636" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Border Background="#21262d" CornerRadius="4" Padding="12,6">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="POSICIÓN NETA" FontSize="10" Foreground="#8b949e" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding PosicionNeta, StringFormat='{}{0:N2}'}" FontSize="16" FontWeight="Bold" Foreground="#58a6ff"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
