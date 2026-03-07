@@ -1,30 +1,37 @@
+using SistemaCambio.Models;
 using SistemaCambio.Services;
 using Xunit;
 
 namespace SistemaCambio.Tests
 {
     /// <summary>
-    /// Tests para ArqueoService - el servicio de arqueo ciego de caja.
-    /// 
-    /// ARQUEO CIEGO = El operador cuenta el dinero físico SIN ver el saldo del sistema.
-    /// Después de contar, se compara con el sistema y se genera un asiento de ajuste automático.
-    /// 
-    /// Esto previene:
-    /// - Fraude (porque el operador no sabe cuánto debería haber)
-    /// - Errores humanos (el sistema ajusta automáticamente las diferencias)
+    /// Tests para ArqueoService - ahora con DI e InMemory database.
+    /// Gracias al refactor, podemos probar el flujo completo de arqueo.
     /// </summary>
     public class ArqueoServiceTests
     {
-        // ============================================
-        // TESTS: Validación de entrada
-        // ============================================
+        private readonly IArqueoService _arqueoService;
+        private readonly TestDbContextFactory _factory;
+
+        public ArqueoServiceTests()
+        {
+            _factory = new TestDbContextFactory();
+            var auditService = new AuditService(_factory);
+            _arqueoService = new ArqueoService(_factory, auditService);
+
+            // Seed datos de prueba
+            using var db = _factory.CreateDbContext();
+            db.Cuentas.Add(new Cuenta { Id = 1, Nombre = "Caja Pesos", Tipo = "Caja" });
+            db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = 1, Moneda = "ARS", Saldo = 10000m });
+            db.SaveChanges();
+        }
 
         [Fact]
         public void RealizarArqueoCiego_CuentaNoExiste_DeberiaRetornarError()
         {
-            // Cuenta 999999 definitivamente no existe
-            var resultado = ArqueoService.RealizarArqueoCiego(
+            var resultado = _arqueoService.RealizarArqueoCiego(
                 cuentaId: 999999,
+                moneda: "ARS",
                 montoContado: 1000m
             );
 
@@ -33,17 +40,56 @@ namespace SistemaCambio.Tests
         }
 
         // ============================================
-        // NOTA EDUCATIVA: Tests de Integración
+        // NUEVO: Tests de arqueo completo (antes imposibles)
         // ============================================
-        
-        // Para probar el arqueo completo (con diferencias y asientos de ajuste)
-        // necesitaríamos una base de datos de prueba aislada.
-        // 
-        // El flujo completo sería:
-        // 1. Crear cuenta de prueba con saldo conocido (ej: 10000)
-        // 2. Hacer arqueo con monto diferente (ej: 10500 = sobrante de 500)
-        // 3. Verificar que se creó el asiento de ajuste
-        // 4. Verificar que el saldo de la cuenta ahora es 10500
-        // 5. Verificar que existe el registro en cta "Diferencias de Caja"
+
+        [Fact]
+        public void RealizarArqueoCiego_SinDiferencia_DeberiaSerExitoso()
+        {
+            var resultado = _arqueoService.RealizarArqueoCiego(
+                cuentaId: 1,
+                moneda: "ARS",
+                montoContado: 10000m  // Mismo que el saldo
+            );
+
+            Assert.True(resultado.Exitoso);
+            Assert.Equal(0m, resultado.Diferencia);
+        }
+
+        [Fact]
+        public void RealizarArqueoCiego_ConSobrante_DeberiaAjustarSaldo()
+        {
+            var resultado = _arqueoService.RealizarArqueoCiego(
+                cuentaId: 1,
+                moneda: "ARS",
+                montoContado: 10500m  // 500 de sobrante
+            );
+
+            Assert.True(resultado.Exitoso);
+            Assert.Equal(500m, resultado.Diferencia);
+
+            // Verificar que el saldo se actualizó
+            using var db = _factory.CreateDbContext();
+            var saldo = db.SaldosCuenta.First(s => s.CuentaId == 1 && s.Moneda == "ARS");
+            Assert.Equal(10500m, saldo.Saldo);
+        }
+
+        [Fact]
+        public void RealizarArqueoCiego_ConFaltante_DeberiaAjustarSaldo()
+        {
+            var resultado = _arqueoService.RealizarArqueoCiego(
+                cuentaId: 1,
+                moneda: "ARS",
+                montoContado: 9500m  // 500 de faltante
+            );
+
+            Assert.True(resultado.Exitoso);
+            Assert.Equal(-500m, resultado.Diferencia);
+
+            // Verificar que el saldo se actualizó
+            using var db = _factory.CreateDbContext();
+            var saldo = db.SaldosCuenta.First(s => s.CuentaId == 1 && s.Moneda == "ARS");
+            Assert.Equal(9500m, saldo.Saldo);
+        }
     }
 }

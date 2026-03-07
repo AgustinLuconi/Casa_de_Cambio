@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
+             x:Class="SistemaCambio.Views.Controls.LineChartControl"
+             Background="Transparent">
+    
+    <Border Background="#0d1117" BorderBrush="#30363d" BorderThickness="1" CornerRadius="6" Padding="15">
+        <Grid RowDefinitions="Auto, *">
+            
+            <!-- Título -->
+            <TextBlock Grid.Row="0" 
+                       x:Name="txtTitulo"
+                       Text="Operaciones Diarias" 
+                       FontWeight="Bold" 
+                       FontSize="14" 
+                       Foreground="#e6edf3"
+                       Margin="0,0,0,10"/>
+            
+            <!-- Gráfico -->
+            <ScottPlot:AvaPlot Grid.Row="1" 
+                               x:Name="plotView" 
+                               Height="250"/>
+            
+        </Grid>
+    </Border>
+</UserControl>

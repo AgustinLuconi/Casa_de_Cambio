@@ -2,8 +2,13 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
+using System;
 using System.Linq;
 using Avalonia.Markup.Xaml;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using SistemaCambio.Models;
+using SistemaCambio.Services;
 using SistemaCambio.ViewModels;
 using SistemaCambio.Views;
 
@@ -11,6 +16,12 @@ namespace SistemaCambio;
 
 public partial class App : Application
 {
+    /// <summary>
+    /// Contenedor de servicios global — accesible desde toda la app.
+    /// Las vistas lo usan para resolver sus dependencias.
+    /// </summary>
+    public static IServiceProvider Services { get; private set; } = null!;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -21,11 +32,17 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
-            // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
+
+            // Configurar contenedor de DI
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.ConfigurarServicios();
+            Services = serviceCollection.BuildServiceProvider();
+
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = new MainWindowViewModel(
+                    Services.GetRequiredService<IDbContextFactory<AppDbContext>>()),
             };
         }
 

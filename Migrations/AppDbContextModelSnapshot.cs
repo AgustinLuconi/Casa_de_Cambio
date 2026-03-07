@@ -126,6 +126,82 @@ namespace SistemaCambio.Migrations
                     b.ToTable("audit_logs");
                 });
 
+            modelBuilder.Entity("SistemaCambio.Models.CierreCaja", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CantidadCompras")
+                        .HasColumnType("integer")
+                        .HasColumnName("cantidad_compras");
+
+                    b.Property<int>("CantidadVentas")
+                        .HasColumnType("integer")
+                        .HasColumnName("cantidad_ventas");
+
+                    b.Property<bool>("Cerrado")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cerrado");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha");
+
+                    b.Property<DateTime>("FechaCierre")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_cierre");
+
+                    b.Property<string>("Observaciones")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("observaciones");
+
+                    b.Property<decimal>("SaldoCajaARS")
+                        .HasColumnType("numeric")
+                        .HasColumnName("saldo_caja_ars");
+
+                    b.Property<decimal>("SaldoCajaEUR")
+                        .HasColumnType("numeric")
+                        .HasColumnName("saldo_caja_eur");
+
+                    b.Property<decimal>("SaldoCajaUSD")
+                        .HasColumnType("numeric")
+                        .HasColumnName("saldo_caja_usd");
+
+                    b.Property<decimal>("TotalComprasARS")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_compras_ars");
+
+                    b.Property<decimal>("TotalComprasUSD")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_compras_usd");
+
+                    b.Property<decimal>("TotalDiferencias")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_diferencias");
+
+                    b.Property<decimal>("TotalVentasARS")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_ventas_ars");
+
+                    b.Property<decimal>("TotalVentasUSD")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_ventas_usd");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("usuario");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("cierres_caja");
+                });
+
             modelBuilder.Entity("SistemaCambio.Models.Cliente", b =>
                 {
                     b.Property<int>("Id")
@@ -200,19 +276,10 @@ namespace SistemaCambio.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Moneda")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("moneda");
-
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("nombre");
-
-                    b.Property<decimal>("Saldo")
-                        .HasColumnType("numeric")
-                        .HasColumnName("saldo");
 
                     b.Property<string>("Tipo")
                         .IsRequired()
@@ -326,6 +393,11 @@ namespace SistemaCambio.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fecha");
 
+                    b.Property<string>("Moneda")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("moneda");
+
                     b.Property<decimal>("Monto")
                         .HasColumnType("numeric")
                         .HasColumnName("monto");
@@ -387,6 +459,36 @@ namespace SistemaCambio.Migrations
                     b.HasIndex("ClienteId");
 
                     b.ToTable("operaciones");
+                });
+
+            modelBuilder.Entity("SistemaCambio.Models.SaldoCuenta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CuentaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("cuenta_id");
+
+                    b.Property<string>("Moneda")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("moneda");
+
+                    b.Property<decimal>("Saldo")
+                        .HasColumnType("numeric")
+                        .HasColumnName("saldo");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CuentaId", "Moneda")
+                        .IsUnique();
+
+                    b.ToTable("saldos_cuenta");
                 });
 
             modelBuilder.Entity("SistemaCambio.Models.TenenciaMoneda", b =>
@@ -491,6 +593,17 @@ namespace SistemaCambio.Migrations
                     b.Navigation("Cliente");
                 });
 
+            modelBuilder.Entity("SistemaCambio.Models.SaldoCuenta", b =>
+                {
+                    b.HasOne("SistemaCambio.Models.Cuenta", "Cuenta")
+                        .WithMany("Saldos")
+                        .HasForeignKey("CuentaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cuenta");
+                });
+
             modelBuilder.Entity("SistemaCambio.Models.TenenciaMoneda", b =>
                 {
                     b.HasOne("SistemaCambio.Models.Moneda", "Moneda")
@@ -500,6 +613,11 @@ namespace SistemaCambio.Migrations
                         .IsRequired();
 
                     b.Navigation("Moneda");
+                });
+
+            modelBuilder.Entity("SistemaCambio.Models.Cuenta", b =>
+                {
+                    b.Navigation("Saldos");
                 });
 
             modelBuilder.Entity("SistemaCambio.Models.Operacion", b =>

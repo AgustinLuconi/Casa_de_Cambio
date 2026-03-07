@@ -37,10 +37,15 @@ namespace SistemaCambio.Tests
             _db.Monedas.Add(new Moneda { Id = 2, Codigo = "ARS", Nombre = "Peso Argentino", Activa = true });
             _db.Monedas.Add(new Moneda { Id = 3, Codigo = "EUR", Nombre = "Euro", Activa = true });
             
-            _db.Cuentas.Add(new Cuenta { Id = 1, Nombre = "Caja Pesos", Moneda = "ARS", Saldo = 1000000m, Tipo = "Caja" });
-            _db.Cuentas.Add(new Cuenta { Id = 2, Nombre = "Caja USD", Moneda = "USD", Saldo = 5000m, Tipo = "Caja" });
-            _db.Cuentas.Add(new Cuenta { Id = 3, Nombre = "Caja EUR", Moneda = "EUR", Saldo = 2000m, Tipo = "Caja" });
-            _db.Cuentas.Add(new Cuenta { Id = 4, Nombre = "Banco Pesos", Moneda = "ARS", Saldo = 5000000m, Tipo = "Banco" });
+            _db.Cuentas.Add(new Cuenta { Id = 1, Nombre = "Caja Pesos", Tipo = "Caja" });
+            _db.Cuentas.Add(new Cuenta { Id = 2, Nombre = "Caja USD", Tipo = "Caja" });
+            _db.Cuentas.Add(new Cuenta { Id = 3, Nombre = "Caja EUR", Tipo = "Caja" });
+            _db.Cuentas.Add(new Cuenta { Id = 4, Nombre = "Banco Pesos", Tipo = "Banco" });
+            
+            _db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = 1, Moneda = "ARS", Saldo = 1000000m });
+            _db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = 2, Moneda = "USD", Saldo = 5000m });
+            _db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = 3, Moneda = "EUR", Saldo = 2000m });
+            _db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = 4, Moneda = "ARS", Saldo = 5000000m });
             
             _db.SaveChanges();
         }
@@ -59,7 +64,8 @@ namespace SistemaCambio.Tests
         {
             var cuenta = _db.Cuentas.Find(1);
             Assert.NotNull(cuenta);
-            Assert.Equal(1000000m, cuenta.Saldo);
+            var saldo = _db.SaldosCuenta.First(s => s.CuentaId == 1 && s.Moneda == "ARS");
+            Assert.Equal(1000000m, saldo.Saldo);
             Assert.Equal("Caja Pesos", cuenta.Nombre);
         }
 
@@ -74,16 +80,16 @@ namespace SistemaCambio.Tests
         public void Cuenta_DeberiaPoderActualizarSaldo()
         {
             // Arrange
-            var cuenta = _db.Cuentas.Find(2);
-            Assert.NotNull(cuenta);
-            decimal saldoOriginal = cuenta.Saldo;
+            var saldoCuenta = _db.SaldosCuenta.First(s => s.CuentaId == 2 && s.Moneda == "USD");
+            Assert.NotNull(saldoCuenta);
+            decimal saldoOriginal = saldoCuenta.Saldo;
 
             // Act
-            cuenta.Saldo += 1000;
+            saldoCuenta.Saldo += 1000;
             _db.SaveChanges();
 
             // Assert
-            var cuentaActualizada = _db.Cuentas.Find(2);
+            var cuentaActualizada = _db.SaldosCuenta.First(s => s.CuentaId == 2 && s.Moneda == "USD");
             Assert.Equal(saldoOriginal + 1000, cuentaActualizada!.Saldo);
         }
 
@@ -156,11 +162,8 @@ namespace SistemaCambio.Tests
             // no en el modelo. El modelo permite valores negativos pero el
             // servicio lo bloquea.
             
-            var cuenta = _db.Cuentas.Find(1);
-            Assert.NotNull(cuenta);
-            
-            // El modelo PERMITE esto (no hay validación a nivel de BD)
-            cuenta.Saldo = -1000;
+            var saldo = new SaldoCuenta { CuentaId = 1, Moneda = "ARS", Saldo = -1000 };
+            _db.SaldosCuenta.Add(saldo);
             var exception = Record.Exception(() => _db.SaveChanges());
             
             // No hay excepción porque la validación está en el servicio, no en el modelo

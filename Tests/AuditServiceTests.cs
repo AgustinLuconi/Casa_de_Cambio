@@ -4,32 +4,27 @@ using Xunit;
 namespace SistemaCambio.Tests
 {
     /// <summary>
-    /// Tests para AuditService - el servicio de auditoría.
-    /// 
-    /// AUDITORÍA = Registro de todas las acciones importantes del sistema.
-    /// Sirve para:
-    /// - Saber quién hizo qué y cuándo
-    /// - Detectar fraudes o errores
-    /// - Cumplir con regulaciones financieras
+    /// Tests para AuditService - ahora usa DI con InMemory database.
     /// 
     /// IMPORTANTE: El AuditService está diseñado para NUNCA fallar.
-    /// Si hay un error al guardar el log, falla silenciosamente para no
-    /// interrumpir la operación principal.
+    /// Si hay un error al guardar el log, falla silenciosamente.
     /// </summary>
     public class AuditServiceTests
     {
-        // ============================================
-        // TESTS: El servicio no debe fallar nunca
-        // ============================================
+        private readonly IAuditService _auditService;
+
+        public AuditServiceTests()
+        {
+            var factory = new TestDbContextFactory();
+            _auditService = new AuditService(factory);
+        }
 
         [Fact]
         public void Registrar_DeberiaEjecutarseSinExcepciones()
         {
-            // El servicio debería ejecutarse sin tirar excepciones
-            // incluso si los datos no son perfectos
             var exception = Record.Exception(() =>
             {
-                AuditService.Registrar(
+                _auditService.Registrar(
                     accion: "TEST",
                     entidad: "Prueba",
                     entidadId: 1,
@@ -43,10 +38,9 @@ namespace SistemaCambio.Tests
         [Fact]
         public void Registrar_ConDatosNulos_NoDeberiaFallar()
         {
-            // Probar con datos mínimos - no debería fallar
             var exception = Record.Exception(() =>
             {
-                AuditService.Registrar("CREATE", "Test", 1);
+                _auditService.Registrar("CREATE", "Test", 1);
             });
 
             Assert.Null(exception);
@@ -57,7 +51,7 @@ namespace SistemaCambio.Tests
         {
             var exception = Record.Exception(() =>
             {
-                AuditService.RegistrarCambioCotizacion(
+                _auditService.RegistrarCambioCotizacion(
                     monedaId: 1,
                     cotizacionAnterior: 1000m,
                     cotizacionNueva: 1050m
@@ -72,7 +66,7 @@ namespace SistemaCambio.Tests
         {
             var exception = Record.Exception(() =>
             {
-                AuditService.RegistrarEliminacion(
+                _auditService.RegistrarEliminacion(
                     entidad: "Operacion",
                     entidadId: 123,
                     datosEliminados: new { tipo = "Compra", monto = 1000 }

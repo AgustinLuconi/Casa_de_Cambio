@@ -1,0 +1,105 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SistemaCambio.Views.DetalleCuentaWindow"
+        x:CompileBindings="False"
+        Title="Detalle de Cuenta"
+        Width="1000" Height="700"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="{DynamicResource AppBackgroundBrush}">
+
+    <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" 
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
+                CornerRadius="8" Padding="16,12" Margin="0,0,0,20">
+            <Grid ColumnDefinitions="Auto, *">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                    <icon:MaterialIcon Kind="Bank" Foreground="{DynamicResource AccentBrush}" Width="28" Height="28"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="txtNombreCuenta" Text="Nombre de la Cuenta" FontWeight="Bold" FontSize="18" 
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock x:Name="txtTipoCuenta" Text="Tipo" FontWeight="Medium" FontSize="12" 
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Saldos por Moneda -->
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" 
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
+                CornerRadius="8" Padding="16" Margin="0,0,0,20">
+            <StackPanel>
+                <TextBlock Text="Saldos Actuales" FontWeight="SemiBold" FontSize="14" 
+                           Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,12"/>
+                <ItemsControl x:Name="icSaldos">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource AppBackgroundBrush}" 
+                                    BorderBrush="{Binding ColorBrush}" BorderThickness="1" 
+                                    CornerRadius="6" Padding="16,12" Margin="0,0,12,12" MinWidth="180">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Moneda}" FontWeight="SemiBold" FontSize="12" 
+                                               Foreground="{Binding ColorBrush}"/>
+                                    <TextBlock Text="{Binding SaldoFormatted}" FontWeight="Bold" FontSize="20" 
+                                               Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- Últimos Movimientos -->
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" 
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
+                CornerRadius="8" Padding="16">
+            <Grid RowDefinitions="Auto, *">
+                <TextBlock Grid.Row="0" Text="Últimos Movimientos" FontWeight="SemiBold" FontSize="14" 
+                           Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,12"/>
+                
+                <DataGrid Grid.Row="1" x:Name="dgMovimientos" AutoGenerateColumns="False" 
+                          BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
+                          HeadersVisibility="Column"
+                          IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="140"/>
+                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}" Width="130"/>
+                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="100"/>
+                        <DataGridTemplateColumn Header="MONTO" Width="140">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding MontoFormatted}" 
+                                               Foreground="{Binding MontoColor}" 
+                                               FontWeight="Bold" 
+                                               VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="DETALLE / OBSERVACIONES" Binding="{Binding Detalle}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <TextBlock Grid.Row="1" x:Name="txtSinMovimientos" Text="No hay movimientos registrados en esta cuenta."
+                           Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="False"/>
+            </Grid>
+        </Border>
+
+        <!-- Footer -->
+        <Grid Grid.Row="3" Margin="0,20,0,0">
+            <Button HorizontalAlignment="Right" Content="Cerrar" Classes="Secondary" Width="100" Height="36" 
+                    HorizontalContentAlignment="Center" Click="BtnCerrar_Click"/>
+        </Grid>
+
+    </Grid>
+</Window>

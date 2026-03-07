@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
+             x:Class="SistemaCambio.Views.Controls.BarChartControl"
+             Background="Transparent">
+    
+    <Border Background="#0d1117" BorderBrush="#30363d" BorderThickness="1" CornerRadius="6" Padding="15">
+        <Grid RowDefinitions="Auto, *">
+            
+            <TextBlock Grid.Row="0" 
+                       x:Name="txtTitulo"
+                       Text="Por Moneda" 
+                       FontWeight="Bold" 
+                       FontSize="14" 
+                       Foreground="#e6edf3"
+                       Margin="0,0,0,10"/>
+            
+            <ScottPlot:AvaPlot Grid.Row="1" 
+                               x:Name="plotView" 
+                               Height="220"/>
+        </Grid>
+    </Border>
+</UserControl>

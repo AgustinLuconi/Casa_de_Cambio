@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="SistemaCambio.Views.Controls.NotificationToast"
+             MinWidth="320"
+             MaxWidth="400"
+             Margin="0,0,0,10">
+
+    <Border x:Name="borderContainer"
+            CornerRadius="8"
+            Padding="15,12"
+            Background="#21262d"
+            BorderThickness="1"
+            BorderBrush="#30363d">
+        
+        <Grid ColumnDefinitions="Auto, *, Auto">
+            
+            <!-- Icono -->
+            <Border Grid.Column="0"
+                    x:Name="iconBackground"
+                    Width="32" 
+                    Height="32"
+                    CornerRadius="16"
+                    Background="#23863620"
+                    VerticalAlignment="Top"
+                    Margin="0,0,12,0">
+                <icon:MaterialIcon x:Name="icon"
+                                   Kind="CheckCircle"
+                                   Foreground="#238636"
+                                   Width="20"
+                                   Height="20"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+            </Border>
+
+            <!-- Contenido -->
+            <StackPanel Grid.Column="1" 
+                        Spacing="4"
+                        VerticalAlignment="Center">
+                <TextBlock x:Name="txtTitle"
+                           Text="Título"
+                           FontWeight="SemiBold"
+                           FontSize="13"
+                           Foreground="#e6edf3"
+                           TextWrapping="Wrap"/>
+                
+                <TextBlock x:Name="txtMessage"
+                           Text="Mensaje"
+                           FontSize="12"
+                           Foreground="#8b949e"
+                           TextWrapping="Wrap"
+                           IsVisible="False"/>
+            </StackPanel>
+
+            <!-- Botón cerrar -->
+            <Button Grid.Column="2"
+                    x:Name="btnClose"
+                    Width="24"
+                    Height="24"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="0"
+                    VerticalAlignment="Top"
+                    Click="BtnClose_Click"
+                    Cursor="Hand">
+                <icon:MaterialIcon Kind="Close"
+                                   Foreground="#8b949e"
+                                   Width="16"
+                                   Height="16"/>
+            </Button>
+        </Grid>
+    </Border>
+</UserControl>

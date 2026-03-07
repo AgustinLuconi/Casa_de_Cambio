@@ -1,15 +1,23 @@
+using Microsoft.EntityFrameworkCore;
 using SistemaCambio.Models;
 using System;
 using System.Text.Json;
 
 namespace SistemaCambio.Services
 {
-    public static class AuditService
+    public class AuditService : IAuditService
     {
+        private readonly IDbContextFactory<AppDbContext> _contextFactory;
+
+        public AuditService(IDbContextFactory<AppDbContext> contextFactory)
+        {
+            _contextFactory = contextFactory;
+        }
+
         /// <summary>
         /// Registra una acción en el log de auditoría.
         /// </summary>
-        public static void Registrar(
+        public void Registrar(
             string accion, 
             string entidad, 
             int entidadId,
@@ -19,7 +27,7 @@ namespace SistemaCambio.Services
         {
             try
             {
-                using var db = new AppDbContext();
+                using var db = _contextFactory.CreateDbContext();
 
                 var log = new AuditLog
                 {
@@ -27,7 +35,7 @@ namespace SistemaCambio.Services
                     Accion = accion,
                     Entidad = entidad,
                     EntidadId = entidadId,
-                    UsuarioNombre = usuario ?? "Admin", // TODO: Integrar con sistema de usuarios
+                    UsuarioNombre = usuario ?? "Admin",
                     ValoresAnteriores = datosAnteriores != null
                         ? JsonSerializer.Serialize(datosAnteriores)
                         : null,
@@ -42,14 +50,13 @@ namespace SistemaCambio.Services
             catch
             {
                 // Fallar silenciosamente para no interrumpir operaciones principales
-                // En producción, loguear a archivo
             }
         }
 
         /// <summary>
         /// Registra una actualización de cotización.
         /// </summary>
-        public static void RegistrarCambioCotizacion(int monedaId, decimal cotizacionAnterior, decimal cotizacionNueva)
+        public void RegistrarCambioCotizacion(int monedaId, decimal cotizacionAnterior, decimal cotizacionNueva)
         {
             Registrar("UPDATE", "CotizacionDiaria", monedaId,
                 datosAnteriores: new { cotizacion = cotizacionAnterior },
@@ -59,7 +66,7 @@ namespace SistemaCambio.Services
         /// <summary>
         /// Registra eliminación de una operación.
         /// </summary>
-        public static void RegistrarEliminacion(string entidad, int entidadId, object datosEliminados)
+        public void RegistrarEliminacion(string entidad, int entidadId, object datosEliminados)
         {
             Registrar("DELETE", entidad, entidadId, datosAnteriores: datosEliminados);
         }

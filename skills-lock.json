@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "skills": {
+    "Backend Testing": {
+      "source": "exceptionless/exceptionless",
+      "sourceType": "github",
+      "computedHash": "61a49160903edcbd179cabc121e2930d35d1827a0597540815f82271cacfe5db"
+    },
+    "banking-expert": {
+      "source": "personamanagmentlayer/pcl",
+      "sourceType": "github",
+      "computedHash": "9dd9a56804f09d4efe73635522614a7b6373c488faa68869fd31b18292777b26"
+    },
+    "csharp-concurrency-patterns": {
+      "source": "aaronontheweb/dotnet-skills",
+      "sourceType": "github",
+      "computedHash": "bc018a164a25c789359e1dea178238840449db5b4f2a4ec529f23f6d2ceca805"
+    },
+    "csharp-xunit": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "3c224e79f92ec027de3d5f44d0ca3077f076cb1e1bfff6b0db5b09c34c3aecd2"
+    },
+    "database-performance": {
+      "source": "aaronontheweb/dotnet-skills",
+      "sourceType": "github",
+      "computedHash": "92361eaa2e8b5b0ca21b6f81ead855df527cdb92994f59ec86840d4d266bb739"
+    },
+    "dependency-injection-patterns": {
+      "source": "aaronontheweb/dotnet-skills",
+      "sourceType": "github",
+      "computedHash": "bfbf2bc8613dbe292514c0501ca50dfa4f2129cc73b524392b55c27f5315c5f1"
+    },
+    "dotnet-backend-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "8e3f80d9f1c4fa28d9903ee027fc0ed741b6d0f213532a6b9ef78e192674ce86"
+    },
+    "economic-systems": {
+      "source": "jwynia/agent-skills",
+      "sourceType": "github",
+      "computedHash": "60c0bc5184963317694572ff9cdb10a02c368d90ec169b9102e492cdd462bada"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "6412eb4eb3b91595ebab937f0c69501240e7ba761b3d82510b5cf506ec5c7adc"
+    },
+    "modern-csharp-coding-standards": {
+      "source": "aaronontheweb/dotnet-skills",
+      "sourceType": "github",
+      "computedHash": "d9aa818e5b25a74505ed6678a6d31445bebe4b12ec29c07329c38c574dca0cac"
+    },
+    "numscript-guidelines": {
+      "source": "direktly/agent-skills",
+      "sourceType": "github",
+      "computedHash": "ac5668ddaad880848b084eda03039287959d3b1b4c8cc499b4c9138cbf77e541"
+    },
+    "owasp-security": {
+      "source": "agamm/claude-code-owasp",
+      "sourceType": "github",
+      "computedHash": "49014e3045cbfcd944ef2f3d54ea8a643cfed95f55eb434c901f96a186de3775"
+    },
+    "ui-ux-pro-max": {
+      "source": "kimny1143/claude-code-template",
+      "sourceType": "github",
+      "computedHash": "ba446ed0bc083a9f62e030142be324df63dbd13af66794ad0689114ee41fec50"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+    }
+  }
+}

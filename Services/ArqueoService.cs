@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SistemaCambio.Models;
 using System;
 using System.Linq;
@@ -17,14 +18,25 @@ namespace SistemaCambio.Services
             new() { Exitoso = false, Mensaje = msg };
     }
 
-    public static class ArqueoService
+    public class ArqueoService : IArqueoService
     {
-        /// <summary>
-        /// Realiza un arqueo ciego y genera asiento de ajuste automático si hay diferencia.
-        /// </summary>
-        public static ArqueoResult RealizarArqueoCiego(int cuentaId, decimal montoContado, string observaciones = "")
+        private readonly IDbContextFactory<AppDbContext> _contextFactory;
+        private readonly IAuditService _auditService;
+
+        public ArqueoService(
+            IDbContextFactory<AppDbContext> contextFactory,
+            IAuditService auditService)
         {
-            using var db = new AppDbContext();
+            _contextFactory = contextFactory;
+            _auditService = auditService;
+        }
+
+        /// <summary>
+        /// Realiza un arqueo ciego para una cuenta+moneda y genera ajuste si hay diferencia.
+        /// </summary>
+        public ArqueoResult RealizarArqueoCiego(int cuentaId, string moneda, decimal montoContado, string observaciones = "")
+        {
+            using var db = _contextFactory.CreateDbContext();
             using var transaction = db.Database.BeginTransaction();
 
             try
@@ -33,10 +45,13 @@ namespace SistemaCambio.Services
                 if (cuenta == null)
                     return ArqueoResult.Error("Cuenta no encontrada");
 
-                decimal saldoSistema = cuenta.Saldo;
+                // Obtener saldo de la moneda específica
+                var saldoCuenta = db.SaldosCuenta
+                    .FirstOrDefault(s => s.CuentaId == cuentaId && s.Moneda == moneda);
+
+                decimal saldoSistema = saldoCuenta?.Saldo ?? 0;
                 decimal diferencia = montoContado - saldoSistema;
 
-                // Crear registro de arqueo
                 var arqueo = new Arqueo
                 {
                     CuentaId = cuentaId,
@@ -49,29 +64,25 @@ namespace SistemaCambio.Services
                         : observaciones
                 };
                 db.Arqueos.Add(arqueo);
-                db.SaveChanges(); // Para obtener el ID del arqueo
+                db.SaveChanges();
 
-                // Si hay diferencia, generar asiento de ajuste
                 if (diferencia != 0)
                 {
-                    // Buscar o crear cuenta de Diferencias de Caja
+                    // Buscar o crear cuenta de diferencias
                     var cuentaAjuste = db.Cuentas.FirstOrDefault(c =>
-                        c.Nombre == "Diferencias de Caja" && c.Moneda == cuenta.Moneda);
+                        c.Nombre == "Diferencias de Caja");
 
                     if (cuentaAjuste == null)
                     {
                         cuentaAjuste = new Cuenta
                         {
                             Nombre = "Diferencias de Caja",
-                            Tipo = "Resultado",
-                            Moneda = cuenta.Moneda,
-                            Saldo = 0
+                            Tipo = "Resultado"
                         };
                         db.Cuentas.Add(cuentaAjuste);
                         db.SaveChanges();
                     }
 
-                    // Crear operación de ajuste
                     var tipoAjuste = diferencia > 0 ? "Sobrante Caja" : "Faltante Caja";
                     var opAjuste = new Operacion
                     {
@@ -84,38 +95,63 @@ namespace SistemaCambio.Services
                     };
                     db.Operaciones.Add(opAjuste);
 
-                    // Movimiento de ajuste en la caja
-                    var movCaja = new Movimiento
+                    db.Movimientos.Add(new Movimiento
                     {
                         Operacion = opAjuste,
                         CuentaId = cuentaId,
-                        Monto = diferencia, // Positivo = sobrante, Negativo = faltante
+                        Monto = diferencia,
                         Fecha = DateTime.Now
-                    };
-                    db.Movimientos.Add(movCaja);
+                    });
 
-                    // Movimiento contrario en cuenta de diferencias
-                    var movDiferencias = new Movimiento
+                    db.Movimientos.Add(new Movimiento
                     {
                         Operacion = opAjuste,
                         CuentaId = cuentaAjuste.Id,
-                        Monto = -diferencia, // Contrario al movimiento de caja
+                        Monto = -diferencia,
                         Fecha = DateTime.Now
-                    };
-                    db.Movimientos.Add(movDiferencias);
+                    });
 
-                    // Actualizar saldos
-                    cuenta.Saldo = montoContado; // Ajustar al monto contado
-                    cuentaAjuste.Saldo -= diferencia;
+                    // Actualizar saldo en SaldoCuenta
+                    if (saldoCuenta != null)
+                    {
+                        saldoCuenta.Saldo = montoContado;
+                    }
+                    else
+                    {
+                        db.SaldosCuenta.Add(new SaldoCuenta
+                        {
+                            CuentaId = cuentaId,
+                            Moneda = moneda,
+                            Saldo = montoContado
+                        });
+                    }
+
+                    // Saldo de ajuste en la cuenta de diferencias
+                    var saldoAjuste = db.SaldosCuenta
+                        .FirstOrDefault(s => s.CuentaId == cuentaAjuste.Id && s.Moneda == moneda);
+                    if (saldoAjuste != null)
+                    {
+                        saldoAjuste.Saldo -= diferencia;
+                    }
+                    else
+                    {
+                        db.SaldosCuenta.Add(new SaldoCuenta
+                        {
+                            CuentaId = cuentaAjuste.Id,
+                            Moneda = moneda,
+                            Saldo = -diferencia
+                        });
+                    }
 
                     db.SaveChanges();
 
-                    // Vincular el movimiento al arqueo
-                    arqueo.MovimientoAjusteId = movCaja.Id;
+                    arqueo.MovimientoAjusteId = db.Movimientos
+                        .Where(m => m.Operacion == opAjuste && m.CuentaId == cuentaId)
+                        .Select(m => m.Id)
+                        .FirstOrDefault();
 
-                    // Registrar en Audit
-                    AuditService.Registrar("AJUSTE", "Arqueo", arqueo.Id,
-                        datosNuevos: new { diferencia, tipoAjuste, saldoAnterior = saldoSistema, saldoNuevo = montoContado });
+                    _auditService.Registrar("AJUSTE", "Arqueo", arqueo.Id,
+                        datosNuevos: new { diferencia, tipoAjuste, moneda, saldoAnterior = saldoSistema, saldoNuevo = montoContado });
                 }
 
                 db.SaveChanges();

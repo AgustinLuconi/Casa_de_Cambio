@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -13,6 +15,7 @@ namespace SistemaCambio.Models
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Cuenta> Cuentas { get; set; }
+        public DbSet<SaldoCuenta> SaldosCuenta { get; set; }
         public DbSet<Cliente> Clientes { get; set; }
         public DbSet<Operacion> Operaciones { get; set; }
         public DbSet<Movimiento> Movimientos { get; set; }
@@ -20,10 +23,11 @@ namespace SistemaCambio.Models
         public DbSet<CotizacionDiaria> CotizacionesDiarias { get; set; }
         public DbSet<Arqueo> Arqueos { get; set; }
         
-        // Nuevas entidades para mejoras de arquitectura
+        // Entidades de arquitectura
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<EstadoCaja> EstadosCaja { get; set; }
         public DbSet<TenenciaMoneda> TenenciasMoneda { get; set; }
+        public DbSet<CierreCaja> CierresCaja { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -31,6 +35,14 @@ namespace SistemaCambio.Models
             if (!options.IsConfigured)
             {
                 options.UseNpgsql("Host=localhost;Database=SistemaCambio;Username=postgres;Password=19022006");
+
+#if DEBUG
+                // Solo en modo Debug: mostrar queries SQL generados
+                // Útil para detectar N+1 y queries lentos
+                options
+                    .EnableSensitiveDataLogging()
+                    .LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information);
+#endif
             }
         }
 
@@ -56,6 +68,18 @@ namespace SistemaCambio.Models
                 .WithMany()
                 .HasForeignKey(m => m.CuentaId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configurar relación SaldoCuenta -> Cuenta
+            modelBuilder.Entity<SaldoCuenta>()
+                .HasOne(s => s.Cuenta)
+                .WithMany(c => c.Saldos)
+                .HasForeignKey(s => s.CuentaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Índice único: una sola entrada por cuenta+moneda
+            modelBuilder.Entity<SaldoCuenta>()
+                .HasIndex(s => new { s.CuentaId, s.Moneda })
+                .IsUnique();
         }
     }
 
@@ -64,8 +88,20 @@ namespace SistemaCambio.Models
     {
         [Key] [Column("id")] public int Id { get; set; }
         [Column("nombre")] public string Nombre { get; set; } = "";
-        [Column("tipo")] public string Tipo { get; set; } = "Caja"; 
+        [Column("tipo")] public string Tipo { get; set; } = "Caja";
+
+        // Navegación: saldos por moneda
+        public List<SaldoCuenta> Saldos { get; set; } = new();
+    }
+
+    [Table("saldos_cuenta")]
+    public class SaldoCuenta
+    {
+        [Key] [Column("id")] public int Id { get; set; }
+        [Column("cuenta_id")] public int CuentaId { get; set; }
         [Column("moneda")] public string Moneda { get; set; } = "USD";
         [Column("saldo")] public decimal Saldo { get; set; }
+
+        public Cuenta Cuenta { get; set; } = null!;
     }
 }

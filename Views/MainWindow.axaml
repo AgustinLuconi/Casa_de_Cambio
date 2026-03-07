@@ -2,15 +2,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:SistemaCambio.ViewModels"
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
+        xmlns:sp="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
         x:Class="SistemaCambio.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="Sistema Casa de Cambio"
+        Title="Treasury ERP"
         Background="{DynamicResource AppBackgroundBrush}"
         WindowStartupLocation="CenterScreen"
         Width="1400" Height="900">
 
     <Window.KeyBindings>
         <KeyBinding Gesture="F1" Command="{Binding AbrirDashboardCommand}"/>
+        <KeyBinding Gesture="F2" Command="{Binding AbrirCuentasCommand}"/>
         <KeyBinding Gesture="F3" Command="{Binding AbrirCompraCommand}"/>
         <KeyBinding Gesture="F4" Command="{Binding AbrirVentaCommand}"/>
         <KeyBinding Gesture="F5" Command="{Binding AbrirCreditoDebitoCommand}"/>
@@ -20,302 +23,399 @@
 
     <Grid RowDefinitions="Auto, *, Auto">
         
-        <!-- HEADER -->
-        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="15,10">
+        <!-- ═══════════════════════ HEADER ═══════════════════════ -->
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" 
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="20,12">
             <Grid ColumnDefinitions="Auto, *, Auto">
-                <!-- Logo y Título -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="15">
-                    <icon:MaterialIcon Kind="CurrencyUsd" Width="32" Height="32" Foreground="#2f81f7"/>
-                    <TextBlock Text="Treasury ERP" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <Border Background="#238636" CornerRadius="4" Padding="8,4" VerticalAlignment="Center" Margin="20,0,0,0">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <!-- Title/Icon removed as requested -->
+                </StackPanel>
+
+                <!-- Toolbar -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <Button Classes="toolbar-btn" Command="{Binding AbrirDashboardCommand}" ToolTip.Tip="Dashboard (F1)">
                         <StackPanel Orientation="Horizontal" Spacing="5">
-                            <Ellipse Width="8" Height="8" Fill="#7ee787"/>
-                            <TextBlock Text="LIVE MARKET" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                            <TextBlock Text="F1" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" FontSize="11"/>
+                            <TextBlock Text="Dashboard" FontSize="12"/>
                         </StackPanel>
-                    </Border>
+                    </Button>
+                    <Button Classes="toolbar-btn" Command="{Binding AbrirCuentasCommand}" ToolTip.Tip="Cuentas (F2)">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="F2" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" FontSize="11"/>
+                            <TextBlock Text="Cuentas" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="toolbar-btn" Command="{Binding AbrirCompraCommand}" ToolTip.Tip="Compra (F3)">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="F3" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" FontSize="11"/>
+                            <TextBlock Text="Compra" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="toolbar-btn" Command="{Binding AbrirVentaCommand}" ToolTip.Tip="Venta (F4)">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="F4" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" FontSize="11"/>
+                            <TextBlock Text="Venta" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="toolbar-btn" Command="{Binding AbrirCreditoDebitoCommand}" ToolTip.Tip="Crédito/Débito (F5)">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="F5" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" FontSize="11"/>
+                            <TextBlock Text="Créd/Déb" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="toolbar-btn" Command="{Binding AbrirArqueoCommand}" ToolTip.Tip="Arqueo (F6)">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="F6" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" FontSize="11"/>
+                            <TextBlock Text="Arqueo" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="toolbar-btn" Command="{Binding AbrirMovimientosCommand}" ToolTip.Tip="Movimientos (F7)">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="F7" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" FontSize="11"/>
+                            <TextBlock Text="Movimientos" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="toolbar-btn" Click="BtnCierreCaja_Click" ToolTip.Tip="Cierre de Caja (F8)">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="F8" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" FontSize="11"/>
+                            <TextBlock Text="Cierre" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
-                <!-- Atajos de Teclado -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
-                        <TextBlock Text="F1 Dashboard" FontSize="11" Foreground="#8b949e"/>
-                    </Border>
-                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
-                        <TextBlock Text="F3 Compra" FontSize="11" Foreground="#8b949e"/>
-                    </Border>
-                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
-                        <TextBlock Text="F4 Venta" FontSize="11" Foreground="#8b949e"/>
-                    </Border>
-                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
-                        <TextBlock Text="F5 Créd/Déb" FontSize="11" Foreground="#8b949e"/>
-                    </Border>
-                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
-                        <TextBlock Text="F6 Arqueo" FontSize="11" Foreground="#8b949e"/>
-                    </Border>
-                    <Border Background="#21262d" CornerRadius="4" Padding="10,5">
-                        <TextBlock Text="F7 Movimientos" FontSize="11" Foreground="#8b949e"/>
-                    </Border>
-                </StackPanel>
-
-                <!-- Usuario -->
+                <!-- User (Removed for now) -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
-                    <Border Background="#30363d" CornerRadius="20" Width="36" Height="36">
-                        <icon:MaterialIcon Kind="Account" Width="20" Height="20" Foreground="#e6edf3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Admin User" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
-                        <TextBlock Text="Treasury Manager" FontSize="10" Foreground="#8b949e"/>
-                    </StackPanel>
+                    <!-- Placeholder for future login logic -->
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- CONTENIDO PRINCIPAL -->
-        <Grid Grid.Row="1" ColumnDefinitions="240, *">
+        <!-- ═══════════════════════ CONTENT ═══════════════════════ -->
+        <Grid Grid.Row="1" ColumnDefinitions="230, *">
             
             <!-- SIDEBAR -->
-            <Border Grid.Column="0" Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+            <Border Grid.Column="0" Background="{DynamicResource SidebarBackgroundBrush}" 
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                 <ScrollViewer>
                     <StackPanel Margin="10">
-                        <!-- Sección Principal -->
-                        <TextBlock Text="PRINCIPAL" FontSize="10" FontWeight="Bold" Foreground="#8b949e" Margin="10,15,0,8"/>
+                        <TextBlock Text="PRINCIPAL" FontSize="10" FontWeight="Bold" 
+                                   Foreground="{DynamicResource SecondaryTextBrush}" Margin="14,15,0,8"/>
                         
                         <Button x:Name="btnDashboard" Classes="SidebarButton" Click="BtnDashboard_Click">
                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                <icon:MaterialIcon Kind="ViewDashboard" Width="20" Height="20"/>
-                                <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
+                                <icon:MaterialIcon Kind="ViewDashboard" Width="18" Height="18"/>
+                                <TextBlock Text="Dashboard" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
                         
                         <Button x:Name="btnCuentas" Classes="SidebarButtonActive" Click="BtnCuentas_Click">
                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                <icon:MaterialIcon Kind="Bank" Width="20" Height="20"/>
-                                <TextBlock Text="Cuentas" VerticalAlignment="Center"/>
+                                <icon:MaterialIcon Kind="Bank" Width="18" Height="18"/>
+                                <TextBlock Text="Cuentas" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
 
-                        <!-- Sección Operaciones -->
-                        <TextBlock Text="OPERACIONES" FontSize="10" FontWeight="Bold" Foreground="#8b949e" Margin="10,25,0,8"/>
+                        <TextBlock Text="OPERACIONES" FontSize="10" FontWeight="Bold" 
+                                   Foreground="{DynamicResource SecondaryTextBrush}" Margin="14,25,0,8"/>
                         
                         <Button x:Name="btnCompra" Classes="SidebarButton" Click="BtnCompra_Click">
                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                <icon:MaterialIcon Kind="CartArrowDown" Width="20" Height="20" Foreground="#238636"/>
-                                <TextBlock Text="Compra (F3)" VerticalAlignment="Center"/>
+                                <icon:MaterialIcon Kind="CartArrowDown" Width="18" Height="18"/>
+                                <TextBlock Text="Compra (F3)" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
                         
                         <Button x:Name="btnVenta" Classes="SidebarButton" Click="BtnVenta_Click">
                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                <icon:MaterialIcon Kind="CartArrowUp" Width="20" Height="20" Foreground="#da3633"/>
-                                <TextBlock Text="Venta (F4)" VerticalAlignment="Center"/>
+                                <icon:MaterialIcon Kind="CartArrowUp" Width="18" Height="18"/>
+                                <TextBlock Text="Venta (F4)" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
                         
                         <Button x:Name="btnCreditoDebito" Classes="SidebarButton" Click="BtnCreditoDebito_Click">
                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                <icon:MaterialIcon Kind="SwapHorizontal" Width="20" Height="20" Foreground="#a371f7"/>
-                                <TextBlock Text="Crédito/Débito (F5)" VerticalAlignment="Center"/>
+                                <icon:MaterialIcon Kind="SwapHorizontal" Width="18" Height="18"/>
+                                <TextBlock Text="Crédito/Débito (F5)" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
 
-                        <!-- Sección Auditoría -->
-                        <TextBlock Text="AUDITORÍA" FontSize="10" FontWeight="Bold" Foreground="#8b949e" Margin="10,25,0,8"/>
+                        <TextBlock Text="AUDITORÍA" FontSize="10" FontWeight="Bold" 
+                                   Foreground="{DynamicResource SecondaryTextBrush}" Margin="14,25,0,8"/>
                         
                         <Button x:Name="btnArqueo" Classes="SidebarButton" Click="BtnArqueo_Click">
                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                <icon:MaterialIcon Kind="Calculator" Width="20" Height="20" Foreground="#f0883e"/>
-                                <TextBlock Text="Arqueo (F6)" VerticalAlignment="Center"/>
+                                <icon:MaterialIcon Kind="Calculator" Width="18" Height="18"/>
+                                <TextBlock Text="Arqueo (F6)" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
                         
                         <Button x:Name="btnMovimientos" Classes="SidebarButton" Click="BtnMovimientos_Click">
                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                <icon:MaterialIcon Kind="History" Width="20" Height="20" Foreground="#79c0ff"/>
-                                <TextBlock Text="Movimientos (F7)" VerticalAlignment="Center"/>
+                                <icon:MaterialIcon Kind="History" Width="18" Height="18"/>
+                                <TextBlock Text="Movimientos (F7)" VerticalAlignment="Center" FontSize="13"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button x:Name="btnCierreCaja" Classes="SidebarButton" Click="BtnCierreCaja_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="CashRegister" Width="18" Height="18"/>
+                                <TextBlock Text="Cierre de Caja (F8)" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
 
-                        <!-- Sección Configuración -->
-                        <TextBlock Text="SISTEMA" FontSize="10" FontWeight="Bold" Foreground="#8b949e" Margin="10,25,0,8"/>
+                        <TextBlock Text="SISTEMA" FontSize="10" FontWeight="Bold" 
+                                   Foreground="{DynamicResource SecondaryTextBrush}" Margin="14,25,0,8"/>
                         
                         <Button Classes="SidebarButton" Click="BtnReportes_Click">
                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                <icon:MaterialIcon Kind="ChartLine" Width="20" Height="20" Foreground="#a371f7"/>
-                                <TextBlock Text="Reportes" VerticalAlignment="Center"/>
+                                <icon:MaterialIcon Kind="ChartLine" Width="18" Height="18"/>
+                                <TextBlock Text="Reportes" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
                         
                         <Button Classes="SidebarButton" Click="BtnConfiguracion_Click">
                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                <icon:MaterialIcon Kind="Cog" Width="20" Height="20"/>
-                                <TextBlock Text="Configuración" VerticalAlignment="Center"/>
+                                <icon:MaterialIcon Kind="Cog" Width="18" Height="18"/>
+                                <TextBlock Text="Configuración" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
                 </ScrollViewer>
             </Border>
 
-            <!-- ÁREA PRINCIPAL -->
-            <Grid Grid.Column="1" Margin="20" RowDefinitions="Auto, Auto, *">
+            <!-- MAIN AREA -->
+            <Grid Grid.Column="1" Margin="24,20" RowDefinitions="Auto, Auto, *">
                 
-                <!-- Título y Acciones -->
-                <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
-                    <TextBlock x:Name="txtMainTitle" Text="Cuentas Overview" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <!-- Title Bar -->
+                <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
+                    <TextBlock x:Name="txtMainTitle" Text="Cuentas Overview" FontSize="22" FontWeight="Bold" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                        <Button Background="#238636" Foreground="White" Padding="12,8" Click="BtnNuevaCuenta_Click">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <icon:MaterialIcon Kind="Plus" Width="16" Height="16"/>
-                                <TextBlock Text="Nueva Cuenta"/>
+                        <Button Background="{DynamicResource AccentBrush}" Foreground="White" Padding="14,8" 
+                                CornerRadius="8" Click="BtnNuevaCuenta_Click" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <icon:MaterialIcon Kind="Plus" Width="16" Height="16" VerticalAlignment="Center"/>
+                                <TextBlock Text="Nueva Cuenta" FontSize="13" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Classes="Secondary" Padding="12,8" Click="BtnExportar_Click">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <icon:MaterialIcon Kind="Download" Width="16" Height="16"/>
-                                <TextBlock Text="Exportar"/>
+                        <Button Classes="Secondary" Padding="14,8" Click="BtnExportar_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <icon:MaterialIcon Kind="Download" Width="16" Height="16" VerticalAlignment="Center"/>
+                                <TextBlock Text="Exportar" FontSize="13" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
                 </Grid>
 
                 <!-- DASHBOARD PANEL -->
-                <StackPanel x:Name="dashboardPanel" Grid.Row="1" IsVisible="False" Margin="0,15,0,0">
-                    <!-- Stats Cards -->
-                    <StackPanel Orientation="Horizontal" Spacing="15">
-                        <Border Background="#238636" CornerRadius="8" Padding="20" MinWidth="220">
+                <ScrollViewer x:Name="dashboardPanel" Grid.Row="1" IsVisible="False" Margin="0,0,0,0" Padding="0,0,16,0">
+                    <StackPanel Spacing="24" Margin="0,0,0,40">
+                        <!-- Stat Cards -->
+                        <UniformGrid Columns="4" Rows="1" Margin="0,0,0,0">
+                            <!-- Card 1 -->
+                            <Border Background="#1AFFFFFF" BorderBrush="#33FFFFFF" 
+                                    BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,0,16,0">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <icon:MaterialIcon Kind="Bank" Width="20" Height="20" Foreground="{DynamicResource AccentBrush}"/>
+                                        <TextBlock Text="Total Cuentas" FontSize="14" Foreground="#B0B5C9"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="txtTotalCuentas" Text="0" FontSize="36" FontWeight="Bold" 
+                                               Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,12,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <!-- Card 2 -->
+                            <Border Background="#1AFFFFFF" BorderBrush="#33FFFFFF" 
+                                    BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,0,16,0">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <icon:MaterialIcon Kind="SwapHorizontal" Width="20" Height="20" Foreground="{DynamicResource WarningBrush}"/>
+                                        <TextBlock Text="Operaciones Hoy" FontSize="14" Foreground="#B0B5C9"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="txtOperacionesHoy" Text="0" FontSize="36" FontWeight="Bold" 
+                                               Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,12,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <!-- Card 3 -->
+                            <Border Background="#13a4ec33" BorderBrush="#13a4ec80" 
+                                    BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,0,16,0">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <icon:MaterialIcon Kind="CurrencyUsd" Width="20" Height="20" Foreground="#13a4ec"/>
+                                        <TextBlock Text="Saldo Total (USD)" FontSize="14" Foreground="#B0B5C9"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="txtSaldoUSD" Text="$0.00" FontSize="32" FontWeight="Bold" 
+                                               Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,12,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <!-- Card 4 -->
+                            <Border Background="#4ade8033" BorderBrush="#4ade8080" 
+                                    BorderThickness="1" CornerRadius="16" Padding="24" Margin="0">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <icon:MaterialIcon Kind="CurrencyEur" Width="20" Height="20" Foreground="#4ade80"/>
+                                        <TextBlock Text="Saldo Total (EUR/ARS)" FontSize="14" Foreground="#B0B5C9"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="txtSaldoARS" Text="$0.00" FontSize="32" FontWeight="Bold" 
+                                               Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,12,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+                        
+                        <!-- Middle Charts -->
+                        <Grid ColumnDefinitions="2*, 1*">
+                            <!-- Left Chart (Balance Evolution) -->
+                            <Border Grid.Column="0" Margin="0,0,24,0" Background="#0Cffffff" BorderBrush="#22ffffff" BorderThickness="1" CornerRadius="16" Padding="24">
+                                <StackPanel>
+                                    <TextBlock Text="Evolución de Saldos" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <sp:AvaPlot x:Name="pltBalanceEvolution" Height="300" Margin="0,16,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Right Chart (Currency Distribution) -->
+                            <Border Grid.Column="1" Background="#0Cffffff" BorderBrush="#22ffffff" BorderThickness="1" CornerRadius="16" Padding="24">
+                                <StackPanel>
+                                    <TextBlock Text="Distribución Monedas" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <sp:AvaPlot x:Name="pltCurrencyDistribution" Height="300" Margin="0,16,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Bottom: Recent Transactions -->
+                        <Border Background="#0Cffffff" BorderBrush="#22ffffff" 
+                                BorderThickness="1" CornerRadius="16" Padding="24">
                             <StackPanel>
-                                <TextBlock Text="Total Cuentas" FontSize="12" Foreground="White" Opacity="0.8"/>
-                                <TextBlock x:Name="txtTotalCuentas" Text="0" FontSize="28" FontWeight="Bold" Foreground="White"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Background="#1f6feb" CornerRadius="8" Padding="20" MinWidth="220">
-                            <StackPanel>
-                                <TextBlock Text="Operaciones Hoy" FontSize="12" Foreground="White" Opacity="0.8"/>
-                                <TextBlock x:Name="txtOperacionesHoy" Text="0" FontSize="28" FontWeight="Bold" Foreground="White"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Background="#a371f7" CornerRadius="8" Padding="20" MinWidth="220">
-                            <StackPanel>
-                                <TextBlock Text="Saldo Total (USD)" FontSize="12" Foreground="White" Opacity="0.8"/>
-                                <TextBlock x:Name="txtSaldoUSD" Text="$0.00" FontSize="24" FontWeight="Bold" Foreground="White"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Background="#f0883e" CornerRadius="8" Padding="20" MinWidth="220">
-                            <StackPanel>
-                                <TextBlock Text="Saldo Total (ARS)" FontSize="12" Foreground="White" Opacity="0.8"/>
-                                <TextBlock x:Name="txtSaldoARS" Text="$0.00" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                                <TextBlock Text="Últimas Operaciones" FontSize="18" FontWeight="SemiBold" 
+                                           Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,16"/>
+                                <DataGrid x:Name="dgUltimasOperaciones" AutoGenerateColumns="True" 
+                                          IsReadOnly="True" MinHeight="250"
+                                          BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+                                          GridLinesVisibility="Horizontal"
+                                          HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
+                                          HeadersVisibility="Column"
+                                          Background="Transparent"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
-                    
-                    <!-- Recent Operations -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="8" Padding="20" Margin="0,20,0,0">
-                        <StackPanel>
-                            <TextBlock Text="Últimas Operaciones" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,15"/>
-                            <DataGrid x:Name="dgUltimasOperaciones" AutoGenerateColumns="True" 
-                                      Background="#0d1117" RowBackground="#0d1117" Foreground="#e6edf3"
-                                      BorderThickness="1" BorderBrush="#30363d" IsReadOnly="True" MaxHeight="300"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
+                </ScrollViewer>
 
-                <!-- CUENTAS PANEL -->
-                <StackPanel x:Name="cuentasPanel" Grid.Row="1" Margin="0,15,0,0">
-                    <!-- Filtros -->
-                    <Border Background="#161b22" CornerRadius="8" Padding="15">
-                        <StackPanel Orientation="Horizontal" Spacing="15">
-                            <TextBox Watermark="Buscar por ID o Nombre..." Width="250" Background="#0d1117" Foreground="#e6edf3" BorderBrush="#30363d"/>
-                            <ComboBox Width="150" SelectedIndex="0" Background="#0d1117" Foreground="#e6edf3">
+                <!-- ACCOUNTS PANEL -->
+                <StackPanel x:Name="cuentasPanel" Grid.Row="1" Margin="0,0,0,16">
+                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" 
+                            BorderThickness="1" CornerRadius="10" Padding="16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBox Watermark="Buscar por ID o Nombre..." Width="250"/>
+                            <ComboBox Width="150" SelectedIndex="0">
                                 <ComboBoxItem>Todos los Tipos</ComboBoxItem>
                                 <ComboBoxItem>Caja</ComboBoxItem>
                                 <ComboBoxItem>Banco</ComboBoxItem>
                                 <ComboBoxItem>Cliente</ComboBoxItem>
                             </ComboBox>
-                            <ComboBox Width="150" SelectedIndex="0" Background="#0d1117" Foreground="#e6edf3">
+                            <ComboBox Width="150" SelectedIndex="0">
                                 <ComboBoxItem>Todas las Monedas</ComboBoxItem>
                                 <ComboBoxItem>USD</ComboBoxItem>
                                 <ComboBoxItem>EUR</ComboBoxItem>
                                 <ComboBoxItem>ARS</ComboBoxItem>
                             </ComboBox>
-                            <Button Background="#21262d" BorderThickness="0" Padding="10">
-                                <icon:MaterialIcon Kind="Refresh" Width="18" Height="18" Foreground="#8b949e"/>
+                            <Button Background="{DynamicResource HoverBackgroundBrush}" BorderThickness="1" 
+                                    BorderBrush="{DynamicResource BorderBrush}" CornerRadius="6" Padding="8">
+                                <icon:MaterialIcon Kind="Refresh" Width="16" Height="16" 
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </Button>
                         </StackPanel>
                     </Border>
                 </StackPanel>
 
-                <!-- DataGrid de Cuentas -->
+                <!-- Accounts DataGrid -->
                 <DataGrid Grid.Row="2" ItemsSource="{Binding Cuentas}" AutoGenerateColumns="False" 
-                          Background="#0d1117" 
-                          RowBackground="#0d1117" 
-                          Foreground="#e6edf3"
-                          BorderThickness="1" 
-                          BorderBrush="#30363d" 
+                          BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
                           GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
                           HeadersVisibility="Column"
-                          IsReadOnly="True"
-                          CornerRadius="8">
+                          IsReadOnly="True">
                     
-                    <DataGrid.Styles>
-                       <Style Selector="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#161b22"/>
-                            <Setter Property="Foreground" Value="#8b949e"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Padding" Value="12,10"/>
-                            <Setter Property="FontSize" Value="11"/>
-                       </Style>
-                       <Style Selector="DataGridRow">
-                            <Setter Property="Padding" Value="0,5"/>
-                       </Style>
-                    </DataGrid.Styles>
-
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80" Foreground="#8b949e"/>
+                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80"/>
                         <DataGridTextColumn Header="CUENTA" Binding="{Binding Nombre}" Width="*" FontWeight="SemiBold"/>
-                        <DataGridTextColumn Header="TIPO" Binding="{Binding Tipo}" Width="120" Foreground="#a5d6ff"/>
-                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="100" FontWeight="Bold"/>
+                        <DataGridTextColumn Header="TIPO" Binding="{Binding Tipo}" Width="120"/>
+                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="100" FontWeight="SemiBold"/>
                         <DataGridTextColumn Header="SALDO" 
                                             Binding="{Binding Saldo, StringFormat='{}{0:N2}'}" 
                                             Width="180" 
-                                            FontWeight="Bold"
-                                            Foreground="#2ea043"/>
+                                            FontWeight="Bold"/>
+                        <DataGridTemplateColumn Header="" Width="140">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel x:CompileBindings="False" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                        <Button Classes="Secondary" Background="Transparent" Padding="4" Margin="0" 
+                                                Cursor="Hand" ToolTip.Tip="Ver Detalles"
+                                                Command="{Binding #cuentasPanel.DataContext.VerDetalleCuentaCommand}"
+                                                CommandParameter="{Binding}">
+                                            <icon:MaterialIcon Kind="Eye" Width="16" Height="16" Foreground="{DynamicResource SuccessBrush}"/>
+                                        </Button>
+                                        <Button Classes="Secondary" Background="Transparent" Padding="4" Margin="0" 
+                                                Cursor="Hand" ToolTip.Tip="Editar Cuenta"
+                                                Command="{Binding #cuentasPanel.DataContext.EditarCuentaCommand}"
+                                                CommandParameter="{Binding}">
+                                            <icon:MaterialIcon Kind="Pencil" Width="16" Height="16" Foreground="{DynamicResource AccentBrush}"/>
+                                        </Button>
+                                        <Button Classes="Danger" Background="Transparent" Padding="4" Margin="0" 
+                                                Cursor="Hand" ToolTip.Tip="Eliminar Cuenta"
+                                                Command="{Binding #cuentasPanel.DataContext.EliminarCuentaCommand}"
+                                                CommandParameter="{Binding}">
+                                            <icon:MaterialIcon Kind="Delete" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
             </Grid>
         </Grid>
 
-        <!-- FOOTER -->
-        <Border Grid.Row="2" Background="#0d1117" BorderBrush="#30363d" BorderThickness="0,1,0,0" Padding="20,10">
+        <!-- ═══════════════════════ FOOTER ═══════════════════════ -->
+        <Border Grid.Row="2" Background="{DynamicResource SidebarBackgroundBrush}" 
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="20,10">
             <Grid ColumnDefinitions="Auto, *, Auto">
-                <!-- Info del Sistema -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
-                    <TextBlock Text="Sistema v1.0.0" FontSize="11" Foreground="#8b949e"/>
-                    <TextBlock Text="Server: Local" FontSize="11" Foreground="#8b949e"/>
+                    <TextBlock Text="Sistema v1.0.0" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="Server: Local" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                 </StackPanel>
 
-                <!-- Estadísticas -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center">
-                    <TextBlock Text="Cuentas:" FontSize="11" Foreground="#8b949e"/>
-                    <TextBlock Text="{Binding CuentasCount}" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="Cuentas:" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding CuentasCount}" FontSize="11" FontWeight="Bold" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
                 </StackPanel>
 
-                <!-- Totales -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="30">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="24">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="TOTAL DÉBITO" FontSize="10" Foreground="#8b949e" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalDebito, StringFormat='{}{0:N2}'}" FontSize="14" FontWeight="Bold" Foreground="#da3633" VerticalAlignment="Center"/>
+                        <TextBlock Text="TOTAL DÉBITO" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalDebito, StringFormat='{}{0:N2}'}" FontSize="14" FontWeight="Bold" 
+                                   Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="TOTAL CRÉDITO" FontSize="10" Foreground="#8b949e" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalCredito, StringFormat='{}{0:N2}'}" FontSize="14" FontWeight="Bold" Foreground="#238636" VerticalAlignment="Center"/>
+                        <TextBlock Text="TOTAL CRÉDITO" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalCredito, StringFormat='{}{0:N2}'}" FontSize="14" FontWeight="Bold" 
+                                   Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <Border Background="#21262d" CornerRadius="4" Padding="12,6">
+                    <Border Background="{DynamicResource HoverBackgroundBrush}" CornerRadius="6" Padding="12,6">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="POSICIÓN NETA" FontSize="10" Foreground="#8b949e" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding PosicionNeta, StringFormat='{}{0:N2}'}" FontSize="16" FontWeight="Bold" Foreground="#58a6ff"/>
+                            <TextBlock Text="POSICIÓN NETA" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding PosicionNeta, StringFormat='{}{0:N2}'}" FontSize="16" FontWeight="Bold" 
+                                       Foreground="{DynamicResource AccentBrush}"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
             </Grid>
         </Border>
+
+        <!-- Notification Panel -->
+        <controls:NotificationPanel x:Name="notificationPanel" 
+                                     Grid.Row="0" 
+                                     Grid.RowSpan="3"
+                                     VerticalAlignment="Top"
+                                     HorizontalAlignment="Right"/>
     </Grid>
 </Window>

@@ -2,56 +2,78 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         x:Class="SistemaCambio.Views.NuevaCuentaWindow"
+        x:CompileBindings="False"
         Title="Nueva Cuenta"
-        Width="500" Height="400"
+        Width="550" Height="500"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
-        Background="#161b22">
+        Background="{DynamicResource AppBackgroundBrush}">
 
-    <Grid RowDefinitions="Auto, *, Auto" Margin="20">
+    <Grid RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="20">
         
         <!-- Header -->
-        <Border Grid.Row="0" Background="#21262d" BorderBrush="#30363d" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,20">
+        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" 
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
+                CornerRadius="8" Padding="14,10" Margin="0,0,0,20">
             <StackPanel Orientation="Horizontal" Spacing="10">
-                <icon:MaterialIcon Kind="BankPlus" Foreground="#238636" Width="24" Height="24"/>
-                <TextBlock Text="Crear Nueva Cuenta" FontWeight="Bold" FontSize="14" Foreground="#e6edf3" VerticalAlignment="Center"/>
+                <icon:MaterialIcon Kind="BankPlus" x:Name="iconHeader" Foreground="{DynamicResource AccentBrush}" Width="22" Height="22"/>
+                <TextBlock x:Name="txtTitulo" Text="Crear Nueva Cuenta" FontWeight="SemiBold" FontSize="14" 
+                           Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
             </StackPanel>
         </Border>
 
-        <!-- Formulario -->
-        <StackPanel Grid.Row="1" Spacing="15">
-            
-            <Grid ColumnDefinitions="120, *">
-                <TextBlock Text="Nombre" VerticalAlignment="Center" Foreground="#8b949e"/>
-                <TextBox x:Name="txtNombre" Grid.Column="1" Watermark="Nombre de la cuenta"/>
+        <!-- Name -->
+        <Grid Grid.Row="1" ColumnDefinitions="120, *" Margin="0,0,0,10">
+            <TextBlock Text="Nombre" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox x:Name="txtNombre" Grid.Column="1" Watermark="Nombre de la cuenta"/>
+        </Grid>
+
+        <!-- Type -->
+        <Grid Grid.Row="2" ColumnDefinitions="120, *" Margin="0,0,0,16">
+            <TextBlock Text="Tipo" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <ComboBox x:Name="cmbTipo" Grid.Column="1" HorizontalAlignment="Stretch" SelectedIndex="0">
+                <ComboBoxItem>Caja</ComboBoxItem>
+                <ComboBoxItem>Banco</ComboBoxItem>
+                <ComboBoxItem>Cliente</ComboBoxItem>
+                <ComboBoxItem>Proveedor</ComboBoxItem>
+            </ComboBox>
+        </Grid>
+
+        <!-- Initial Balances -->
+        <Border Grid.Row="3" Background="{DynamicResource CardBackgroundBrush}" 
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
+                CornerRadius="8" Padding="16" Margin="0,0,0,16">
+            <Grid RowDefinitions="Auto, *">
+                <TextBlock Grid.Row="0" x:Name="txtSaldosTitulo" Text="Saldos Iniciales por Divisa" FontWeight="SemiBold" 
+                           Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,10"/>
+                <DataGrid Grid.Row="1" x:Name="dgSaldosIniciales" AutoGenerateColumns="False"
+                          BorderThickness="0" IsReadOnly="True"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{DynamicResource BorderBrush}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="100"/>
+                        <DataGridTextColumn Header="NOMBRE" Binding="{Binding Nombre}" Width="*"/>
+                        <DataGridTemplateColumn Header="SALDO INICIAL" Width="150">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Saldo, Mode=TwoWay}" Background="Transparent" 
+                                             BorderThickness="0" Foreground="{DynamicResource PrimaryTextBrush}" 
+                                             Padding="5,3" TextAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
             </Grid>
+        </Border>
 
-            <Grid ColumnDefinitions="120, *">
-                <TextBlock Text="Tipo" VerticalAlignment="Center" Foreground="#8b949e"/>
-                <ComboBox x:Name="cmbTipo" Grid.Column="1" HorizontalAlignment="Stretch" SelectedIndex="0">
-                    <ComboBoxItem>Caja</ComboBoxItem>
-                    <ComboBoxItem>Banco</ComboBoxItem>
-                    <ComboBoxItem>Cliente</ComboBoxItem>
-                    <ComboBoxItem>Proveedor</ComboBoxItem>
-                </ComboBox>
-            </Grid>
-
-            <Grid ColumnDefinitions="120, *">
-                <TextBlock Text="Moneda" VerticalAlignment="Center" Foreground="#8b949e"/>
-                <ComboBox x:Name="cmbMoneda" Grid.Column="1" HorizontalAlignment="Stretch"/>
-            </Grid>
-
-            <Grid ColumnDefinitions="120, *">
-                <TextBlock Text="Saldo Inicial" VerticalAlignment="Center" Foreground="#8b949e"/>
-                <TextBox x:Name="txtSaldoInicial" Grid.Column="1" Text="0.00" TextAlignment="Right"/>
-            </Grid>
-
-        </StackPanel>
-
-        <!-- Botones -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button Content="Guardar" Background="#238636" Foreground="White" Width="110" Height="36" HorizontalContentAlignment="Center" Click="BtnGuardar_Click"/>
-            <Button Content="Cancelar" Background="Transparent" BorderBrush="#30363d" BorderThickness="1" Foreground="#e6edf3" Width="110" Height="36" HorizontalContentAlignment="Center" Click="BtnCancelar_Click"/>
+        <!-- Buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+            <Button Content="Guardar" Background="{DynamicResource AccentBrush}" Foreground="White" 
+                    Width="110" Height="36" HorizontalContentAlignment="Center" CornerRadius="8" 
+                    Cursor="Hand" Click="BtnGuardar_Click"/>
+            <Button Content="Cancelar" Classes="Secondary" Width="110" Height="36" 
+                    HorizontalContentAlignment="Center" Click="BtnCancelar_Click"/>
         </StackPanel>
     </Grid>
 </Window>

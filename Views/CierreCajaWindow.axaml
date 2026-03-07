@@ -1,0 +1,188 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SistemaCambio.Views.CierreCajaWindow"
+        x:CompileBindings="False"
+        Title="Cierre de Caja Diario"
+        Width="900" Height="700"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="{DynamicResource AppBackgroundBrush}">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="20">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" 
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
+                CornerRadius="8" Padding="16" Margin="0,0,0,20">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                    <icon:MaterialIcon Kind="CashRegister" Foreground="{DynamicResource AccentBrush}" Width="26" Height="26"/>
+                    <TextBlock Text="Cierre de Caja Diario" FontWeight="SemiBold" FontSize="16" 
+                               Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Grid.Column="2" x:Name="txtFecha" Text="" FontSize="14" 
+                           Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="20">
+                
+                <!-- Operations Summary -->
+                <Border Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" 
+                        BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="RESUMEN DE OPERACIONES DEL DÍA" FontWeight="SemiBold" FontSize="13" 
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        
+                        <Grid ColumnDefinitions="*, *">
+                            <!-- Purchases -->
+                            <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" 
+                                    BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1" 
+                                    CornerRadius="8" Padding="16" Margin="0,0,10,0">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="COMPRAS (Ingreso de divisa)" FontWeight="SemiBold" 
+                                               Foreground="{DynamicResource SuccessBrush}"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="Cantidad:" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock x:Name="txtCantidadCompras" Text="0" FontWeight="Bold" 
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="Total USD:" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock x:Name="txtComprasUSD" Text="$0.00" FontWeight="Bold" 
+                                                   Foreground="{DynamicResource SuccessBrush}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="Total ARS:" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock x:Name="txtComprasARS" Text="$0.00" 
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Sales -->
+                            <Border Grid.Column="1" Background="{DynamicResource CardBackgroundBrush}" 
+                                    BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" 
+                                    CornerRadius="8" Padding="16" Margin="10,0,0,0">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="VENTAS (Salida de divisa)" FontWeight="SemiBold" 
+                                               Foreground="{DynamicResource DangerBrush}"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="Cantidad:" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock x:Name="txtCantidadVentas" Text="0" FontWeight="Bold" 
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="Total USD:" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock x:Name="txtVentasUSD" Text="$0.00" FontWeight="Bold" 
+                                                   Foreground="{DynamicResource DangerBrush}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="Total ARS:" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock x:Name="txtVentasARS" Text="$0.00" 
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Current Balances -->
+                <Border Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" 
+                        BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="SALDOS ACTUALES DE CAJA" FontWeight="SemiBold" FontSize="13" 
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        
+                        <ItemsControl x:Name="icSaldos" Margin="0,5">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource CardBackgroundBrush}" 
+                                            BorderBrush="{Binding ColorBrush}" BorderThickness="1" 
+                                            CornerRadius="8" Padding="16" Margin="0,0,10,10" Width="180">
+                                        <StackPanel Spacing="5">
+                                            <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold" 
+                                                       Foreground="{Binding ColorBrush}" FontSize="12"/>
+                                            <TextBlock Text="{Binding SaldoFormatted}" FontSize="18" FontWeight="Bold" 
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Audit Differences -->
+                <Border Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" 
+                        BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="DIFERENCIAS DE ARQUEOS" FontWeight="SemiBold" FontSize="13" 
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="Total diferencias del día:" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <TextBlock x:Name="txtTotalDiferencias" Text="$0.00" FontWeight="Bold" FontSize="16"
+                                       Foreground="{DynamicResource WarningBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Observations -->
+                <Border Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" 
+                        BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="OBSERVACIONES" FontWeight="SemiBold" FontSize="13" 
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBox x:Name="txtObservaciones" Height="80" AcceptsReturn="True"
+                                 Watermark="Ingrese observaciones sobre el cierre del día..."/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Margin="0,20,0,0">
+            <Border Grid.Column="0" x:Name="borderEstado" 
+                    Background="{DynamicResource CardBackgroundBrush}" 
+                    BorderBrush="{DynamicResource WarningBrush}" 
+                    BorderThickness="1" CornerRadius="6" Padding="12,8" IsVisible="False">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <icon:MaterialIcon Kind="Information" Foreground="{DynamicResource WarningBrush}" Width="16" Height="16"/>
+                    <TextBlock x:Name="txtEstado" Text="Cierre generado - Sin cerrar definitivamente" 
+                               Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+                <Button x:Name="btnGenerar" Background="{DynamicResource AccentBrush}" Foreground="White" 
+                        Height="38" Padding="15,0" CornerRadius="8" Cursor="Hand" Click="BtnGenerar_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <icon:MaterialIcon Kind="Calculator" Width="16" Height="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="Generar Cierre" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="btnCerrarDefinitivo" Background="{DynamicResource SuccessBrush}" Foreground="White" 
+                        Height="38" Padding="15,0" CornerRadius="8" Cursor="Hand" IsEnabled="False" Click="BtnCerrarDefinitivo_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <icon:MaterialIcon Kind="Lock" Width="16" Height="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="Cerrar Definitivo" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Content="Cancelar" Classes="Secondary" Width="100" Height="38" 
+                        HorizontalContentAlignment="Center" Click="BtnCancelar_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

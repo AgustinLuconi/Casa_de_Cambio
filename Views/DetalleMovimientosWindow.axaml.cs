@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.Models;
 using System;
 using System.Collections.ObjectModel;
@@ -10,13 +11,15 @@ namespace SistemaCambio.Views
 {
     public partial class DetalleMovimientosWindow : Window
     {
+        private readonly IDbContextFactory<AppDbContext> _contextFactory;
         private ObservableCollection<MovimientoDetalle> _movimientos = new();
 
         public DetalleMovimientosWindow()
         {
+            _contextFactory = App.Services.GetRequiredService<IDbContextFactory<AppDbContext>>();
+
             InitializeComponent();
             
-            // Establecer fechas por defecto
             dpDesde.SelectedDate = DateTime.Today;
             dpHasta.SelectedDate = DateTime.Today;
             
@@ -25,9 +28,8 @@ namespace SistemaCambio.Views
 
         private void CargarDatos()
         {
-            using var db = new AppDbContext();
+            using var db = _contextFactory.CreateDbContext();
 
-            // Cargar cuentas
             cmbCuenta.Items.Add(new ComboBoxItem { Content = "Todas", Tag = 0 });
             cmbCuentaExterna.Items.Add(new ComboBoxItem { Content = "Todas", Tag = 0 });
 
@@ -41,8 +43,7 @@ namespace SistemaCambio.Views
             cmbCuenta.SelectedIndex = 0;
             cmbCuentaExterna.SelectedIndex = 0;
 
-            // Cargar monedas
-            var monedas = cuentas.Select(c => c.Moneda).Distinct().ToList();
+            var monedas = db.SaldosCuenta.Select(s => s.Moneda).Distinct().OrderBy(m => m).ToList();
             foreach (var moneda in monedas)
             {
                 cmbMoneda.Items.Add(new ComboBoxItem { Content = moneda, Tag = moneda });
@@ -56,37 +57,32 @@ namespace SistemaCambio.Views
         {
             _movimientos.Clear();
 
-            using var db = new AppDbContext();
+            using var db = _contextFactory.CreateDbContext();
 
-            // Obtener filtros
             var itemCuenta = cmbCuenta.SelectedItem as ComboBoxItem;
             var itemMoneda = cmbMoneda.SelectedItem as ComboBoxItem;
             
             int cuentaId = itemCuenta?.Tag is int id ? id : 0;
             string? monedaFiltro = itemMoneda?.Tag as string;
 
-            DateTime fechaDesde = dpDesde.SelectedDate?.DateTime ?? DateTime.Today;
-            DateTime fechaHasta = dpHasta.SelectedDate?.DateTime.AddDays(1) ?? DateTime.Today.AddDays(1);
+            DateTime fechaDesde = DateTime.SpecifyKind(dpDesde.SelectedDate?.DateTime ?? DateTime.Today, DateTimeKind.Utc);
+            DateTime fechaHasta = DateTime.SpecifyKind((dpHasta.SelectedDate?.DateTime ?? DateTime.Today).AddDays(1), DateTimeKind.Utc);
 
-            // Query base
             var query = db.Movimientos
                 .Include(m => m.Operacion)
                 .Include(m => m.Cuenta)
                 .Where(m => m.Fecha >= fechaDesde && m.Fecha < fechaHasta);
 
-            // Filtrar por cuenta
             if (cuentaId > 0)
             {
                 query = query.Where(m => m.CuentaId == cuentaId);
             }
 
-            // Filtrar por moneda
             if (!string.IsNullOrEmpty(monedaFiltro))
             {
-                query = query.Where(m => m.Cuenta.Moneda == monedaFiltro);
+                query = query.Where(m => m.Moneda == monedaFiltro);
             }
 
-            // Ejecutar query
             var movimientos = query.OrderByDescending(m => m.Fecha).ToList();
 
             foreach (var mov in movimientos)
@@ -97,6 +93,7 @@ namespace SistemaCambio.Views
                     Fecha = mov.Fecha,
                     TipoOperacion = mov.Operacion?.TipoOperacion ?? "",
                     CuentaNombre = mov.Cuenta?.Nombre ?? "",
+                    Moneda = mov.Moneda,
                     Debito = mov.Monto < 0 ? Math.Abs(mov.Monto) : 0,
                     Credito = mov.Monto > 0 ? mov.Monto : 0,
                     Observaciones = mov.Operacion?.Observaciones ?? ""
@@ -112,13 +109,13 @@ namespace SistemaCambio.Views
         }
     }
 
-    // Clase auxiliar para el DataGrid
     public class MovimientoDetalle
     {
         public int Id { get; set; }
         public DateTime Fecha { get; set; }
         public string TipoOperacion { get; set; } = "";
         public string CuentaNombre { get; set; } = "";
+        public string Moneda { get; set; } = "";
         public decimal Debito { get; set; }
         public decimal Credito { get; set; }
         public string Observaciones { get; set; } = "";

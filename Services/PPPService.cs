@@ -1,7 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using SistemaCambio.Models;
 using System;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
 
 namespace SistemaCambio.Services
 {
@@ -13,15 +13,22 @@ namespace SistemaCambio.Services
         public string Mensaje { get; set; } = "";
     }
 
-    public static class PPPService
+    public class PPPService : IPPPService
     {
+        private readonly IDbContextFactory<AppDbContext> _contextFactory;
+
+        public PPPService(IDbContextFactory<AppDbContext> contextFactory)
+        {
+            _contextFactory = contextFactory;
+        }
+
         /// <summary>
         /// Registra una compra de divisa y actualiza el Costo Promedio Ponderado.
         /// Fórmula: PPP = (CostoTotalAnterior + NuevoCosto) / (CantidadAnterior + NuevaCantidad)
         /// </summary>
-        public static void RegistrarCompra(string codigoMoneda, decimal cantidadDivisa, decimal costoEnPesos)
+        public void RegistrarCompra(string codigoMoneda, decimal cantidadDivisa, decimal costoEnPesos)
         {
-            using var db = new AppDbContext();
+            using var db = _contextFactory.CreateDbContext();
 
             var moneda = db.Monedas.FirstOrDefault(m => m.Codigo == codigoMoneda);
             if (moneda == null) return;
@@ -48,9 +55,9 @@ namespace SistemaCambio.Services
         /// <summary>
         /// Registra una venta de divisa y reduce la tenencia.
         /// </summary>
-        public static void RegistrarVenta(string codigoMoneda, decimal cantidadDivisa)
+        public void RegistrarVenta(string codigoMoneda, decimal cantidadDivisa)
         {
-            using var db = new AppDbContext();
+            using var db = _contextFactory.CreateDbContext();
 
             var moneda = db.Monedas.FirstOrDefault(m => m.Codigo == codigoMoneda);
             if (moneda == null) return;
@@ -76,9 +83,9 @@ namespace SistemaCambio.Services
         /// Valida si la cotización de venta está por encima del Costo Promedio Ponderado.
         /// Retorna advertencia si se vende por debajo del costo de adquisición.
         /// </summary>
-        public static PPPValidacion ValidarVenta(string codigoMoneda, decimal cotizacionVenta)
+        public PPPValidacion ValidarVenta(string codigoMoneda, decimal cotizacionVenta)
         {
-            using var db = new AppDbContext();
+            using var db = _contextFactory.CreateDbContext();
 
             var moneda = db.Monedas.FirstOrDefault(m => m.Codigo == codigoMoneda);
             if (moneda == null)
@@ -105,9 +112,9 @@ namespace SistemaCambio.Services
         /// <summary>
         /// Obtiene el PPP actual de una moneda.
         /// </summary>
-        public static decimal ObtenerPPP(string codigoMoneda)
+        public decimal ObtenerPPP(string codigoMoneda)
         {
-            using var db = new AppDbContext();
+            using var db = _contextFactory.CreateDbContext();
 
             var moneda = db.Monedas.FirstOrDefault(m => m.Codigo == codigoMoneda);
             if (moneda == null) return 0;

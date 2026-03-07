@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.Models;
 using System;
 using System.Collections.Generic;
@@ -12,8 +14,12 @@ namespace SistemaCambio.Views
 {
     public partial class ReportesWindow : Window
     {
+        private readonly IDbContextFactory<AppDbContext> _contextFactory;
+
         public ReportesWindow()
         {
+            _contextFactory = App.Services.GetRequiredService<IDbContextFactory<AppDbContext>>();
+
             InitializeComponent();
             dpDesdeOp.SelectedDate = new DateTimeOffset(DateTime.Today.AddDays(-30));
             dpHastaOp.SelectedDate = new DateTimeOffset(DateTime.Today);
@@ -21,12 +27,11 @@ namespace SistemaCambio.Views
 
         private void BtnGenerarOperaciones_Click(object? sender, RoutedEventArgs e)
         {
-            using var db = new AppDbContext();
+            using var db = _contextFactory.CreateDbContext();
             
             var fechaDesde = dpDesdeOp.SelectedDate?.Date ?? DateTime.Today.AddDays(-30);
             var fechaHasta = (dpHastaOp.SelectedDate?.Date ?? DateTime.Today).AddDays(1);
 
-            // Fetch all and filter in memory to avoid PostgreSQL DateTime issues
             var operaciones = db.Operaciones
                 .ToList()
                 .Where(o => o.Fecha.Date >= fechaDesde && o.Fecha.Date < fechaHasta)
@@ -38,12 +43,12 @@ namespace SistemaCambio.Views
 
         private void BtnGenerarSaldos_Click(object? sender, RoutedEventArgs e)
         {
-            using var db = new AppDbContext();
+            using var db = _contextFactory.CreateDbContext();
             
             var itemTipo = cmbTipoSaldos.SelectedItem as ComboBoxItem;
             string tipo = itemTipo?.Content?.ToString() ?? "Todos";
 
-            var query = db.Cuentas.AsQueryable();
+            var query = db.Cuentas.Include(c => c.Saldos).AsQueryable();
             
             if (tipo != "Todos")
             {
@@ -101,7 +106,17 @@ namespace SistemaCambio.Views
                 
                 foreach (var c in cuentas)
                 {
-                    sb.AppendLine($"{c.Id},\"{c.Nombre}\",{c.Tipo},{c.Moneda},{c.Saldo}");
+                    if (c.Saldos.Any())
+                    {
+                        foreach (var s in c.Saldos)
+                        {
+                            sb.AppendLine($"{c.Id},\"{c.Nombre}\",{c.Tipo},{s.Moneda},{s.Saldo}");
+                        }
+                    }
+                    else
+                    {
+                        sb.AppendLine($"{c.Id},\"{c.Nombre}\",{c.Tipo},,0");
+                    }
                 }
 
                 await using var stream = await file.OpenWriteAsync();

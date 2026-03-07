@@ -23,6 +23,9 @@ namespace SistemaCambio.Models
         [ForeignKey("CuentaId")]
         public Cuenta Cuenta { get; set; } = null!;
 
+        [Column("moneda")]
+        public string Moneda { get; set; } = "";
+
         [Column("monto")]
         public decimal Monto { get; set; } // Positivo = ingreso, Negativo = egreso
 
