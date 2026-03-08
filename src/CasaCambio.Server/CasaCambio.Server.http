@@ -1,0 +1,6 @@
+@CasaCambio.Server_HostAddress = http://localhost:5017
+
+GET {{CasaCambio.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

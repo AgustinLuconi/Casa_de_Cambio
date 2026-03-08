@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.EntityFrameworkCore;
-using SistemaCambio.Models;
+using SistemaCambio.ApiClient;
 
 namespace SistemaCambio.ViewModels
 {
@@ -20,7 +19,7 @@ namespace SistemaCambio.ViewModels
 
     public partial class MainWindowViewModel : ViewModelBase
     {
-        private readonly IDbContextFactory<AppDbContext> _contextFactory;
+        private readonly ICasaCambioApiClient _apiClient;
 
         [ObservableProperty]
         private ObservableCollection<CuentaResumenItem> cuentas;
@@ -54,11 +53,11 @@ namespace SistemaCambio.ViewModels
         public event Action<string, string>? MostrarMensajeEvent;
         public event Func<string, string, System.Threading.Tasks.Task<bool>>? MostrarConfirmacionEvent;
 
-        public MainWindowViewModel(IDbContextFactory<AppDbContext> contextFactory)
+        public MainWindowViewModel(ICasaCambioApiClient apiClient)
         {
-            _contextFactory = contextFactory;
+            _apiClient = apiClient;
             Cuentas = new ObservableCollection<CuentaResumenItem>();
-            
+
             AbrirDashboardCommand = new RelayCommand(() => SolicitarAbrirVentana?.Invoke("Dashboard"));
             AbrirCuentasCommand = new RelayCommand(() => SolicitarAbrirVentana?.Invoke("Cuentas"));
             AbrirCompraCommand = new RelayCommand(() => SolicitarAbrirVentana?.Invoke("Compra"));
@@ -69,122 +68,76 @@ namespace SistemaCambio.ViewModels
 
             VerDetalleCuentaCommand = new RelayCommand<CuentaResumenItem>(obj =>
             {
-                if (obj != null)
-                {
-                    SolicitarDetalleCuenta?.Invoke(obj.Id);
-                }
+                if (obj != null) SolicitarDetalleCuenta?.Invoke(obj.Id);
             });
 
             EditarCuentaCommand = new RelayCommand<CuentaResumenItem>(obj =>
             {
-                if (obj != null)
-                {
-                    SolicitarEdicionCuenta?.Invoke(obj.Id);
-                }
+                if (obj != null) SolicitarEdicionCuenta?.Invoke(obj.Id);
             });
 
             EliminarCuentaCommand = new AsyncRelayCommand<CuentaResumenItem>(async (obj) =>
             {
-                if (obj == null) return;
-
-                if (MostrarConfirmacionEvent == null) return;
+                if (obj == null || MostrarConfirmacionEvent == null) return;
 
                 bool confirma = await MostrarConfirmacionEvent.Invoke(
-                    "Eliminar Cuenta", 
-                    $"¿Está seguro que desea eliminar la cuenta '{obj.Nombre}'?\n\nEsta acción eliminará también sus saldos iniciales y no se puede deshacer.");
+                    "Eliminar Cuenta",
+                    $"Esta funcionalidad requiere conexion al servidor.\n\n¿Desea continuar?");
 
                 if (!confirma) return;
 
-                try
-                {
-                    using var db = _contextFactory.CreateDbContext();
-
-                    // Check for operations linked to this account
-                    bool tieneMovimientos = await db.Movimientos.AnyAsync(m => m.CuentaId == obj.Id);
-                    
-                    if (tieneMovimientos)
-                    {
-                        MostrarMensajeEvent?.Invoke("Error", $"No se puede eliminar la cuenta '{obj.Nombre}' porque tiene movimientos u operaciones asociadas.");
-                        return;
-                    }
-
-                    var cuenta = await db.Cuentas.Include(c => c.Saldos).FirstOrDefaultAsync(c => c.Id == obj.Id);
-                    if (cuenta != null)
-                    {
-                        db.SaldosCuenta.RemoveRange(cuenta.Saldos);
-                        db.Cuentas.Remove(cuenta);
-                        await db.SaveChangesAsync();
-                        
-                        RefrescarDatos();
-                        MostrarMensajeEvent?.Invoke("Éxito", "La cuenta ha sido eliminada correctamente.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MostrarMensajeEvent?.Invoke("Error", $"Error al eliminar la cuenta: {ex.Message}");
-                }
+                MostrarMensajeEvent?.Invoke("Info", "La eliminacion de cuentas se realiza desde el servidor.");
             });
 
-            CargarDatosDeBaseDeDatos();
+            CargarDatosAsync();
         }
 
         public void RefrescarDatos()
         {
             Cuentas.Clear();
-            CargarDatosDeBaseDeDatos();
+            CargarDatosAsync();
         }
 
-        private void CargarDatosDeBaseDeDatos()
+        private async void CargarDatosAsync()
         {
             try
             {
-                using var db = _contextFactory.CreateDbContext();
+                var cuentasApi = await _apiClient.ObtenerCuentasAsync();
 
-                if (db.Database.CanConnect())
+                foreach (var cuenta in cuentasApi.OrderBy(c => c.Id))
                 {
-                    var listaCuentas = db.Cuentas.Include(c => c.Saldos).OrderBy(c => c.Id).ToList();
-
-                    foreach (var cuenta in listaCuentas)
+                    if (cuenta.Saldos.Any())
                     {
-                        if (cuenta.Saldos.Any())
-                        {
-                            foreach (var saldo in cuenta.Saldos)
-                            {
-                                Cuentas.Add(new CuentaResumenItem
-                                {
-                                    Id = cuenta.Id,
-                                    Nombre = cuenta.Nombre,
-                                    Tipo = cuenta.Tipo,
-                                    Moneda = saldo.Moneda,
-                                    Saldo = saldo.Saldo
-                                });
-                            }
-                        }
-                        else
+                        foreach (var saldo in cuenta.Saldos)
                         {
                             Cuentas.Add(new CuentaResumenItem
                             {
                                 Id = cuenta.Id,
                                 Nombre = cuenta.Nombre,
                                 Tipo = cuenta.Tipo,
-                                Moneda = "ARS",
-                                Saldo = 0
+                                Moneda = saldo.Moneda,
+                                Saldo = saldo.Saldo
                             });
                         }
                     }
+                    else
+                    {
+                        Cuentas.Add(new CuentaResumenItem
+                        {
+                            Id = cuenta.Id,
+                            Nombre = cuenta.Nombre,
+                            Tipo = cuenta.Tipo,
+                            Moneda = "ARS",
+                            Saldo = 0
+                        });
+                    }
+                }
 
-                    // Calcular estadísticas
-                    CuentasCount = listaCuentas.Count; // Total physical accounts
-                    
-                    var saldos = db.SaldosCuenta.ToList();
-                    TotalDebito = saldos.Where(s => s.Saldo < 0).Sum(s => Math.Abs(s.Saldo));
-                    TotalCredito = saldos.Where(s => s.Saldo > 0).Sum(s => s.Saldo);
-                    PosicionNeta = TotalCredito - TotalDebito;
-                }
-                else
-                {
-                    Cuentas.Add(new CuentaResumenItem { Nombre = "ERROR: NO CONECTA A DB" });
-                }
+                CuentasCount = cuentasApi.Count;
+                var allSaldos = cuentasApi.SelectMany(c => c.Saldos).ToList();
+                TotalDebito = allSaldos.Where(s => s.Saldo < 0).Sum(s => Math.Abs(s.Saldo));
+                TotalCredito = allSaldos.Where(s => s.Saldo > 0).Sum(s => s.Saldo);
+                PosicionNeta = TotalCredito - TotalDebito;
             }
             catch (Exception ex)
             {

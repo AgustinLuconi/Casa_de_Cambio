@@ -1,0 +1,261 @@
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Security;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using CasaCambio.Shared.DTOs;
+using CasaCambio.Shared.Requests;
+using CasaCambio.Shared.Responses;
+
+namespace SistemaCambio.ApiClient;
+
+public class CasaCambioApiClient : ICasaCambioApiClient
+{
+    private readonly HttpClient _http;
+    private readonly AuthTokenStore _tokenStore;
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
+    public event Action? OnSessionExpired;
+
+    public CasaCambioApiClient(HttpClient http, AuthTokenStore tokenStore)
+    {
+        _http = http;
+        _tokenStore = tokenStore;
+    }
+
+    // Auth
+
+    public async Task<AuthResponse> LoginAsync(LoginRequest request)
+    {
+        var response = await _http.PostAsJsonAsync("api/auth/login", request);
+        response.EnsureSuccessStatusCode();
+        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        _tokenStore.SetTokens(auth!);
+        return auth!;
+    }
+
+    public async Task<AuthResponse?> RefreshTokenAsync(string refreshToken)
+    {
+        var response = await _http.PostAsJsonAsync("api/auth/refresh", new { RefreshToken = refreshToken });
+        if (!response.IsSuccessStatusCode) return null;
+        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        if (auth != null) _tokenStore.SetTokens(auth);
+        return auth;
+    }
+
+    public async Task<bool> HealthCheckAsync()
+    {
+        try
+        {
+            var response = await _http.GetAsync("api/auth/health");
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    // Operaciones
+
+    public async Task<OperacionResponse> CrearCompraAsync(CrearOperacionRequest request)
+        => await PostAuthenticatedAsync<OperacionResponse>("api/operaciones/compra", request);
+
+    public async Task<OperacionResponse> CrearVentaAsync(CrearOperacionRequest request)
+        => await PostAuthenticatedAsync<OperacionResponse>("api/operaciones/venta", request);
+
+    public async Task<OperacionResponse> CrearCreditoDebitoAsync(CrearCreditoDebitoRequest request)
+        => await PostAuthenticatedAsync<OperacionResponse>("api/operaciones/credito-debito", request);
+
+    public async Task<OperacionResponse> CrearInterbancarioAsync(CrearInterbancarioRequest request)
+        => await PostAuthenticatedAsync<OperacionResponse>("api/operaciones/interbancaria", request);
+
+    public async Task<PaginatedResponse<OperacionDto>> ObtenerOperacionesAsync(DateTime? desde = null, DateTime? hasta = null, string? tipo = null, int page = 1, int pageSize = 50)
+    {
+        var query = $"api/operaciones?page={page}&pageSize={pageSize}";
+        if (desde.HasValue) query += $"&desde={desde.Value:O}";
+        if (hasta.HasValue) query += $"&hasta={hasta.Value:O}";
+        if (!string.IsNullOrEmpty(tipo)) query += $"&tipo={Uri.EscapeDataString(tipo)}";
+        return await GetAuthenticatedAsync<PaginatedResponse<OperacionDto>>(query);
+    }
+
+    public async Task<OperacionDto?> ObtenerOperacionAsync(int id)
+    {
+        try { return await GetAuthenticatedAsync<OperacionDto>($"api/operaciones/{id}"); }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound) { return null; }
+    }
+
+    // Cuentas
+
+    public async Task<List<CuentaDto>> ObtenerCuentasAsync()
+        => await GetAuthenticatedAsync<List<CuentaDto>>("api/cuentas");
+
+    public async Task<CuentaDto> CrearCuentaAsync(CrearCuentaRequest request)
+        => await PostAuthenticatedAsync<CuentaDto>("api/cuentas", request);
+
+    public async Task<List<MovimientoDto>> ObtenerMovimientosCuentaAsync(int cuentaId, DateTime? desde = null, DateTime? hasta = null)
+    {
+        var query = $"api/cuentas/{cuentaId}/movimientos";
+        var sep = '?';
+        if (desde.HasValue) { query += $"{sep}desde={desde.Value:O}"; sep = '&'; }
+        if (hasta.HasValue) { query += $"{sep}hasta={hasta.Value:O}"; }
+        return await GetAuthenticatedAsync<List<MovimientoDto>>(query);
+    }
+
+    public async Task<List<SaldoCuentaDto>> ObtenerSaldosCuentaAsync(int cuentaId)
+        => await GetAuthenticatedAsync<List<SaldoCuentaDto>>($"api/cuentas/{cuentaId}/saldos");
+
+    // Monedas
+
+    public async Task<List<MonedaDto>> ObtenerMonedasAsync()
+        => await GetAuthenticatedAsync<List<MonedaDto>>("api/monedas");
+
+    public async Task<MonedaDto> CrearMonedaAsync(CrearMonedaRequest request)
+        => await PostAuthenticatedAsync<MonedaDto>("api/monedas", request);
+
+    // Cotizaciones
+
+    public async Task<List<CotizacionDto>> ObtenerCotizacionesHoyAsync()
+        => await GetAuthenticatedAsync<List<CotizacionDto>>("api/cotizaciones/hoy");
+
+    public async Task GuardarCotizacionAsync(CrearCotizacionRequest request)
+        => await PostAuthenticatedAsync<object>("api/cotizaciones", request);
+
+    // Clientes
+
+    public async Task<List<ClienteDto>> ObtenerClientesAsync()
+        => await GetAuthenticatedAsync<List<ClienteDto>>("api/clientes");
+
+    // Arqueo
+
+    public async Task<ArqueoDto> RealizarArqueoAsync(CrearArqueoRequest request)
+        => await PostAuthenticatedAsync<ArqueoDto>("api/arqueo", request);
+
+    // Cierre de Caja
+
+    public async Task<CierreCajaDto?> ObtenerCierreHoyAsync()
+    {
+        try { return await GetAuthenticatedAsync<CierreCajaDto>("api/cierre/hoy"); }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound) { return null; }
+    }
+
+    public async Task<CierreCajaDto> GenerarCierreAsync(string observaciones = "")
+        => await PostAuthenticatedAsync<CierreCajaDto>("api/cierre/generar", new { Observaciones = observaciones });
+
+    public async Task<CierreCajaDto> CerrarDefinitivoAsync(int id)
+        => await PostAuthenticatedAsync<CierreCajaDto>($"api/cierre/{id}/cerrar", new { });
+
+    // PPP
+
+    public async Task<decimal> ObtenerPPPAsync(string moneda)
+    {
+        var result = await GetAuthenticatedAsync<JsonElement>($"api/ppp/{Uri.EscapeDataString(moneda)}");
+        return result.GetProperty("ppp").GetDecimal();
+    }
+
+    public async Task<PPPValidacionDto> ValidarVentaPPPAsync(string moneda, decimal cotizacion)
+        => await GetAuthenticatedAsync<PPPValidacionDto>($"api/ppp/{Uri.EscapeDataString(moneda)}/validar-venta?cotizacion={cotizacion}");
+
+    // Dashboard
+
+    public async Task<DashboardDto> ObtenerDashboardAsync()
+        => await GetAuthenticatedAsync<DashboardDto>("api/dashboard");
+
+    // Sync
+
+    public async Task<SyncPushResponse> SyncPushAsync(SyncPushRequest request)
+        => await PostAuthenticatedAsync<SyncPushResponse>("api/sync/push", request);
+
+    public async Task<SyncPullResponse> SyncPullAsync()
+        => await GetAuthenticatedAsync<SyncPullResponse>("api/sync/pull");
+
+    // Internal helpers
+
+    private async Task<T> GetAuthenticatedAsync<T>(string url)
+    {
+        await EnsureAuthenticatedAsync();
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _tokenStore.AccessToken);
+
+        var response = await _http.SendAsync(request);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            if (await TryRefreshAsync())
+            {
+                request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _tokenStore.AccessToken);
+                response = await _http.SendAsync(request);
+            }
+            else
+            {
+                OnSessionExpired?.Invoke();
+                throw new UnauthorizedAccessException("Sesion expirada");
+            }
+        }
+
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<T>(JsonOptions))!;
+    }
+
+    private async Task<T> PostAuthenticatedAsync<T>(string url, object body)
+    {
+        await EnsureAuthenticatedAsync();
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _tokenStore.AccessToken);
+        request.Content = JsonContent.Create(body);
+
+        var response = await _http.SendAsync(request);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            if (await TryRefreshAsync())
+            {
+                request = new HttpRequestMessage(HttpMethod.Post, url);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _tokenStore.AccessToken);
+                request.Content = JsonContent.Create(body);
+                response = await _http.SendAsync(request);
+            }
+            else
+            {
+                OnSessionExpired?.Invoke();
+                throw new UnauthorizedAccessException("Sesion expirada");
+            }
+        }
+
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<T>(JsonOptions))!;
+    }
+
+    private async Task EnsureAuthenticatedAsync()
+    {
+        if (!_tokenStore.IsAuthenticated)
+            throw new UnauthorizedAccessException("No autenticado. Debe hacer login primero.");
+
+        if (_tokenStore.NeedsRefresh)
+            await TryRefreshAsync();
+    }
+
+    private async Task<bool> TryRefreshAsync()
+    {
+        if (string.IsNullOrEmpty(_tokenStore.RefreshToken)) return false;
+
+        await _refreshLock.WaitAsync();
+        try
+        {
+            if (!_tokenStore.NeedsRefresh) return true;
+            var result = await RefreshTokenAsync(_tokenStore.RefreshToken);
+            return result != null;
+        }
+        finally
+        {
+            _refreshLock.Release();
+        }
+    }
+}

@@ -1,0 +1,79 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using CasaCambio.Shared.DTOs;
+using CasaCambio.Shared.Requests;
+using CasaCambio.Shared.Responses;
+
+namespace SistemaCambio.ApiClient;
+
+public interface ICasaCambioApiClient
+{
+    // Auth
+    Task<AuthResponse> LoginAsync(LoginRequest request);
+    Task<AuthResponse?> RefreshTokenAsync(string refreshToken);
+    Task<bool> HealthCheckAsync();
+
+    // Operaciones
+    Task<OperacionResponse> CrearCompraAsync(CrearOperacionRequest request);
+    Task<OperacionResponse> CrearVentaAsync(CrearOperacionRequest request);
+    Task<OperacionResponse> CrearCreditoDebitoAsync(CrearCreditoDebitoRequest request);
+    Task<OperacionResponse> CrearInterbancarioAsync(CrearInterbancarioRequest request);
+    Task<PaginatedResponse<OperacionDto>> ObtenerOperacionesAsync(DateTime? desde = null, DateTime? hasta = null, string? tipo = null, int page = 1, int pageSize = 50);
+    Task<OperacionDto?> ObtenerOperacionAsync(int id);
+
+    // Cuentas
+    Task<List<CuentaDto>> ObtenerCuentasAsync();
+    Task<CuentaDto> CrearCuentaAsync(CrearCuentaRequest request);
+    Task<List<MovimientoDto>> ObtenerMovimientosCuentaAsync(int cuentaId, DateTime? desde = null, DateTime? hasta = null);
+    Task<List<SaldoCuentaDto>> ObtenerSaldosCuentaAsync(int cuentaId);
+
+    // Monedas
+    Task<List<MonedaDto>> ObtenerMonedasAsync();
+    Task<MonedaDto> CrearMonedaAsync(CrearMonedaRequest request);
+
+    // Cotizaciones
+    Task<List<CotizacionDto>> ObtenerCotizacionesHoyAsync();
+    Task GuardarCotizacionAsync(CrearCotizacionRequest request);
+
+    // Clientes
+    Task<List<ClienteDto>> ObtenerClientesAsync();
+
+    // Arqueo
+    Task<ArqueoDto> RealizarArqueoAsync(CrearArqueoRequest request);
+
+    // Cierre de Caja
+    Task<CierreCajaDto?> ObtenerCierreHoyAsync();
+    Task<CierreCajaDto> GenerarCierreAsync(string observaciones = "");
+    Task<CierreCajaDto> CerrarDefinitivoAsync(int id);
+
+    // PPP
+    Task<decimal> ObtenerPPPAsync(string moneda);
+    Task<PPPValidacionDto> ValidarVentaPPPAsync(string moneda, decimal cotizacion);
+
+    // Dashboard
+    Task<DashboardDto> ObtenerDashboardAsync();
+
+    // Sync
+    Task<SyncPushResponse> SyncPushAsync(SyncPushRequest request);
+    Task<SyncPullResponse> SyncPullAsync();
+
+    // Events
+    event Action? OnSessionExpired;
+}
+
+public class PPPValidacionDto
+{
+    public string Moneda { get; set; } = "";
+    public decimal PPP { get; set; }
+    public decimal CotizacionVenta { get; set; }
+    public decimal Ganancia { get; set; }
+    public bool EsRentable { get; set; }
+}
+
+public class SyncPullResponse
+{
+    public List<CuentaDto> Cuentas { get; set; } = new();
+    public List<MonedaDto> Monedas { get; set; } = new();
+    public List<CotizacionDto> Cotizaciones { get; set; } = new();
+}

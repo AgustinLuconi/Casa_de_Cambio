@@ -1,0 +1,48 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="SistemaCambio.Views.LoginWindow"
+        Title="Casa de Cambio - Iniciar Sesion"
+        Width="420" Height="480"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        Background="#0d1117">
+    <Border Background="#161b22" CornerRadius="12" Margin="30" Padding="30"
+            BorderBrush="#30363d" BorderThickness="1">
+        <StackPanel Spacing="20" VerticalAlignment="Center">
+            <icon:MaterialIcon Kind="CurrencyUsd" Width="48" Height="48"
+                               Foreground="#58a6ff" HorizontalAlignment="Center" />
+            <TextBlock Text="Casa de Cambio" FontSize="24" FontWeight="Bold"
+                       Foreground="#e6edf3" HorizontalAlignment="Center" />
+            <TextBlock Text="Iniciar Sesion" FontSize="14"
+                       Foreground="#8b949e" HorizontalAlignment="Center" />
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Usuario" Foreground="#c9d1d9" FontSize="12" />
+                <TextBox x:Name="txtUsuario" Watermark="admin"
+                         Background="#0d1117" Foreground="#e6edf3"
+                         BorderBrush="#30363d" Padding="10" />
+            </StackPanel>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Contrasena" Foreground="#c9d1d9" FontSize="12" />
+                <TextBox x:Name="txtPassword" PasswordChar="*" Watermark="********"
+                         Background="#0d1117" Foreground="#e6edf3"
+                         BorderBrush="#30363d" Padding="10"
+                         KeyDown="TxtPassword_KeyDown" />
+            </StackPanel>
+
+            <TextBlock x:Name="txtError" Foreground="#f85149" FontSize="12"
+                       IsVisible="False" TextWrapping="Wrap" />
+
+            <Button x:Name="btnLogin" Content="Iniciar Sesion"
+                    HorizontalAlignment="Stretch" Height="40"
+                    HorizontalContentAlignment="Center"
+                    Background="#238636" Foreground="White" FontWeight="SemiBold"
+                    Click="BtnLogin_Click" />
+
+            <TextBlock x:Name="txtStatus" Text="" Foreground="#8b949e"
+                       FontSize="11" HorizontalAlignment="Center" />
+        </StackPanel>
+    </Border>
+</Window>

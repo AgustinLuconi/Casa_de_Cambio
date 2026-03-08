@@ -1,37 +1,34 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using SistemaCambio.Models;
+using SistemaCambio.ApiClient;
+using SistemaCambio.LocalDb;
+using SistemaCambio.Services.Offline;
 
 namespace SistemaCambio.Services
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection ConfigurarServicios(this IServiceCollection services)
+        public static IServiceCollection ConfigurarServicios(this IServiceCollection services, string apiBaseUrl = "http://localhost:5001")
         {
-            // DbContext Factory — centraliza la configuración de la conexión
-            services.AddDbContextFactory<AppDbContext>(options =>
-            {
-                options.UseNpgsql("Host=localhost;Database=SistemaCambio;Username=postgres;Password=19022006");
+            // Auth token store (singleton, shared across all services)
+            services.AddSingleton<AuthTokenStore>();
 
-#if DEBUG
-                options
-                    .EnableSensitiveDataLogging()
-                    .LogTo(System.Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information);
-#endif
+            // API Client via HttpClientFactory
+            services.AddHttpClient<ICasaCambioApiClient, CasaCambioApiClient>(client =>
+            {
+                client.BaseAddress = new Uri(apiBaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(15);
             });
 
-            // Servicios de negocio (Singleton porque son stateless, solo usan factory)
-            services.AddSingleton<IAuditService, AuditService>();
-            services.AddSingleton<ICierreCajaService, CierreCajaService>();
-            services.AddSingleton<IOperacionService, OperacionService>();
-            services.AddSingleton<IPPPService, PPPService>();
-            services.AddSingleton<IArqueoService, ArqueoService>();
-            services.AddSingleton<IDashboardService, DashboardService>();
-            services.AddSingleton<IQueryService, QueryService>();
+            // SQLite local database
+            services.AddDbContextFactory<LocalDbContext>(options =>
+                options.UseSqlite($"Data Source={LocalDbContext.GetDefaultDbPath()}"));
 
-            // Validadores
-            services.AddSingleton<Validators.OperacionValidator>();
-            services.AddSingleton<Validators.ArqueoValidator>();
+            // Offline services
+            services.AddSingleton<ConnectivityChecker>();
+            services.AddSingleton<OfflineOperacionService>();
+            services.AddHostedService<SyncService>();
 
             return services;
         }

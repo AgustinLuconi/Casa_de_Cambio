@@ -1,19 +1,17 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using SistemaCambio.Models;
+using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
-using SistemaCambio.Services.Validators;
+using SistemaCambio.Services.Offline;
+using CasaCambio.Shared.DTOs;
+using CasaCambio.Shared.Requests;
 using System;
 using System.Linq;
 
 namespace SistemaCambio.Views
 {
-    /// <summary>
-    /// Clase auxiliar para almacenar CuentaId + Moneda juntos en el Tag del combo.
-    /// </summary>
     public class CuentaMonedaTag
     {
         public int CuentaId { get; set; }
@@ -23,62 +21,43 @@ namespace SistemaCambio.Views
 
     public partial class CompraWindow : Window
     {
-        private readonly IOperacionService _operacionService;
-        private readonly IPPPService _pppService;
-        private readonly IDbContextFactory<AppDbContext> _contextFactory;
-        private readonly OperacionValidator _validator;
+        private readonly ICasaCambioApiClient _apiClient;
+        private readonly OfflineOperacionService _offlineService;
 
         public CompraWindow()
         {
-            _operacionService = App.Services.GetRequiredService<IOperacionService>();
-            _pppService = App.Services.GetRequiredService<IPPPService>();
-            _contextFactory = App.Services.GetRequiredService<IDbContextFactory<AppDbContext>>();
-            _validator = App.Services.GetRequiredService<OperacionValidator>();
+            _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
+            _offlineService = App.Services.GetRequiredService<OfflineOperacionService>();
 
             InitializeComponent();
-            CargarDatos();
+            CargarDatosAsync();
         }
 
-        private void CargarDatos()
+        private async void CargarDatosAsync()
         {
-            using var db = _contextFactory.CreateDbContext();
-
-            // Cargar monedas dinámicamente
-            var monedas = db.Monedas.Where(m => m.Activa).ToList();
-            cmbMoneda.Items.Clear();
-            
-            if (monedas.Any())
+            try
             {
+                var monedas = await _apiClient.ObtenerMonedasAsync();
+                cmbMoneda.Items.Clear();
                 foreach (var moneda in monedas)
-                {
-                    cmbMoneda.Items.Add(new ComboBoxItem { Content = $"{moneda.Codigo} - {moneda.Nombre}", Tag = moneda.Id });
-                }
+                    cmbMoneda.Items.Add(new ComboBoxItem { Content = $"{moneda.Codigo} - {moneda.Nombre}", Tag = moneda.Codigo });
+                if (cmbMoneda.Items.Count > 0) cmbMoneda.SelectedIndex = 0;
+
+                var cuentas = await _apiClient.ObtenerCuentasAsync();
+                CargarComboCuentas(cuentas);
+                await CargarCotizacionDelDiaAsync();
             }
-            else
+            catch (Exception ex)
             {
-                cmbMoneda.Items.Add(new ComboBoxItem { Content = "USD - Dólar", Tag = "USD" });
-                cmbMoneda.Items.Add(new ComboBoxItem { Content = "EUR - Euro", Tag = "EUR" });
+                NotificationService.Error("Error al cargar datos", ex.Message);
             }
-            cmbMoneda.SelectedIndex = 0;
-
-            // Cargar cuentas
-            CargarComboCuentas(db);
-
-            CargarCotizacionDelDia();
-            ActualizarLabelsMoneda();
         }
 
-        private void CargarComboCuentas(AppDbContext db)
+        private void CargarComboCuentas(System.Collections.Generic.List<CuentaDto> cuentas)
         {
-            var cuentas = db.Cuentas
-                .Include(c => c.Saldos)
-                .OrderBy(c => c.Nombre)
-                .ToList();
-
             cmbDestino.Items.Clear();
             cmbOrigen.Items.Clear();
-
-            foreach (var cuenta in cuentas)
+            foreach (var cuenta in cuentas.OrderBy(c => c.Nombre))
             {
                 if (cuenta.Saldos.Any())
                 {
@@ -97,15 +76,13 @@ namespace SistemaCambio.Views
                     cmbOrigen.Items.Add(new ComboBoxItem { Content = $"{cuenta.Nombre} (ARS)", Tag = tag });
                 }
             }
-
             if (cmbDestino.Items.Count > 0) cmbDestino.SelectedIndex = 0;
             if (cmbOrigen.Items.Count > 0) cmbOrigen.SelectedIndex = 0;
         }
 
         private void CmbMoneda_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
-            CargarCotizacionDelDia();
-            ActualizarLabelsMoneda();
+            _ = CargarCotizacionDelDiaAsync();
         }
 
         private string ObtenerCodigoMonedaSeleccionada()
@@ -113,54 +90,32 @@ namespace SistemaCambio.Views
             if (cmbMoneda.SelectedItem is ComboBoxItem item)
             {
                 var content = item.Content?.ToString() ?? "";
-                if (content.Contains(" - "))
-                {
-                    return content.Split(" - ")[0].Trim();
-                }
+                if (content.Contains(" - ")) return content.Split(" - ")[0].Trim();
             }
             return "USD";
         }
 
-        private void ActualizarLabelsMoneda()
-        {
-            // Removed to allow agnostic account choice rather than forced matching
-        }
+        private void ActualizarLabelsMoneda() { }
 
-        private void CargarCotizacionDelDia()
+        private async System.Threading.Tasks.Task CargarCotizacionDelDiaAsync()
         {
             try
             {
-                using var db = _contextFactory.CreateDbContext();
-                var selectedItem = cmbMoneda.SelectedItem as ComboBoxItem;
-                if (selectedItem?.Tag is int monedaId)
-                {
-                    var cotizacion = db.CotizacionesDiarias
-                        .Where(c => c.MonedaId == monedaId && c.Fecha.Date == DateTime.UtcNow.Date)
-                        .FirstOrDefault();
-
-                    if (cotizacion != null)
-                    {
-                        txtCotizacion.Text = cotizacion.CotizacionCompra.ToString("N5");
-                    }
-                }
+                var codigo = ObtenerCodigoMonedaSeleccionada();
+                var cotizaciones = await _apiClient.ObtenerCotizacionesHoyAsync();
+                var cot = cotizaciones.FirstOrDefault(c => c.CodigoMoneda == codigo);
+                if (cot != null) txtCotizacion.Text = cot.CotizacionCompra.ToString("N5");
             }
-            catch
-            {
-            }
+            catch { }
         }
 
-        private decimal ParsearMonto(string? texto)
-        {
-            return MontoHelper.Parsear(texto);
-        }
+        private decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
 
         private void Recalcular_KeyUp(object? sender, KeyEventArgs e)
         {
             decimal montoDestino = ParsearMonto(txtMontoDestino.Text);
             decimal cotizacion = ParsearMonto(txtCotizacion.Text);
-            decimal montoOrigen = montoDestino * cotizacion;
-            txtMontoOrigen.Text = montoOrigen.ToString("N2");
-            
+            txtMontoOrigen.Text = (montoDestino * cotizacion).ToString("N2");
             CalcularVuelto();
         }
 
@@ -168,16 +123,12 @@ namespace SistemaCambio.Views
         {
             decimal montoOrigen = ParsearMonto(txtMontoOrigen.Text);
             decimal pagaCon = ParsearMonto(txtPagaCon.Text);
-            decimal vuelto = pagaCon - montoOrigen;
-            txtVuelto.Text = vuelto.ToString("N2");
+            txtVuelto.Text = (pagaCon - montoOrigen).ToString("N2");
         }
 
         public void TextBox_GotFocus(object? sender, GotFocusEventArgs e)
         {
-            if (sender is TextBox textBox)
-            {
-                textBox.SelectAll();
-            }
+            if (sender is TextBox textBox) textBox.SelectAll();
         }
 
         private async void BotonAceptar_Click(object? sender, RoutedEventArgs e)
@@ -191,80 +142,25 @@ namespace SistemaCambio.Views
             var itemOrigen = cmbOrigen.SelectedItem as ComboBoxItem;
             var itemDestino = cmbDestino.SelectedItem as ComboBoxItem;
 
-            if (itemOrigen?.Tag is not CuentaMonedaTag tagOrigen ||
-                itemDestino?.Tag is not CuentaMonedaTag tagDestino)
+            if (itemOrigen?.Tag is not CuentaMonedaTag tagOrigen || itemDestino?.Tag is not CuentaMonedaTag tagDestino)
             {
-                NotificationService.Warning("Selección incompleta", "Seleccione las cuentas");
+                NotificationService.Warning("Seleccion incompleta", "Seleccione las cuentas");
                 return;
             }
 
-            string monedaDestino = tagDestino.Moneda;
-            string monedaOrigen = tagOrigen.Moneda;
+            var request = new CrearOperacionRequest
+            {
+                CuentaOrigenId = tagOrigen.CuentaId,
+                CuentaDestinoId = tagDestino.CuentaId,
+                MonedaOrigen = tagOrigen.Moneda,
+                MonedaDestino = tagDestino.Moneda,
+                MontoOrigen = montoOrigen,
+                MontoDestino = montoDestino,
+                Cotizacion = cotizacion,
+                Observaciones = txtObservaciones.Text ?? "Compra de divisa"
+            };
 
-            bool esInterbancaria = (cmbTipoOperacion.SelectedItem as ComboBoxItem)?.Content?.ToString() == "Interbancaria";
-
-            ValidationResult validacion;
-            if (esInterbancaria)
-            {
-                validacion = _validator.ValidarOperacionInterbancaria(
-                    tagOrigen.CuentaId, tagDestino.CuentaId,
-                    monedaOrigen, monedaDestino,
-                    montoOrigen, montoDestino);
-            }
-            else
-            {
-                // ═══ VALIDACIÓN CENTRALIZADA ═══
-                validacion = _validator.ValidarOperacion(
-                    "Compra", tagOrigen.CuentaId, tagDestino.CuentaId,
-                    monedaOrigen, monedaDestino,
-                    montoOrigen, montoDestino, cotizacion);
-            }
-
-            if (validacion.HasErrors)
-            {
-                NotificationService.Error("Errores de validación",
-                    string.Join("\n", validacion.Errors.Select(err => $"• {err.Message}")));
-                return;
-            }
-
-            if (validacion.HasWarnings)
-            {
-                var mensajeWarnings = string.Join("\n\n",
-                    validacion.Warnings.Select(w => $"⚠️ {w.Message}\n   {w.Details}"));
-                var continuar = await MostrarConfirmacion("Advertencias detectadas",
-                    $"{mensajeWarnings}\n\n¿Desea continuar de todas formas?");
-                if (!continuar) return;
-            }
-
-            OperacionResult resultado;
-            if (esInterbancaria)
-            {
-                resultado = _operacionService.GuardarOperacionInterbancaria(
-                    tipo: "Compra",
-                    cuentaOrigenId: tagOrigen.CuentaId,
-                    cuentaDestinoId: tagDestino.CuentaId,
-                    monedaOrigen: monedaOrigen,
-                    monedaDestino: monedaDestino,
-                    montoOrigen: montoOrigen,
-                    montoDestino: montoDestino,
-                    cotizacion: cotizacion,
-                    observaciones: txtObservaciones.Text ?? "Compra de divisa (Interbancaria)"
-                );
-            }
-            else
-            {
-                resultado = _operacionService.GuardarOperacion(
-                    tipo: "Compra",
-                    cuentaOrigenId: tagOrigen.CuentaId,
-                    cuentaDestinoId: tagDestino.CuentaId,
-                    monedaOrigen: monedaOrigen,
-                    monedaDestino: monedaDestino,
-                    montoOrigen: montoOrigen,
-                    montoDestino: montoDestino,
-                    cotizacion: cotizacion,
-                    observaciones: txtObservaciones.Text ?? "Compra de divisa"
-                );
-            }
+            var resultado = await _offlineService.GuardarCompraAsync(request);
 
             if (!resultado.Exitoso)
             {
@@ -272,38 +168,19 @@ namespace SistemaCambio.Views
                 return;
             }
 
-            // Registrar en PPP
-            if (monedaDestino != "ARS")
-                _pppService.RegistrarCompra(monedaDestino, montoDestino, montoOrigen);
-
-            NotificationService.OperacionGuardada("Compra", resultado.OperacionId ?? 0);
+            if (resultado.IsOffline)
+                NotificationService.Warning("Guardada offline", resultado.Mensaje);
+            else
+                NotificationService.OperacionGuardada("Compra", resultado.OperacionId ?? 0);
             Close();
         }
 
         private async System.Threading.Tasks.Task<bool> MostrarConfirmacion(string titulo, string mensaje)
         {
-            var dialog = new Window
-            {
-                Title = titulo,
-                Width = 480,
-                Height = 220,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                CanResize = false
-            };
+            var dialog = new Window { Title = titulo, Width = 480, Height = 220, WindowStartupLocation = WindowStartupLocation.CenterOwner, CanResize = false };
             var panel = new StackPanel { Margin = new Avalonia.Thickness(20) };
-            panel.Children.Add(new TextBlock
-            {
-                Text = mensaje,
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                MaxWidth = 440
-            });
-            var btnPanel = new StackPanel
-            {
-                Orientation = Avalonia.Layout.Orientation.Horizontal,
-                Spacing = 10,
-                Margin = new Avalonia.Thickness(0, 15, 0, 0),
-                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
-            };
+            panel.Children.Add(new TextBlock { Text = mensaje, TextWrapping = Avalonia.Media.TextWrapping.Wrap, MaxWidth = 440 });
+            var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, Margin = new Avalonia.Thickness(0, 15, 0, 0), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
             bool continuar = false;
             var btnContinuar = new Button { Content = "Continuar de todas formas" };
             var btnCancelar = new Button { Content = "Cancelar" };
@@ -317,9 +194,6 @@ namespace SistemaCambio.Views
             return continuar;
         }
 
-        private void BotonCancelar_Click(object? sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+        private void BotonCancelar_Click(object? sender, RoutedEventArgs e) => Close();
     }
 }
