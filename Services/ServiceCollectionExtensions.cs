@@ -9,7 +9,7 @@ namespace SistemaCambio.Services
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection ConfigurarServicios(this IServiceCollection services, string apiBaseUrl = "http://localhost:5001")
+        public static IServiceCollection ConfigurarServicios(this IServiceCollection services, string apiBaseUrl = "https://casa-cambio-api.fly.dev")
         {
             // Auth token store (singleton, shared across all services)
             services.AddSingleton<AuthTokenStore>();
