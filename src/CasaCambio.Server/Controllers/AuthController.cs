@@ -67,7 +67,12 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("health")]
-    public IActionResult Health() => Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
+    public async Task<IActionResult> Health()
+    {
+        await using var db = await _contextFactory.CreateDbContextAsync();
+        var canConnect = await db.Database.CanConnectAsync();
+        return Ok(new { status = canConnect ? "healthy" : "degraded", timestamp = DateTime.UtcNow });
+    }
 }
 
 public class RefreshRequest
