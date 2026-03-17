@@ -35,4 +35,8 @@
   <ItemGroup>
     <ProjectReference Include="src\CasaCambio.Shared\CasaCambio.Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
 </Project>

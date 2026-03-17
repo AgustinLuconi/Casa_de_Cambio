@@ -41,6 +41,9 @@ public partial class App : Application
                 localDb.Database.EnsureCreated();
             }
 
+            // Prevent app from shutting down when LoginWindow closes
+            desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+
             // Show login window first
             var loginWindow = new LoginWindow();
             loginWindow.Closed += (s, e) =>
@@ -48,11 +51,13 @@ public partial class App : Application
                 if (loginWindow.LoginExitoso)
                 {
                     var apiClient = Services.GetRequiredService<ICasaCambioApiClient>();
-                    desktop.MainWindow = new MainWindow
+                    var mainWindow = new MainWindow
                     {
                         DataContext = new MainWindowViewModel(apiClient),
                     };
-                    desktop.MainWindow.Show();
+                    desktop.MainWindow = mainWindow;
+                    desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnMainWindowClose;
+                    mainWindow.Show();
                 }
                 else
                 {

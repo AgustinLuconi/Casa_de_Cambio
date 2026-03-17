@@ -3,46 +3,153 @@
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         x:Class="SistemaCambio.Views.LoginWindow"
         Title="Casa de Cambio - Iniciar Sesion"
-        Width="420" Height="480"
+        Width="480" Height="660"
         WindowStartupLocation="CenterScreen"
         CanResize="False"
-        Background="#0d1117">
-    <Border Background="#161b22" CornerRadius="12" Margin="30" Padding="30"
-            BorderBrush="#30363d" BorderThickness="1">
-        <StackPanel Spacing="20" VerticalAlignment="Center">
-            <icon:MaterialIcon Kind="CurrencyUsd" Width="48" Height="48"
-                               Foreground="#58a6ff" HorizontalAlignment="Center" />
-            <TextBlock Text="Casa de Cambio" FontSize="24" FontWeight="Bold"
-                       Foreground="#e6edf3" HorizontalAlignment="Center" />
-            <TextBlock Text="Iniciar Sesion" FontSize="14"
-                       Foreground="#8b949e" HorizontalAlignment="Center" />
+        Background="#101c22">
 
-            <StackPanel Spacing="5">
-                <TextBlock Text="Usuario" Foreground="#c9d1d9" FontSize="12" />
-                <TextBox x:Name="txtUsuario" Watermark="admin"
-                         Background="#0d1117" Foreground="#e6edf3"
-                         BorderBrush="#30363d" Padding="10" />
+    <Grid>
+        <!-- Brillo ambiental esquina superior izquierda -->
+        <Ellipse Width="350" Height="350" Fill="#13a4ec" Opacity="0.06"
+                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-80,-60,0,0">
+            <Ellipse.Effect>
+                <BlurEffect Radius="80"/>
+            </Ellipse.Effect>
+        </Ellipse>
+
+        <!-- Brillo ambiental esquina inferior derecha -->
+        <Ellipse Width="280" Height="280" Fill="#0d79b3" Opacity="0.07"
+                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-60,-60">
+            <Ellipse.Effect>
+                <BlurEffect Radius="80"/>
+            </Ellipse.Effect>
+        </Ellipse>
+
+        <!-- Tarjeta principal (glassmorphism) -->
+        <Border Background="#14232b" CornerRadius="16"
+                BorderBrush="#1e3441" BorderThickness="1"
+                BoxShadow="0 25 60 0 #99000000"
+                Width="400"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                ClipToBounds="True">
+            <StackPanel>
+
+                <!-- Imagen de cabecera con overlay gradiente -->
+                <Grid Height="140" ClipToBounds="True">
+                    <Image Source="avares://SistemaCambio/Assets/login_header.jpg"
+                           Stretch="UniformToFill"/>
+                    <Rectangle>
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#0014232b" Offset="0"/>
+                                <GradientStop Color="#CC14232b" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                </Grid>
+
+                <!-- Contenido de la tarjeta -->
+                <StackPanel Spacing="16" Margin="32,0,32,32">
+
+                    <!-- Ícono flotante sobre la imagen -->
+                    <Border Width="52" Height="52" CornerRadius="14"
+                            Background="#1a3a50"
+                            HorizontalAlignment="Center"
+                            Margin="0,-26,0,0">
+                        <icon:MaterialIcon Kind="CurrencyUsd" Width="28" Height="28"
+                                           Foreground="#13a4ec"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Títulos -->
+                    <TextBlock Text="Casa de Cambio"
+                               FontSize="26" FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
+
+                    <TextBlock Text="Sistema de Gestion de Divisas"
+                               FontSize="13" Foreground="#94A3B8"
+                               HorizontalAlignment="Center"
+                               Margin="0,-8,0,4"/>
+
+                    <!-- Campo: Usuario -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Usuario" Foreground="#CBD5E1" FontSize="13"/>
+                        <Grid>
+                            <TextBox x:Name="txtUsuario"
+                                     Padding="44,12,12,12"
+                                     Height="44"
+                                     Background="#0c151a"
+                                     Foreground="White"
+                                     BorderBrush="#233c4a"
+                                     BorderThickness="1"
+                                     CornerRadius="10"
+                                     Watermark="Ingrese su usuario"/>
+                            <icon:MaterialIcon Kind="AccountOutline"
+                                               Width="18" Height="18"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"
+                                               Margin="14,0,0,0"
+                                               Foreground="#64748B"
+                                               IsHitTestVisible="False"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Campo: Contraseña -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Contrasena" Foreground="#CBD5E1" FontSize="13"/>
+                        <Grid>
+                            <TextBox x:Name="txtPassword"
+                                     PasswordChar="●"
+                                     Padding="44,12,12,12"
+                                     Height="44"
+                                     Background="#0c151a"
+                                     Foreground="White"
+                                     BorderBrush="#233c4a"
+                                     BorderThickness="1"
+                                     CornerRadius="10"
+                                     Watermark="Contrasena"
+                                     KeyDown="TxtPassword_KeyDown"/>
+                            <icon:MaterialIcon Kind="LockOutline"
+                                               Width="18" Height="18"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"
+                                               Margin="14,0,0,0"
+                                               Foreground="#64748B"
+                                               IsHitTestVisible="False"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Mensaje de error -->
+                    <TextBlock x:Name="txtError"
+                               Foreground="#f85149" FontSize="12"
+                               IsVisible="False" TextWrapping="Wrap"
+                               Margin="0,-4,0,0"/>
+
+                    <!-- Botón de inicio de sesión -->
+                    <Button x:Name="btnLogin"
+                            Height="44" CornerRadius="10"
+                            Background="#13a4ec" Foreground="White"
+                            FontWeight="SemiBold" FontSize="14"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Margin="0,4,0,0"
+                            Click="BtnLogin_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Iniciar Sesion" VerticalAlignment="Center"/>
+                            <icon:MaterialIcon Kind="ArrowRight" Width="18" Height="18"
+                                               VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Estado / Loading -->
+                    <TextBlock x:Name="txtStatus" Text=""
+                               Foreground="#94A3B8" FontSize="11"
+                               HorizontalAlignment="Center"/>
+
+                </StackPanel>
             </StackPanel>
-
-            <StackPanel Spacing="5">
-                <TextBlock Text="Contrasena" Foreground="#c9d1d9" FontSize="12" />
-                <TextBox x:Name="txtPassword" PasswordChar="*" Watermark="********"
-                         Background="#0d1117" Foreground="#e6edf3"
-                         BorderBrush="#30363d" Padding="10"
-                         KeyDown="TxtPassword_KeyDown" />
-            </StackPanel>
-
-            <TextBlock x:Name="txtError" Foreground="#f85149" FontSize="12"
-                       IsVisible="False" TextWrapping="Wrap" />
-
-            <Button x:Name="btnLogin" Content="Iniciar Sesion"
-                    HorizontalAlignment="Stretch" Height="40"
-                    HorizontalContentAlignment="Center"
-                    Background="#238636" Foreground="White" FontWeight="SemiBold"
-                    Click="BtnLogin_Click" />
-
-            <TextBlock x:Name="txtStatus" Text="" Foreground="#8b949e"
-                       FontSize="11" HorizontalAlignment="Center" />
-        </StackPanel>
-    </Border>
+        </Border>
+    </Grid>
 </Window>
