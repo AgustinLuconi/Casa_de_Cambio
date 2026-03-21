@@ -10,6 +10,7 @@ using CasaCambio.Shared.Requests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 
 namespace SistemaCambio.Views
 {
@@ -71,14 +72,52 @@ namespace SistemaCambio.Views
 
         private async void BtnGuardarCambios_Click(object? sender, RoutedEventArgs e)
         {
-            await MostrarMensaje("Info", "Las monedas se gestionan individualmente desde el servidor.");
+            if (dgMonedas.ItemsSource is not System.Collections.IEnumerable items) return;
+            var monedas = items.OfType<MonedaDto>().ToList();
+            var errores = new List<string>();
+            foreach (var m in monedas)
+            {
+                try
+                {
+                    await _apiClient.ActualizarMonedaAsync(m.Id, new ActualizarMonedaRequest { Codigo = m.Codigo, Nombre = m.Nombre, Activa = m.Activa });
+                }
+                catch (HttpRequestException ex) { errores.Add($"{m.Codigo}: {ex.Message}"); }
+            }
+            if (errores.Any())
+                await MostrarMensaje("Error", string.Join("\n", errores));
+            else
+                await MostrarMensaje("Éxito", $"{monedas.Count} moneda(s) actualizadas correctamente.");
+            CargarMonedasAsync();
         }
 
         private void BtnRefrescarMonedas_Click(object? sender, RoutedEventArgs e) => CargarMonedasAsync();
 
         private async void BtnEliminarMoneda_Click(object? sender, RoutedEventArgs e)
         {
-            await MostrarMensaje("Info", "La eliminacion de monedas se gestiona desde el servidor.");
+            if ((sender as Button)?.DataContext is not MonedaDto moneda) return;
+
+            var dialog = new Window { Title = "Eliminar Moneda", Width = 420, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#161b22")) };
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 15 };
+            panel.Children.Add(new TextBlock { Text = $"¿Está seguro que desea eliminar la moneda \"{moneda.Codigo} - {moneda.Nombre}\"?\nEsta acción no se puede deshacer.", TextWrapping = Avalonia.Media.TextWrapping.Wrap, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#e6edf3")) });
+            var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
+            bool resultado = false;
+            var btnSi = new Button { Content = "Sí, eliminar", Width = 140, HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#da3633")), Foreground = Avalonia.Media.Brushes.White };
+            var btnNo = new Button { Content = "Cancelar", Width = 100, HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, Background = Avalonia.Media.Brushes.Transparent, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#e6edf3")) };
+            btnSi.Click += (s, ev) => { resultado = true; dialog.Close(); };
+            btnNo.Click += (s, ev) => dialog.Close();
+            btnPanel.Children.Add(btnSi); btnPanel.Children.Add(btnNo);
+            panel.Children.Add(btnPanel);
+            dialog.Content = panel;
+            await dialog.ShowDialog(this);
+
+            if (!resultado) return;
+            try
+            {
+                await _apiClient.EliminarMonedaAsync(moneda.Id);
+                await MostrarMensaje("Éxito", $"La moneda \"{moneda.Codigo}\" fue eliminada.");
+                CargarMonedasAsync();
+            }
+            catch (HttpRequestException ex) { await MostrarMensaje("Error", ex.Message); }
         }
 
         private async void BtnCargarCotizaciones_Click(object? sender, RoutedEventArgs e)

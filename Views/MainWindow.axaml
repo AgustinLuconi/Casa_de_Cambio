@@ -335,35 +335,38 @@
                           IsReadOnly="True">
                     
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80"/>
+                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
                         <DataGridTextColumn Header="CUENTA" Binding="{Binding Nombre}" Width="*" FontWeight="SemiBold"/>
-                        <DataGridTextColumn Header="TIPO" Binding="{Binding Tipo}" Width="120"/>
-                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="100" FontWeight="SemiBold"/>
-                        <DataGridTextColumn Header="SALDO" 
-                                            Binding="{Binding Saldo, StringFormat='{}{0:N2}'}" 
-                                            Width="180" 
-                                            FontWeight="Bold"/>
-                        <DataGridTemplateColumn Header="" Width="140">
+                        <DataGridTextColumn Header="TIPO" Binding="{Binding Tipo}" Width="110"/>
+                        <DataGridTextColumn Header="SALDOS" Binding="{Binding SaldosResumen}" Width="320"/>
+                        <DataGridTemplateColumn Header="" Width="150">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel x:CompileBindings="False" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                                        <Button Classes="Secondary" Background="Transparent" Padding="4" Margin="0" 
-                                                Cursor="Hand" ToolTip.Tip="Ver Detalles"
+                                    <StackPanel x:CompileBindings="False" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <!-- Ver Detalles: con etiqueta visible -->
+                                        <Button Background="#1A16A34A" BorderBrush="#3316A34A" BorderThickness="1"
+                                                CornerRadius="6" Padding="8,4" Margin="0"
+                                                Cursor="Hand" ToolTip.Tip="Ver todos los saldos de esta cuenta"
                                                 Command="{Binding #cuentasPanel.DataContext.VerDetalleCuentaCommand}"
                                                 CommandParameter="{Binding}">
-                                            <icon:MaterialIcon Kind="Eye" Width="16" Height="16" Foreground="{DynamicResource SuccessBrush}"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                                <icon:MaterialIcon Kind="Eye" Width="13" Height="13" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Detalles" FontSize="11" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                                            </StackPanel>
                                         </Button>
-                                        <Button Classes="Secondary" Background="Transparent" Padding="4" Margin="0" 
+                                        <!-- Editar -->
+                                        <Button Classes="Secondary" Background="Transparent" Padding="4" Margin="0"
                                                 Cursor="Hand" ToolTip.Tip="Editar Cuenta"
                                                 Command="{Binding #cuentasPanel.DataContext.EditarCuentaCommand}"
                                                 CommandParameter="{Binding}">
-                                            <icon:MaterialIcon Kind="Pencil" Width="16" Height="16" Foreground="{DynamicResource AccentBrush}"/>
+                                            <icon:MaterialIcon Kind="Pencil" Width="15" Height="15" Foreground="{DynamicResource AccentBrush}"/>
                                         </Button>
-                                        <Button Classes="Danger" Background="Transparent" Padding="4" Margin="0" 
+                                        <!-- Eliminar -->
+                                        <Button Classes="Danger" Background="Transparent" Padding="4" Margin="0"
                                                 Cursor="Hand" ToolTip.Tip="Eliminar Cuenta"
                                                 Command="{Binding #cuentasPanel.DataContext.EliminarCuentaCommand}"
                                                 CommandParameter="{Binding}">
-                                            <icon:MaterialIcon Kind="Delete" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"/>
+                                            <icon:MaterialIcon Kind="Delete" Width="15" Height="15" Foreground="{DynamicResource DangerBrush}"/>
                                         </Button>
                                     </StackPanel>
                                 </DataTemplate>

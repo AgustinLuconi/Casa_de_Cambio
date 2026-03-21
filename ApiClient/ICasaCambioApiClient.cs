@@ -25,12 +25,15 @@ public interface ICasaCambioApiClient
     // Cuentas
     Task<List<CuentaDto>> ObtenerCuentasAsync();
     Task<CuentaDto> CrearCuentaAsync(CrearCuentaRequest request);
+    Task EliminarCuentaAsync(int cuentaId);
     Task<List<MovimientoDto>> ObtenerMovimientosCuentaAsync(int cuentaId, DateTime? desde = null, DateTime? hasta = null);
     Task<List<SaldoCuentaDto>> ObtenerSaldosCuentaAsync(int cuentaId);
 
     // Monedas
     Task<List<MonedaDto>> ObtenerMonedasAsync();
     Task<MonedaDto> CrearMonedaAsync(CrearMonedaRequest request);
+    Task<MonedaDto> ActualizarMonedaAsync(int id, ActualizarMonedaRequest request);
+    Task EliminarMonedaAsync(int id);
 
     // Cotizaciones
     Task<List<CotizacionDto>> ObtenerCotizacionesHoyAsync();

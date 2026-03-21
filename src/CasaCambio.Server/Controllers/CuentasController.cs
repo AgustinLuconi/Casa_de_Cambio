@@ -59,4 +59,23 @@ public class CuentasController : ControllerBase
         var saldos = db.SaldosCuenta.Where(s => s.CuentaId == id).AsNoTracking().ToList();
         return Ok(saldos.Select(s => new SaldoCuentaDto { Moneda = s.Moneda, Saldo = s.Saldo }));
     }
+
+    [HttpDelete("{id}")]
+    public IActionResult EliminarCuenta(int id)
+    {
+        using var db = _contextFactory.CreateDbContext();
+        var cuenta = db.Cuentas.Include(c => c.Saldos).FirstOrDefault(c => c.Id == id);
+        if (cuenta == null)
+            return NotFound($"Cuenta {id} no encontrada.");
+        if (cuenta.Tipo == "Externo")
+            return BadRequest("No se puede eliminar la cuenta especial del sistema.");
+        bool tieneMovimientos = db.Movimientos.Any(m => m.CuentaId == id);
+        if (tieneMovimientos)
+            return BadRequest("No se puede eliminar una cuenta con movimientos registrados.");
+
+        db.SaldosCuenta.RemoveRange(cuenta.Saldos);
+        db.Cuentas.Remove(cuenta);
+        db.SaveChanges();
+        return NoContent();
+    }
 }

@@ -130,7 +130,7 @@ public partial class MainWindow : Window
 
     private async Task<bool> MostrarConfirmacionEnUI(string titulo, string mensaje)
     {
-        var dialog = new Window { Title = titulo, Width = 450, Height = 220, WindowStartupLocation = WindowStartupLocation.CenterOwner, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#161b22")) };
+        var dialog = new Window { Title = titulo, Width = 450, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#161b22")) };
         var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 15 };
         panel.Children.Add(new TextBlock { Text = mensaje, TextWrapping = Avalonia.Media.TextWrapping.Wrap, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#e6edf3")) });
         var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Avalonia.Thickness(0, 10, 0, 0) };
@@ -151,8 +151,8 @@ public partial class MainWindow : Window
         if (file != null)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("ID,Cuenta,Tipo,Moneda,Saldo");
-            foreach (var c in _viewModel.Cuentas) sb.AppendLine($"{c.Id},\"{c.Nombre}\",{c.Tipo},{c.Moneda},{c.Saldo}");
+            sb.AppendLine("ID,Cuenta,Tipo,Saldos");
+            foreach (var c in _viewModel.Cuentas) sb.AppendLine($"{c.Id},\"{c.Nombre}\",{c.Tipo},\"{c.SaldosResumen}\"");
             await using var stream = await file.OpenWriteAsync();
             await using var writer = new StreamWriter(stream);
             await writer.WriteAsync(sb.ToString());

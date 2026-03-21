@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Http;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -8,13 +10,20 @@ using SistemaCambio.ApiClient;
 
 namespace SistemaCambio.ViewModels
 {
-    public class CuentaResumenItem
+    public class SaldoInfo
+    {
+        public string Moneda { get; set; } = "";
+        public decimal Saldo { get; set; }
+    }
+
+    public class CuentaGrupoItem
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = "";
         public string Tipo { get; set; } = "";
-        public string Moneda { get; set; } = "";
-        public decimal Saldo { get; set; }
+        public string SaldosResumen { get; set; } = "";
+        public int CantidadMonedas { get; set; }
+        public List<SaldoInfo> Saldos { get; set; } = new();
     }
 
     public partial class MainWindowViewModel : ViewModelBase
@@ -22,7 +31,7 @@ namespace SistemaCambio.ViewModels
         private readonly ICasaCambioApiClient _apiClient;
 
         [ObservableProperty]
-        private ObservableCollection<CuentaResumenItem> cuentas;
+        private ObservableCollection<CuentaGrupoItem> cuentas;
 
         [ObservableProperty]
         private int cuentasCount;
@@ -56,7 +65,7 @@ namespace SistemaCambio.ViewModels
         public MainWindowViewModel(ICasaCambioApiClient apiClient)
         {
             _apiClient = apiClient;
-            Cuentas = new ObservableCollection<CuentaResumenItem>();
+            Cuentas = new ObservableCollection<CuentaGrupoItem>();
 
             AbrirDashboardCommand = new RelayCommand(() => SolicitarAbrirVentana?.Invoke("Dashboard"));
             AbrirCuentasCommand = new RelayCommand(() => SolicitarAbrirVentana?.Invoke("Cuentas"));
@@ -66,27 +75,36 @@ namespace SistemaCambio.ViewModels
             AbrirArqueoCommand = new RelayCommand(() => SolicitarAbrirVentana?.Invoke("Arqueo"));
             AbrirMovimientosCommand = new RelayCommand(() => SolicitarAbrirVentana?.Invoke("Movimientos"));
 
-            VerDetalleCuentaCommand = new RelayCommand<CuentaResumenItem>(obj =>
+            VerDetalleCuentaCommand = new RelayCommand<CuentaGrupoItem>(obj =>
             {
                 if (obj != null) SolicitarDetalleCuenta?.Invoke(obj.Id);
             });
 
-            EditarCuentaCommand = new RelayCommand<CuentaResumenItem>(obj =>
+            EditarCuentaCommand = new RelayCommand<CuentaGrupoItem>(obj =>
             {
                 if (obj != null) SolicitarEdicionCuenta?.Invoke(obj.Id);
             });
 
-            EliminarCuentaCommand = new AsyncRelayCommand<CuentaResumenItem>(async (obj) =>
+            EliminarCuentaCommand = new AsyncRelayCommand<CuentaGrupoItem>(async (obj) =>
             {
                 if (obj == null || MostrarConfirmacionEvent == null) return;
 
                 bool confirma = await MostrarConfirmacionEvent.Invoke(
                     "Eliminar Cuenta",
-                    $"Esta funcionalidad requiere conexion al servidor.\n\n¿Desea continuar?");
+                    $"¿Está seguro que desea eliminar la cuenta \"{obj.Nombre}\"?\nEsta acción no se puede deshacer.");
 
                 if (!confirma) return;
 
-                MostrarMensajeEvent?.Invoke("Info", "La eliminacion de cuentas se realiza desde el servidor.");
+                try
+                {
+                    await _apiClient.EliminarCuentaAsync(obj.Id);
+                    Cuentas.Remove(obj);
+                    MostrarMensajeEvent?.Invoke("Éxito", $"La cuenta \"{obj.Nombre}\" fue eliminada.");
+                }
+                catch (HttpRequestException ex)
+                {
+                    MostrarMensajeEvent?.Invoke("Error", ex.Message);
+                }
             });
 
             CargarDatosAsync();
@@ -104,33 +122,27 @@ namespace SistemaCambio.ViewModels
             {
                 var cuentasApi = await _apiClient.ObtenerCuentasAsync();
 
+                // Una sola fila por cuenta (agrupada por propietario)
                 foreach (var cuenta in cuentasApi.OrderBy(c => c.Id))
                 {
-                    if (cuenta.Saldos.Any())
+                    var saldos = cuenta.Saldos
+                        .OrderBy(s => s.Moneda)
+                        .Select(s => new SaldoInfo { Moneda = s.Moneda, Saldo = s.Saldo })
+                        .ToList();
+
+                    var resumen = saldos.Any()
+                        ? string.Join("  |  ", saldos.Select(s => $"{s.Moneda}: {s.Saldo:N2}"))
+                        : "Sin saldos";
+
+                    Cuentas.Add(new CuentaGrupoItem
                     {
-                        foreach (var saldo in cuenta.Saldos)
-                        {
-                            Cuentas.Add(new CuentaResumenItem
-                            {
-                                Id = cuenta.Id,
-                                Nombre = cuenta.Nombre,
-                                Tipo = cuenta.Tipo,
-                                Moneda = saldo.Moneda,
-                                Saldo = saldo.Saldo
-                            });
-                        }
-                    }
-                    else
-                    {
-                        Cuentas.Add(new CuentaResumenItem
-                        {
-                            Id = cuenta.Id,
-                            Nombre = cuenta.Nombre,
-                            Tipo = cuenta.Tipo,
-                            Moneda = "ARS",
-                            Saldo = 0
-                        });
-                    }
+                        Id = cuenta.Id,
+                        Nombre = cuenta.Nombre,
+                        Tipo = cuenta.Tipo,
+                        SaldosResumen = resumen,
+                        CantidadMonedas = saldos.Count,
+                        Saldos = saldos
+                    });
                 }
 
                 CuentasCount = cuentasApi.Count;
@@ -141,7 +153,7 @@ namespace SistemaCambio.ViewModels
             }
             catch (Exception ex)
             {
-                Cuentas.Add(new CuentaResumenItem { Nombre = $"Error: {ex.Message}" });
+                Cuentas.Add(new CuentaGrupoItem { Nombre = $"Error: {ex.Message}" });
             }
         }
     }

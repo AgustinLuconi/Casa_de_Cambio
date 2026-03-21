@@ -32,4 +32,36 @@ public class MonedasController : ControllerBase
         db.SaveChanges();
         return CreatedAtAction(nameof(GetMonedas), new { id = moneda.Id }, new MonedaDto { Id = moneda.Id, Codigo = moneda.Codigo, Nombre = moneda.Nombre, Activa = moneda.Activa });
     }
+
+    [HttpPut("{id}")]
+    public IActionResult ActualizarMoneda(int id, [FromBody] ActualizarMonedaRequest req)
+    {
+        using var db = _contextFactory.CreateDbContext();
+        var moneda = db.Monedas.FirstOrDefault(m => m.Id == id);
+        if (moneda == null)
+            return NotFound($"Moneda {id} no encontrada.");
+        moneda.Codigo = req.Codigo.Trim().ToUpper();
+        moneda.Nombre = req.Nombre.Trim();
+        moneda.Activa = req.Activa;
+        db.SaveChanges();
+        return Ok(new MonedaDto { Id = moneda.Id, Codigo = moneda.Codigo, Nombre = moneda.Nombre, Activa = moneda.Activa });
+    }
+
+    [HttpDelete("{id}")]
+    public IActionResult EliminarMoneda(int id)
+    {
+        using var db = _contextFactory.CreateDbContext();
+        var moneda = db.Monedas.FirstOrDefault(m => m.Id == id);
+        if (moneda == null)
+            return NotFound($"Moneda {id} no encontrada.");
+        bool tieneMovimientos = db.Movimientos.Any(m => m.Moneda == moneda.Codigo);
+        if (tieneMovimientos)
+            return BadRequest($"No se puede eliminar {moneda.Codigo}: tiene movimientos registrados.");
+        bool tieneSaldos = db.SaldosCuenta.Any(s => s.Moneda == moneda.Codigo);
+        if (tieneSaldos)
+            return BadRequest($"No se puede eliminar {moneda.Codigo}: tiene saldos en cuentas.");
+        db.Monedas.Remove(moneda);
+        db.SaveChanges();
+        return NoContent();
+    }
 }

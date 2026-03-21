@@ -99,6 +99,9 @@ public class CasaCambioApiClient : ICasaCambioApiClient
     public async Task<CuentaDto> CrearCuentaAsync(CrearCuentaRequest request)
         => await PostAuthenticatedAsync<CuentaDto>("api/cuentas", request);
 
+    public async Task EliminarCuentaAsync(int cuentaId)
+        => await DeleteAuthenticatedAsync($"api/cuentas/{cuentaId}");
+
     public async Task<List<MovimientoDto>> ObtenerMovimientosCuentaAsync(int cuentaId, DateTime? desde = null, DateTime? hasta = null)
     {
         var query = $"api/cuentas/{cuentaId}/movimientos";
@@ -118,6 +121,12 @@ public class CasaCambioApiClient : ICasaCambioApiClient
 
     public async Task<MonedaDto> CrearMonedaAsync(CrearMonedaRequest request)
         => await PostAuthenticatedAsync<MonedaDto>("api/monedas", request);
+
+    public async Task<MonedaDto> ActualizarMonedaAsync(int id, ActualizarMonedaRequest request)
+        => await PutAuthenticatedAsync<MonedaDto>($"api/monedas/{id}", request);
+
+    public async Task EliminarMonedaAsync(int id)
+        => await DeleteAuthenticatedAsync($"api/monedas/{id}");
 
     // Cotizaciones
 
@@ -231,6 +240,66 @@ public class CasaCambioApiClient : ICasaCambioApiClient
 
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<T>(JsonOptions))!;
+    }
+
+    private async Task<T> PutAuthenticatedAsync<T>(string url, object body)
+    {
+        await EnsureAuthenticatedAsync();
+        var request = new HttpRequestMessage(HttpMethod.Put, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _tokenStore.AccessToken);
+        request.Content = JsonContent.Create(body);
+
+        var response = await _http.SendAsync(request);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            if (await TryRefreshAsync())
+            {
+                request = new HttpRequestMessage(HttpMethod.Put, url);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _tokenStore.AccessToken);
+                request.Content = JsonContent.Create(body);
+                response = await _http.SendAsync(request);
+            }
+            else
+            {
+                OnSessionExpired?.Invoke();
+                throw new UnauthorizedAccessException("Sesion expirada");
+            }
+        }
+
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<T>(JsonOptions))!;
+    }
+
+    private async Task DeleteAuthenticatedAsync(string url)
+    {
+        await EnsureAuthenticatedAsync();
+        var request = new HttpRequestMessage(HttpMethod.Delete, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _tokenStore.AccessToken);
+
+        var response = await _http.SendAsync(request);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            if (await TryRefreshAsync())
+            {
+                request = new HttpRequestMessage(HttpMethod.Delete, url);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _tokenStore.AccessToken);
+                response = await _http.SendAsync(request);
+            }
+            else
+            {
+                OnSessionExpired?.Invoke();
+                throw new UnauthorizedAccessException("Sesion expirada");
+            }
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            var msg = string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body.Trim('"');
+            throw new HttpRequestException(msg, null, response.StatusCode);
+        }
     }
 
     private async Task EnsureAuthenticatedAsync()
