@@ -25,9 +25,9 @@ public class IntegrationTests : IDisposable
         _db.Monedas.Add(new Moneda { Id = 2, Codigo = "ARS", Nombre = "Peso Argentino", Activa = true });
         _db.Monedas.Add(new Moneda { Id = 3, Codigo = "EUR", Nombre = "Euro", Activa = true });
 
-        _db.Cuentas.Add(new Cuenta { Id = 1, Nombre = "Caja Pesos", Tipo = "Caja" });
-        _db.Cuentas.Add(new Cuenta { Id = 2, Nombre = "Caja USD", Tipo = "Caja" });
-        _db.Cuentas.Add(new Cuenta { Id = 3, Nombre = "Caja EUR", Tipo = "Caja" });
+        _db.Cuentas.Add(new Cuenta { Id = 1, Nombre = "Efectivo ARS", Tipo = "Efectivo" });
+        _db.Cuentas.Add(new Cuenta { Id = 2, Nombre = "Efectivo USD", Tipo = "Efectivo" });
+        _db.Cuentas.Add(new Cuenta { Id = 3, Nombre = "Efectivo EUR", Tipo = "Efectivo" });
         _db.Cuentas.Add(new Cuenta { Id = 4, Nombre = "Banco Pesos", Tipo = "Banco" });
 
         _db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = 1, Moneda = "ARS", Saldo = 1000000m });
@@ -47,7 +47,7 @@ public class IntegrationTests : IDisposable
         Assert.NotNull(cuenta);
         var saldo = _db.SaldosCuenta.First(s => s.CuentaId == 1 && s.Moneda == "ARS");
         Assert.Equal(1000000m, saldo.Saldo);
-        Assert.Equal("Caja Pesos", cuenta.Nombre);
+        Assert.Equal("Efectivo ARS", cuenta.Nombre);
     }
 
     [Fact]

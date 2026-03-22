@@ -31,9 +31,9 @@ public class CierreCajaService : ICierreCajaService
         cierre.CantidadVentas = ventas.Count;
         cierre.TotalVentasUSD = ventas.Sum(o => o.MontoTotalOrigen);
         cierre.TotalVentasARS = ventas.Sum(o => o.MontoTotalDestino);
-        cierre.SaldoCajaARS = db.SaldosCuenta.Where(s => s.Moneda == "ARS" && s.Cuenta.Tipo == "Caja").Sum(s => s.Saldo);
-        cierre.SaldoCajaUSD = db.SaldosCuenta.Where(s => s.Moneda == "USD" && s.Cuenta.Tipo == "Caja").Sum(s => s.Saldo);
-        cierre.SaldoCajaEUR = db.SaldosCuenta.Where(s => s.Moneda == "EUR" && s.Cuenta.Tipo == "Caja").Sum(s => s.Saldo);
+        cierre.SaldoCajaARS = db.SaldosCuenta.Where(s => s.Moneda == "ARS" && s.Cuenta.Tipo == "Efectivo").Sum(s => s.Saldo);
+        cierre.SaldoCajaUSD = db.SaldosCuenta.Where(s => s.Moneda == "USD" && s.Cuenta.Tipo == "Efectivo").Sum(s => s.Saldo);
+        cierre.SaldoCajaEUR = db.SaldosCuenta.Where(s => s.Moneda == "EUR" && s.Cuenta.Tipo == "Efectivo").Sum(s => s.Saldo);
         cierre.TotalDiferencias = db.Arqueos.AsEnumerable().Where(a => a.Fecha.Date == hoy).Sum(a => a.Diferencia);
 
         if (cierreExistente != null)

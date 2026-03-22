@@ -23,7 +23,7 @@ public class DashboardController : ControllerBase
         var operacionesHoy = db.Operaciones.Where(o => o.Fecha >= hoy && o.Fecha < manana).AsNoTracking().ToList();
         var compras = operacionesHoy.Where(o => o.TipoOperacion == "Compra").ToList();
         var ventas = operacionesHoy.Where(o => o.TipoOperacion == "Venta").ToList();
-        var saldos = db.SaldosCuenta.Include(s => s.Cuenta).Where(s => s.Cuenta.Tipo == "Caja").AsNoTracking().ToList();
+        var saldos = db.SaldosCuenta.Include(s => s.Cuenta).Where(s => s.Cuenta.Tipo == "Efectivo").AsNoTracking().ToList();
         var cotizaciones = db.CotizacionesDiarias.Include(c => c.Moneda).Where(c => c.Fecha.Date == hoy).AsNoTracking().ToList();
 
         return Ok(new DashboardDto

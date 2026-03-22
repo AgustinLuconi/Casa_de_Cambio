@@ -9,7 +9,7 @@ public class Cuenta
 {
     [Key] [Column("id")] public int Id { get; set; }
     [Column("nombre")] public string Nombre { get; set; } = "";
-    [Column("tipo")] public string Tipo { get; set; } = "Caja";
+    [Column("tipo")] public string Tipo { get; set; } = "Efectivo";
     public List<SaldoCuenta> Saldos { get; set; } = new();
 }
 

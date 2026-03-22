@@ -19,8 +19,8 @@ public class OperacionServiceTests
         _operacionService = new OperacionService(_factory, auditService, cierreCajaService, validator);
 
         using var db = _factory.CreateDbContext();
-        db.Cuentas.Add(new Cuenta { Id = 1, Nombre = "Caja Pesos", Tipo = "Caja" });
-        db.Cuentas.Add(new Cuenta { Id = 2, Nombre = "Caja USD", Tipo = "Caja" });
+        db.Cuentas.Add(new Cuenta { Id = 1, Nombre = "Efectivo ARS", Tipo = "Efectivo" });
+        db.Cuentas.Add(new Cuenta { Id = 2, Nombre = "Efectivo USD", Tipo = "Efectivo" });
         db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = 1, Moneda = "ARS", Saldo = 1000000m });
         db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = 2, Moneda = "USD", Saldo = 5000m });
         db.SaveChanges();
@@ -78,20 +78,7 @@ public class OperacionServiceTests
     }
 
     [Fact]
-    public void GuardarOperacion_Exitosa_DeberiaCearCuentaMundoExterior()
-    {
-        _operacionService.GuardarOperacion(
-            tipo: "Compra", cuentaOrigenId: 1, cuentaDestinoId: 2,
-            monedaOrigen: "ARS", monedaDestino: "USD",
-            montoOrigen: 1000m, montoDestino: 1m, cotizacion: 1000m);
-
-        using var db = _factory.CreateDbContext();
-        var mundoExterior = db.Cuentas.FirstOrDefault(c => c.Nombre == "Mundo Exterior" && c.Tipo == "Externo");
-        Assert.NotNull(mundoExterior);
-    }
-
-    [Fact]
-    public void GuardarOperacion_Exitosa_DeberiaCear4Movimientos()
+    public void GuardarOperacion_Exitosa_DeberiaCear2Movimientos()
     {
         var resultado = _operacionService.GuardarOperacion(
             tipo: "Compra", cuentaOrigenId: 1, cuentaDestinoId: 2,
@@ -100,8 +87,7 @@ public class OperacionServiceTests
 
         using var db = _factory.CreateDbContext();
         var movimientos = db.Movimientos.Where(m => m.OperacionId == resultado.OperacionId).ToList();
-        Assert.Equal(4, movimientos.Count);
-        Assert.Equal(0, movimientos.Sum(m => m.Monto)); // double-entry: sum = 0
+        Assert.Equal(2, movimientos.Count);
     }
 
     [Fact]

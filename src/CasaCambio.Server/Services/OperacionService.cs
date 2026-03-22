@@ -34,17 +34,11 @@ public class OperacionService : IOperacionService
             var saldoOrigen = ObtenerOCrearSaldo(db, cuentaOrigenId, monedaOrigen);
             var saldoDestino = ObtenerOCrearSaldo(db, cuentaDestinoId, monedaDestino);
             if (saldoOrigen.Saldo < montoOrigen) return OperacionResult.Error($"Saldo insuficiente en '{cuentaOrigen.Nombre}' ({monedaOrigen}). Disponible: {saldoOrigen.Saldo:N2}, Requerido: {montoOrigen:N2}");
-            var cuentaExterna = ObtenerOCrearCuentaExterna(db);
-            var saldoExternaOrigen = ObtenerOCrearSaldo(db, cuentaExterna.Id, monedaOrigen);
-            var saldoExternaDestino = ObtenerOCrearSaldo(db, cuentaExterna.Id, monedaDestino);
             var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = tipo, ClienteId = clienteId, MontoTotalOrigen = montoOrigen, MontoTotalDestino = montoDestino, CotizacionAplicada = cotizacion, Observaciones = observaciones };
             db.Operaciones.Add(operacion);
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaOrigenId, Moneda = monedaOrigen, Monto = -montoOrigen, Fecha = DateTime.UtcNow });
-            db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaExterna.Id, Moneda = monedaOrigen, Monto = montoOrigen, Fecha = DateTime.UtcNow });
-            db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaExterna.Id, Moneda = monedaDestino, Monto = -montoDestino, Fecha = DateTime.UtcNow });
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaDestinoId, Moneda = monedaDestino, Monto = montoDestino, Fecha = DateTime.UtcNow });
             saldoOrigen.Saldo -= montoOrigen; saldoDestino.Saldo += montoDestino;
-            saldoExternaOrigen.Saldo += montoOrigen; saldoExternaDestino.Saldo -= montoDestino;
             db.SaveChanges(); transaction.Commit();
             try { _auditService.Registrar("CREATE", "Operacion", operacion.Id, datosNuevos: new { tipo, monedaOrigen, monedaDestino, montoOrigen, montoDestino, cotizacion }); } catch { }
             return OperacionResult.Success(operacion.Id);
@@ -124,10 +118,4 @@ public class OperacionService : IOperacionService
         return saldo;
     }
 
-    private Cuenta ObtenerOCrearCuentaExterna(AppDbContext db)
-    {
-        var cuenta = db.Cuentas.FirstOrDefault(c => c.Nombre == "Mundo Exterior" && c.Tipo == "Externo");
-        if (cuenta == null) { cuenta = new Cuenta { Nombre = "Mundo Exterior", Tipo = "Externo" }; db.Cuentas.Add(cuenta); db.SaveChanges(); }
-        return cuenta;
-    }
 }

@@ -88,7 +88,7 @@ namespace SistemaCambio.Views
             try
             {
                 var cuentas = await _apiClient.ObtenerCuentasAsync();
-                var cajas = cuentas.Where(c => c.Tipo == "Caja").ToList();
+                var cajas = cuentas.Where(c => c.Tipo == "Efectivo").ToList();
                 var saldosGrouped = cajas.SelectMany(c => c.Saldos)
                     .GroupBy(s => s.Moneda)
                     .Select(g => new { Moneda = g.Key, Saldo = g.Sum(x => x.Saldo) })

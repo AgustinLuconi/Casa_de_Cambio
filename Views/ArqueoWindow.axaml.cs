@@ -30,7 +30,7 @@ namespace SistemaCambio.Views
             {
                 _items.Clear();
                 var cuentas = await _apiClient.ObtenerCuentasAsync();
-                var cajas = cuentas.Where(c => c.Tipo == "Caja").OrderBy(c => c.Nombre).ToList();
+                var cajas = cuentas.Where(c => c.Tipo == "Efectivo").OrderBy(c => c.Nombre).ToList();
 
                 cmbCaja.Items.Clear();
                 cmbCaja.Items.Add(new ComboBoxItem { Content = "TODAS", Tag = 0 });
@@ -38,7 +38,7 @@ namespace SistemaCambio.Views
                     cmbCaja.Items.Add(new ComboBoxItem { Content = caja.Nombre, Tag = caja.Id });
                 cmbCaja.SelectedIndex = 0;
 
-                CargarArqueoItems(0, cuentas.Where(c => c.Tipo == "Caja").ToList());
+                CargarArqueoItems(0, cuentas.Where(c => c.Tipo == "Efectivo").ToList());
                 _isInitializing = false;
             }
             catch (Exception ex) { NotificationService.Error("Error", ex.Message); }
