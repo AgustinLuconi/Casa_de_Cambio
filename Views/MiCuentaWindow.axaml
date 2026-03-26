@@ -1,0 +1,218 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:vm="using:SistemaCambio.ViewModels"
+        x:DataType="vm:MiCuentaViewModel"
+        x:Class="SistemaCambio.Views.MiCuentaWindow"
+        Title="Mi Cuenta"
+        Width="520"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="#101c22">
+
+    <Grid>
+        <!-- Brillo ambiental esquina superior izquierda -->
+        <Ellipse Width="350" Height="350" Fill="#13a4ec" Opacity="0.06"
+                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-80,-60,0,0">
+            <Ellipse.Effect><BlurEffect Radius="80"/></Ellipse.Effect>
+        </Ellipse>
+        <!-- Brillo ambiental esquina inferior derecha -->
+        <Ellipse Width="280" Height="280" Fill="#0d79b3" Opacity="0.07"
+                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-60,-60">
+            <Ellipse.Effect><BlurEffect Radius="80"/></Ellipse.Effect>
+        </Ellipse>
+
+        <!-- Tarjeta principal -->
+        <Border Background="#14232b" CornerRadius="16"
+                BorderBrush="#1e3441" BorderThickness="1"
+                BoxShadow="0 25 60 0 #99000000"
+                Width="460"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Margin="0,30,0,30">
+            <StackPanel>
+
+                <!-- ══ Header: avatar + nombre + rol ══ -->
+                <Grid Height="100" ClipToBounds="True">
+                    <Rectangle Fill="#0c1f2b"/>
+                    <Rectangle>
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#0d1e2b" Offset="0"/>
+                                <GradientStop Color="#1a3a50" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+
+                    <Border Width="64" Height="64" CornerRadius="32"
+                            Background="#1e3d55"
+                            HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Margin="28,0,0,0">
+                        <icon:MaterialIcon Kind="AccountCircle" Width="36" Height="36"
+                                           Foreground="#13a4ec"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <StackPanel VerticalAlignment="Center" Margin="108,0,16,0" Spacing="4">
+                        <TextBlock Text="{Binding NombreCompleto}"
+                                   FontSize="17" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="{Binding Username}"
+                                   FontSize="12" Foreground="#64748B"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Border CornerRadius="4" Padding="6,2"
+                                    IsVisible="{Binding EsAdmin}"
+                                    Background="#1e3d55">
+                                <TextBlock Text="Admin" FontSize="11" Foreground="#13a4ec" FontWeight="SemiBold"/>
+                            </Border>
+                            <Border CornerRadius="4" Padding="6,2"
+                                    IsVisible="{Binding !EsAdmin}"
+                                    Background="#1e2e1e">
+                                <TextBlock Text="{Binding Rol}" FontSize="11" Foreground="#4ade80" FontWeight="SemiBold"/>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ══ Body ══ -->
+                <StackPanel Spacing="20" Margin="28,20,28,28">
+
+                    <!-- ── Sección: Información de Perfil ── -->
+                    <StackPanel Spacing="14">
+                        <TextBlock Text="Informaci&#243;n de Perfil"
+                                   FontSize="13" FontWeight="SemiBold" Foreground="#CBD5E1"/>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Nombre Completo" Foreground="#94A3B8" FontSize="12"/>
+                            <TextBox Text="{Binding NombreCompleto}"
+                                     Padding="12,10" Height="44"
+                                     Background="#0c151a" Foreground="White"
+                                     BorderBrush="#233c4a" BorderThickness="1"
+                                     CornerRadius="10"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Email" Foreground="#94A3B8" FontSize="12"/>
+                            <TextBox Text="{Binding Email}"
+                                     Padding="12,10" Height="44"
+                                     Background="#0c151a" Foreground="White"
+                                     BorderBrush="#233c4a" BorderThickness="1"
+                                     CornerRadius="10"/>
+                        </StackPanel>
+
+                        <!-- Estado de confirmación de email -->
+                        <StackPanel Spacing="4">
+                            <TextBlock IsVisible="{Binding EmailConfirmado}"
+                                       FontSize="12" Foreground="#4ade80">
+                                <Run Text="&#10003; Email confirmado"/>
+                            </TextBlock>
+                            <StackPanel IsVisible="{Binding !EmailConfirmado}" Spacing="4">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#9888; Email sin confirmar"
+                                               FontSize="12" Foreground="#eab308" VerticalAlignment="Center"/>
+                                    <Button Content="Reenviar confirmaci&#243;n"
+                                            Command="{Binding ReenviarConfirmacionCommand}"
+                                            IsEnabled="{Binding !IsLoadingReenvio}"
+                                            Background="Transparent" BorderThickness="0"
+                                            Foreground="#13a4ec" FontSize="12" Padding="0"
+                                            Cursor="Hand"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding ExitoReenvio}"
+                                           IsVisible="{Binding TieneExitoReenvio}"
+                                           Foreground="#22c55e" FontSize="11"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock FontSize="12" Foreground="#64748B">
+                            <Run Text="Miembro desde: "/>
+                            <Run Text="{Binding FechaCreacionFormateada}"/>
+                        </TextBlock>
+
+                        <TextBlock Text="{Binding ErrorPerfil}"
+                                   IsVisible="{Binding TieneErrorPerfil}"
+                                   Foreground="#ef4444" FontSize="12" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding ExitoPerfil}"
+                                   IsVisible="{Binding TieneExitoPerfil}"
+                                   Foreground="#4ade80" FontSize="12"/>
+
+                        <Button Command="{Binding GuardarPerfilCommand}"
+                                IsEnabled="{Binding !IsLoading}"
+                                Height="44" CornerRadius="10"
+                                Background="#13a4ec" Foreground="White"
+                                FontWeight="SemiBold" FontSize="14"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Guardar cambios" VerticalAlignment="Center"/>
+                                <icon:MaterialIcon Kind="ArrowRight" Width="18" Height="18"
+                                                   VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Separador -->
+                    <Rectangle Height="1" Fill="#1e3441"/>
+
+                    <!-- ── Sección: Cambiar Contraseña ── -->
+                    <StackPanel Spacing="14">
+                        <TextBlock Text="Cambiar Contrase&#241;a"
+                                   FontSize="13" FontWeight="SemiBold" Foreground="#CBD5E1"/>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Contrase&#241;a actual" Foreground="#94A3B8" FontSize="12"/>
+                            <TextBox Text="{Binding PasswordActual}"
+                                     PasswordChar="&#9679;"
+                                     Padding="12,10" Height="44"
+                                     Background="#0c151a" Foreground="White"
+                                     BorderBrush="#233c4a" BorderThickness="1"
+                                     CornerRadius="10"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Nueva contrase&#241;a" Foreground="#94A3B8" FontSize="12"/>
+                            <TextBox Text="{Binding NuevaPassword}"
+                                     PasswordChar="&#9679;"
+                                     Padding="12,10" Height="44"
+                                     Background="#0c151a" Foreground="White"
+                                     BorderBrush="#233c4a" BorderThickness="1"
+                                     CornerRadius="10"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Confirmar nueva contrase&#241;a" Foreground="#94A3B8" FontSize="12"/>
+                            <TextBox Text="{Binding ConfirmarPassword}"
+                                     PasswordChar="&#9679;"
+                                     Padding="12,10" Height="44"
+                                     Background="#0c151a" Foreground="White"
+                                     BorderBrush="#233c4a" BorderThickness="1"
+                                     CornerRadius="10"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding ErrorPassword}"
+                                   IsVisible="{Binding TieneErrorPassword}"
+                                   Foreground="#ef4444" FontSize="12" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding ExitoPassword}"
+                                   IsVisible="{Binding TieneExitoPassword}"
+                                   Foreground="#4ade80" FontSize="12"/>
+
+                        <Button Command="{Binding CambiarPasswordCommand}"
+                                IsEnabled="{Binding !IsLoading}"
+                                Height="44" CornerRadius="10"
+                                Background="Transparent"
+                                BorderBrush="#13a4ec" BorderThickness="1"
+                                Foreground="#13a4ec"
+                                FontWeight="SemiBold" FontSize="14"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Cambiar contrase&#241;a" VerticalAlignment="Center"/>
+                                <icon:MaterialIcon Kind="LockOutline" Width="18" Height="18"
+                                                   VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

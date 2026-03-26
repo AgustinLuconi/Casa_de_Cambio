@@ -71,6 +71,16 @@ namespace SistemaCambio.Views
             }
         }
 
+        private async void BtnRecuperar_Click(object? sender, RoutedEventArgs e)
+        {
+            await new RecuperarPasswordWindow().ShowDialog(this);
+        }
+
+        private async void BtnRegistro_Click(object? sender, RoutedEventArgs e)
+        {
+            await new RegistroWindow().ShowDialog(this);
+        }
+
         private void MostrarError(string mensaje)
         {
             txtError.Text = mensaje;

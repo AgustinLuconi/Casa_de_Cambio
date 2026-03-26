@@ -37,6 +37,16 @@ public partial class MainWindow : Window
                 _viewModel.SolicitarEdicionCuenta += async (id) => await AbrirEdicionCuentaWindow(id);
                 _viewModel.MostrarMensajeEvent += MostrarMensajeEnUI;
                 _viewModel.MostrarConfirmacionEvent += MostrarConfirmacionEnUI;
+                _viewModel.DashboardCargado += dashboard =>
+                    Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        txtTotalCuentas.Text   = dashboard.TotalOperacionesHoy.ToString();
+                        txtOperacionesHoy.Text = (dashboard.TotalComprasHoy + dashboard.TotalVentasHoy).ToString();
+                        txtSaldoUSD.Text = $"${dashboard.SaldosCaja.Where(s => s.Moneda == "USD").Sum(s => s.Saldo):N2}";
+                        txtSaldoARS.Text = $"${dashboard.SaldosCaja.Where(s => s.Moneda == "ARS").Sum(s => s.Saldo):N2}";
+                        PoblarGraficoSaldos(dashboard);
+                        PoblarGraficoPie(dashboard);
+                    });
             }
         };
     }
@@ -67,7 +77,8 @@ public partial class MainWindow : Window
         btnDashboard.Classes.Set("SidebarButton", false);
         btnCuentas.Classes.Set("SidebarButtonActive", false);
         btnCuentas.Classes.Set("SidebarButton", true);
-        CargarEstadisticas();
+        _viewModel?.RefrescarDatos();
+        CargarUltimasOperaciones();
     }
 
     private void BtnCuentas_Click(object? sender, RoutedEventArgs e)
@@ -82,23 +93,67 @@ public partial class MainWindow : Window
         _viewModel?.RefrescarDatos();
     }
 
-    private async void CargarEstadisticas()
+    private async void CargarUltimasOperaciones()
     {
         try
         {
-            var dashboard = await _apiClient.ObtenerDashboardAsync();
-            txtTotalCuentas.Text = dashboard.TotalOperacionesHoy.ToString();
-            txtOperacionesHoy.Text = (dashboard.TotalComprasHoy + dashboard.TotalVentasHoy).ToString();
-            txtSaldoUSD.Text = $"${dashboard.SaldosCaja.Where(s => s.Moneda == "USD").Sum(s => s.Saldo):N2}";
-            txtSaldoARS.Text = $"${dashboard.SaldosCaja.Where(s => s.Moneda == "ARS").Sum(s => s.Saldo):N2}";
-
             var opsResponse = await _apiClient.ObtenerOperacionesAsync(page: 1, pageSize: 10);
             dgUltimasOperaciones.ItemsSource = opsResponse.Items;
         }
-        catch (Exception ex)
+        catch (Exception ex) { Console.WriteLine($"Error cargando operaciones: {ex.Message}"); }
+    }
+
+    private void PoblarGraficoSaldos(CasaCambio.Shared.DTOs.DashboardDto dashboard)
+    {
+        pltBalanceEvolution.Plot.Clear();
+        var monedas = dashboard.SaldosCaja
+            .Where(s => s.Saldo != 0)
+            .OrderByDescending(s => Math.Abs(s.Saldo))
+            .Take(8).ToList();
+        if (!monedas.Any()) return;
+
+        var values = monedas.Select(s => (double)Math.Abs(s.Saldo)).ToArray();
+        var bar = pltBalanceEvolution.Plot.Add.Bars(values);
+        var barList = bar.Bars.ToList();
+        for (int i = 0; i < monedas.Count; i++)
         {
-            Console.WriteLine($"Error cargando estadisticas: {ex.Message}");
+            barList[i].FillColor = monedas[i].Saldo >= 0
+                ? ScottPlot.Color.FromHex("#13a4ec")
+                : ScottPlot.Color.FromHex("#ef4444");
         }
+        var tickGen = new ScottPlot.TickGenerators.NumericManual();
+        for (int i = 0; i < monedas.Count; i++)
+            tickGen.AddMajor(i + 1, monedas[i].Moneda);
+        pltBalanceEvolution.Plot.Axes.Bottom.TickGenerator = tickGen;
+        pltBalanceEvolution.Plot.Axes.Left.Label.Text = "Saldo";
+        pltBalanceEvolution.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#14232b");
+        pltBalanceEvolution.Plot.DataBackground.Color   = ScottPlot.Color.FromHex("#0c151a");
+        pltBalanceEvolution.Plot.Axes.Color(ScottPlot.Color.FromHex("#94a3b8"));
+        pltBalanceEvolution.Refresh();
+    }
+
+    private void PoblarGraficoPie(CasaCambio.Shared.DTOs.DashboardDto dashboard)
+    {
+        pltCurrencyDistribution.Plot.Clear();
+        var positivos = dashboard.SaldosCaja
+            .Where(s => s.Saldo > 0)
+            .OrderByDescending(s => s.Saldo)
+            .Take(6).ToList();
+        if (!positivos.Any()) return;
+
+        var pie = pltCurrencyDistribution.Plot.Add.Pie(
+            positivos.Select(s => (double)s.Saldo).ToArray());
+        var colores = new[] { "#13a4ec", "#0d79b3", "#1e3441", "#22c55e", "#eab308", "#94a3b8" };
+        for (int i = 0; i < pie.Slices.Count; i++)
+        {
+            pie.Slices[i].Label     = positivos[i].Moneda;
+            pie.Slices[i].FillColor = ScottPlot.Color.FromHex(colores[i % colores.Length]);
+        }
+        pltCurrencyDistribution.Plot.ShowLegend();
+        pltCurrencyDistribution.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#14232b");
+        pltCurrencyDistribution.Plot.DataBackground.Color   = ScottPlot.Color.FromHex("#0c151a");
+        pltCurrencyDistribution.Plot.Axes.Color(ScottPlot.Color.FromHex("#94a3b8"));
+        pltCurrencyDistribution.Refresh();
     }
 
     private async void BtnCompra_Click(object? sender, RoutedEventArgs e) => await AbrirCompraWindow();
@@ -111,7 +166,13 @@ public partial class MainWindow : Window
     {
         var cierreWindow = new CierreCajaWindow();
         await cierreWindow.ShowDialog(this);
-        CargarEstadisticas();
+        _viewModel?.RefrescarDatos();
+        CargarUltimasOperaciones();
+    }
+
+    private async void BtnMiCuenta_Click(object? sender, RoutedEventArgs e)
+    {
+        await new MiCuentaWindow().ShowDialog(this);
     }
 
     private async void BtnReportes_Click(object? sender, RoutedEventArgs e) => await AbrirReportesWindow();

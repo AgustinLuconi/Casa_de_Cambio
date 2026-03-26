@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows.Input;
+using CasaCambio.Shared.DTOs;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SistemaCambio.ApiClient;
@@ -45,6 +47,14 @@ namespace SistemaCambio.ViewModels
         [ObservableProperty]
         private decimal posicionNeta;
 
+        [ObservableProperty] private int _totalOperacionesHoy;
+        [ObservableProperty] private int _totalComprasHoy;
+        [ObservableProperty] private int _totalVentasHoy;
+        [ObservableProperty] private decimal _volumenComprasARS;
+        [ObservableProperty] private decimal _volumenVentasARS;
+        [ObservableProperty] private decimal _volumenNetoARS;
+        [ObservableProperty] private List<CotizacionDto> _cotizacionesHoy = new();
+
         public ICommand AbrirDashboardCommand { get; }
         public ICommand AbrirCuentasCommand { get; }
         public ICommand AbrirCompraCommand { get; }
@@ -61,6 +71,7 @@ namespace SistemaCambio.ViewModels
         public event Action<int>? SolicitarEdicionCuenta;
         public event Action<string, string>? MostrarMensajeEvent;
         public event Func<string, string, System.Threading.Tasks.Task<bool>>? MostrarConfirmacionEvent;
+        public event Action<DashboardDto>? DashboardCargado;
 
         public MainWindowViewModel(ICasaCambioApiClient apiClient)
         {
@@ -120,7 +131,27 @@ namespace SistemaCambio.ViewModels
         {
             try
             {
-                var cuentasApi = await _apiClient.ObtenerCuentasAsync();
+                var cuentasTask   = _apiClient.ObtenerCuentasAsync();
+                var dashboardTask = _apiClient.ObtenerDashboardAsync();
+                await Task.WhenAll(cuentasTask, dashboardTask);
+                var cuentasApi = cuentasTask.Result;
+
+                try
+                {
+                    var dashboard = dashboardTask.Result;
+                    TotalOperacionesHoy = dashboard.TotalOperacionesHoy;
+                    TotalComprasHoy     = dashboard.TotalComprasHoy;
+                    TotalVentasHoy      = dashboard.TotalVentasHoy;
+                    VolumenComprasARS   = dashboard.VolumenComprasARS;
+                    VolumenVentasARS    = dashboard.VolumenVentasARS;
+                    VolumenNetoARS      = dashboard.VolumenComprasARS + dashboard.VolumenVentasARS;
+                    CotizacionesHoy     = dashboard.CotizacionesHoy;
+                    DashboardCargado?.Invoke(dashboard);
+                }
+                catch (Exception exDash)
+                {
+                    Console.WriteLine($"Error cargando dashboard: {exDash.Message}");
+                }
 
                 // Una sola fila por cuenta (agrupada por propietario)
                 foreach (var cuenta in cuentasApi.OrderBy(c => c.Id))

@@ -1,0 +1,201 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:vm="using:SistemaCambio.ViewModels"
+        x:DataType="vm:RegistroViewModel"
+        x:Class="SistemaCambio.Views.RegistroWindow"
+        Title="Casa de Cambio - Crear Cuenta"
+        Width="480" Height="720"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        Background="#101c22">
+
+    <Grid>
+        <!-- Brillo ambiental superior izquierda -->
+        <Ellipse Width="350" Height="350" Fill="#13a4ec" Opacity="0.06"
+                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-80,-60,0,0">
+            <Ellipse.Effect><BlurEffect Radius="80"/></Ellipse.Effect>
+        </Ellipse>
+        <!-- Brillo ambiental inferior derecha -->
+        <Ellipse Width="280" Height="280" Fill="#0d79b3" Opacity="0.07"
+                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-60,-60">
+            <Ellipse.Effect><BlurEffect Radius="80"/></Ellipse.Effect>
+        </Ellipse>
+
+        <!-- ══════════ PANEL FORMULARIO ══════════ -->
+        <Border IsVisible="{Binding !RegistroExitoso}"
+                Background="#14232b" CornerRadius="16"
+                BorderBrush="#1e3441" BorderThickness="1"
+                BoxShadow="0 25 60 0 #99000000"
+                Width="400"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Padding="32">
+            <StackPanel Spacing="16">
+
+                <!-- Header -->
+                <Border Width="52" Height="52" CornerRadius="14"
+                        Background="#1a3a50" HorizontalAlignment="Center">
+                    <icon:MaterialIcon Kind="CurrencyUsd" Width="28" Height="28"
+                                       Foreground="#13a4ec"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <TextBlock Text="Crear Cuenta"
+                           FontSize="28" FontWeight="Bold" Foreground="White"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Complet&#225; tus datos para registrarte"
+                           FontSize="14" Foreground="#94a3b8"
+                           HorizontalAlignment="Center" Margin="0,-8,0,4"/>
+
+                <!-- Campo: Nombre completo -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Nombre completo" Foreground="#CBD5E1" FontSize="13"/>
+                    <Grid>
+                        <TextBox Text="{Binding NombreCompleto}"
+                                 Padding="44,12,12,12" Height="44"
+                                 Background="#0c151a" Foreground="White"
+                                 BorderBrush="#233c4a" BorderThickness="1"
+                                 CornerRadius="10"
+                                 Watermark="Tu nombre completo"/>
+                        <icon:MaterialIcon Kind="AccountOutline"
+                                           Width="18" Height="18"
+                                           VerticalAlignment="Center" HorizontalAlignment="Left"
+                                           Margin="14,0,0,0" Foreground="#64748B"
+                                           IsHitTestVisible="False"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Campo: Email -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Email" Foreground="#CBD5E1" FontSize="13"/>
+                    <Grid>
+                        <TextBox Text="{Binding Email}"
+                                 Padding="44,12,12,12" Height="44"
+                                 Background="#0c151a" Foreground="White"
+                                 BorderBrush="#233c4a" BorderThickness="1"
+                                 CornerRadius="10"
+                                 Watermark="tu@email.com"/>
+                        <icon:MaterialIcon Kind="EmailOutline"
+                                           Width="18" Height="18"
+                                           VerticalAlignment="Center" HorizontalAlignment="Left"
+                                           Margin="14,0,0,0" Foreground="#64748B"
+                                           IsHitTestVisible="False"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Campo: Contraseña -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Contrase&#241;a" Foreground="#CBD5E1" FontSize="13"/>
+                    <Grid>
+                        <TextBox Text="{Binding Password}"
+                                 PasswordChar="&#9679;"
+                                 Padding="44,12,12,12" Height="44"
+                                 Background="#0c151a" Foreground="White"
+                                 BorderBrush="#233c4a" BorderThickness="1"
+                                 CornerRadius="10"
+                                 Watermark="M&#237;nimo 8 caracteres"/>
+                        <icon:MaterialIcon Kind="LockOutline"
+                                           Width="18" Height="18"
+                                           VerticalAlignment="Center" HorizontalAlignment="Left"
+                                           Margin="14,0,0,0" Foreground="#64748B"
+                                           IsHitTestVisible="False"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Campo: Confirmar contraseña -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Confirmar contrase&#241;a" Foreground="#CBD5E1" FontSize="13"/>
+                    <Grid>
+                        <TextBox Text="{Binding ConfirmarPassword}"
+                                 PasswordChar="&#9679;"
+                                 Padding="44,12,12,12" Height="44"
+                                 Background="#0c151a" Foreground="White"
+                                 BorderBrush="#233c4a" BorderThickness="1"
+                                 CornerRadius="10"
+                                 Watermark="Repet&#237; tu contrase&#241;a"/>
+                        <icon:MaterialIcon Kind="LockOutline"
+                                           Width="18" Height="18"
+                                           VerticalAlignment="Center" HorizontalAlignment="Left"
+                                           Margin="14,0,0,0" Foreground="#64748B"
+                                           IsHitTestVisible="False"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Mensaje de error -->
+                <TextBlock Text="{Binding ErrorMessage}"
+                           IsVisible="{Binding TieneError}"
+                           Foreground="#ef4444" FontSize="12"
+                           TextWrapping="Wrap" Margin="0,-4,0,0"/>
+
+                <!-- Botón principal -->
+                <Button Command="{Binding RegistrarCommand}"
+                        IsEnabled="{Binding !IsLoading}"
+                        Height="44" CornerRadius="10"
+                        Background="#13a4ec" Foreground="White"
+                        FontWeight="SemiBold" FontSize="14"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock IsVisible="{Binding !IsLoading}" Text="Crear Cuenta"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock IsVisible="{Binding IsLoading}" Text="Registrando..."
+                                   VerticalAlignment="Center"/>
+                        <icon:MaterialIcon Kind="ArrowRight" Width="18" Height="18"
+                                           IsVisible="{Binding !IsLoading}"
+                                           VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Link volver al login -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                    <TextBlock Text="&#191;Ya ten&#233;s cuenta?" Foreground="#94A3B8" FontSize="12"
+                               VerticalAlignment="Center"/>
+                    <Button Content="Inici&#225; sesi&#243;n"
+                            Command="{Binding VolverAlLoginCommand}"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="#13a4ec" FontSize="12" Padding="0"
+                            Cursor="Hand"/>
+                </StackPanel>
+
+            </StackPanel>
+        </Border>
+
+        <!-- ══════════ PANEL ÉXITO ══════════ -->
+        <Border IsVisible="{Binding RegistroExitoso}"
+                Background="#14232b" CornerRadius="16"
+                BorderBrush="#1e3441" BorderThickness="1"
+                BoxShadow="0 25 60 0 #99000000"
+                Width="400"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Padding="40">
+            <StackPanel Spacing="20" HorizontalAlignment="Center">
+
+                <Border Width="72" Height="72" CornerRadius="36"
+                        Background="#0d2e1f" HorizontalAlignment="Center">
+                    <icon:MaterialIcon Kind="CheckCircleOutline" Width="40" Height="40"
+                                       Foreground="#13a4ec"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <TextBlock Text="&#161;Registro exitoso!"
+                           FontSize="24" FontWeight="Bold" Foreground="White"
+                           HorizontalAlignment="Center"/>
+
+                <TextBlock Text="Revis&#225; tu email para confirmar tu cuenta antes de iniciar sesi&#243;n."
+                           FontSize="14" Foreground="#94a3b8"
+                           TextWrapping="Wrap" TextAlignment="Center"/>
+
+                <Button Content="Ir al Login"
+                        Command="{Binding VolverAlLoginCommand}"
+                        Height="44" CornerRadius="10"
+                        Background="#13a4ec" Foreground="White"
+                        FontWeight="SemiBold" FontSize="14"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Margin="0,8,0,0"/>
+
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -13,6 +13,13 @@ public interface ICasaCambioApiClient
     Task<AuthResponse> LoginAsync(LoginRequest request);
     Task<AuthResponse?> RefreshTokenAsync(string refreshToken);
     Task<bool> HealthCheckAsync();
+    Task<RegisterResponse> RegistrarUsuarioAsync(RegisterRequest request);
+    Task<bool> RecuperarPasswordAsync(RecuperarPasswordRequest request);
+    Task<UsuarioPerfilDto?> ObtenerPerfilAsync();
+    Task<bool> ActualizarPerfilAsync(ActualizarPerfilRequest request);
+    Task<bool> CambiarPasswordAsync(CambiarPasswordRequest request);
+    Task<RegisterResponse> ReenviarConfirmacionAsync();
+    Task<RegisterResponse> ResetearPasswordAsync(ResetearPasswordRequest request);
 
     // Operaciones
     Task<OperacionResponse> CrearCompraAsync(CrearOperacionRequest request);

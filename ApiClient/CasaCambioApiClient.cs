@@ -62,6 +62,82 @@ public class CasaCambioApiClient : ICasaCambioApiClient
         }
     }
 
+    public async Task<bool> RecuperarPasswordAsync(RecuperarPasswordRequest request)
+    {
+        try
+        {
+            var response = await _http.PostAsJsonAsync("api/auth/recuperar", request);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<UsuarioPerfilDto?> ObtenerPerfilAsync()
+    {
+        try { return await GetAuthenticatedAsync<UsuarioPerfilDto>("api/auth/me"); }
+        catch { return null; }
+    }
+
+    public async Task<bool> ActualizarPerfilAsync(ActualizarPerfilRequest request)
+    {
+        try { await PutAuthenticatedAsync<UsuarioPerfilDto>("api/auth/me", request); return true; }
+        catch { return false; }
+    }
+
+    public async Task<bool> CambiarPasswordAsync(CambiarPasswordRequest request)
+    {
+        try { await PutAuthenticatedAsync<object>("api/auth/cambiar-password", request); return true; }
+        catch { return false; }
+    }
+
+    public async Task<RegisterResponse> ReenviarConfirmacionAsync()
+    {
+        try
+        {
+            return await PostAuthenticatedAsync<RegisterResponse>("api/auth/reenviar-confirmacion", new { });
+        }
+        catch (Exception ex)
+        {
+            return new RegisterResponse { Exitoso = false, Mensaje = ex.Message };
+        }
+    }
+
+    public async Task<RegisterResponse> ResetearPasswordAsync(ResetearPasswordRequest request)
+    {
+        try
+        {
+            var response = await _http.PostAsJsonAsync("api/auth/resetear", request);
+            if (response.IsSuccessStatusCode)
+                return (await response.Content.ReadFromJsonAsync<RegisterResponse>(JsonOptions))!;
+            var error = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(JsonOptions);
+            return new RegisterResponse { Exitoso = false, Mensaje = error?.Message ?? "Error al resetear." };
+        }
+        catch (Exception ex)
+        {
+            return new RegisterResponse { Exitoso = false, Mensaje = ex.Message };
+        }
+    }
+
+    public async Task<RegisterResponse> RegistrarUsuarioAsync(RegisterRequest request)
+    {
+        try
+        {
+            var response = await _http.PostAsJsonAsync("api/auth/register", request);
+            if (response.IsSuccessStatusCode)
+                return (await response.Content.ReadFromJsonAsync<RegisterResponse>(JsonOptions))!;
+
+            var error = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(JsonOptions);
+            return new RegisterResponse { Exitoso = false, Mensaje = error?.Message ?? "Error al registrar." };
+        }
+        catch (Exception ex)
+        {
+            return new RegisterResponse { Exitoso = false, Mensaje = ex.Message };
+        }
+    }
+
     // Operaciones
 
     public async Task<OperacionResponse> CrearCompraAsync(CrearOperacionRequest request)

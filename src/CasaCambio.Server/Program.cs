@@ -47,6 +47,8 @@ builder.Services.AddSingleton<IArqueoService, ArqueoService>();
 builder.Services.AddSingleton<OperacionValidator>();
 builder.Services.AddSingleton<ArqueoValidator>();
 
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 // Controllers + Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

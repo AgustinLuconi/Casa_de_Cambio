@@ -148,6 +148,26 @@
                                Foreground="#94A3B8" FontSize="11"
                                HorizontalAlignment="Center"/>
 
+                    <!-- Link recuperar contraseña -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4" Margin="0,2,0,0">
+                        <Button x:Name="btnRecuperar" Content="&#191;Olvidaste tu contrase&#241;a?"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="#13a4ec" FontSize="12" Padding="0"
+                                Click="BtnRecuperar_Click"
+                                Cursor="Hand"/>
+                    </StackPanel>
+
+                    <!-- Link a registro -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4" Margin="0,2,0,0">
+                        <TextBlock Text="&#191;No ten&#233;s cuenta?" Foreground="#94A3B8" FontSize="12"
+                                   VerticalAlignment="Center"/>
+                        <Button x:Name="btnRegistro" Content="Registrate"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="#13a4ec" FontSize="12" Padding="0"
+                                Click="BtnRegistro_Click"
+                                Cursor="Hand"/>
+                    </StackPanel>
+
                 </StackPanel>
             </StackPanel>
         </Border>

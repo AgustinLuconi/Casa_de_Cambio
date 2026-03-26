@@ -83,9 +83,15 @@
                     </Button>
                 </StackPanel>
 
-                <!-- User (Removed for now) -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
-                    <!-- Placeholder for future login logic -->
+                <!-- Mi Cuenta -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <Button Classes="toolbar-btn" Click="BtnMiCuenta_Click" ToolTip.Tip="Mi Cuenta">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <icon:MaterialIcon Kind="AccountCircle" Width="16" Height="16"
+                                               Foreground="{DynamicResource AccentBrush}"/>
+                            <TextBlock Text="Mi Cuenta" FontSize="12"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -262,6 +268,39 @@
                             </Border>
                         </UniformGrid>
                         
+                        <!-- Métricas del día -->
+                        <UniformGrid Columns="4" Rows="1">
+                            <Border Background="#1a2332" BorderBrush="#233c4a" BorderThickness="1"
+                                    CornerRadius="8" Padding="20,14" Margin="0,0,16,0">
+                                <StackPanel>
+                                    <TextBlock Text="OPERACIONES HOY" FontSize="11" Foreground="#94a3b8" Margin="0,0,0,6"/>
+                                    <TextBlock Text="{Binding TotalOperacionesHoy}" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Background="#1a2332" BorderBrush="#233c4a" BorderThickness="1"
+                                    CornerRadius="8" Padding="20,14" Margin="0,0,16,0">
+                                <StackPanel>
+                                    <TextBlock Text="COMPRAS HOY" FontSize="11" Foreground="#94a3b8" Margin="0,0,0,6"/>
+                                    <TextBlock Text="{Binding TotalComprasHoy}" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Background="#1a2332" BorderBrush="#233c4a" BorderThickness="1"
+                                    CornerRadius="8" Padding="20,14" Margin="0,0,16,0">
+                                <StackPanel>
+                                    <TextBlock Text="VENTAS HOY" FontSize="11" Foreground="#94a3b8" Margin="0,0,0,6"/>
+                                    <TextBlock Text="{Binding TotalVentasHoy}" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Background="#1a2332" BorderBrush="#233c4a" BorderThickness="1"
+                                    CornerRadius="8" Padding="20,14" Margin="0">
+                                <StackPanel>
+                                    <TextBlock Text="VOLUMEN NETO ARS" FontSize="11" Foreground="#94a3b8" Margin="0,0,0,6"/>
+                                    <TextBlock Text="{Binding VolumenNetoARS, StringFormat='$ {0:N0}'}"
+                                               FontSize="22" FontWeight="Bold" Foreground="White"/>
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+
                         <!-- Middle Charts -->
                         <Grid ColumnDefinitions="2*, 1*">
                             <!-- Left Chart (Balance Evolution) -->
@@ -280,6 +319,27 @@
                                 </StackPanel>
                             </Border>
                         </Grid>
+
+                        <!-- Cotizaciones del Día -->
+                        <Border Background="#0Cffffff" BorderBrush="#22ffffff"
+                                BorderThickness="1" CornerRadius="16" Padding="24">
+                            <StackPanel>
+                                <TextBlock Text="Cotizaciones de Hoy" FontSize="18" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,12"/>
+                                <DataGrid ItemsSource="{Binding CotizacionesHoy}"
+                                          AutoGenerateColumns="False" IsReadOnly="True"
+                                          BorderThickness="0" Background="Transparent"
+                                          GridLinesVisibility="Horizontal"
+                                          HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
+                                          HeadersVisibility="Column">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="MONEDA" Binding="{Binding CodigoMoneda}" Width="120" FontWeight="SemiBold"/>
+                                        <DataGridTextColumn Header="COMPRA" Binding="{Binding CotizacionCompra, StringFormat='{}{0:N4}'}" Width="*"/>
+                                        <DataGridTextColumn Header="VENTA"  Binding="{Binding CotizacionVenta,  StringFormat='{}{0:N4}'}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
 
                         <!-- Bottom: Recent Transactions -->
                         <Border Background="#0Cffffff" BorderBrush="#22ffffff" 
