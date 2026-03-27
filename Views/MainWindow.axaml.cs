@@ -19,6 +19,7 @@ public partial class MainWindow : Window
 {
     private MainWindowViewModel? _viewModel;
     private readonly ICasaCambioApiClient _apiClient;
+    private bool _diaCerrado;
 
     public MainWindow()
     {
@@ -47,6 +48,7 @@ public partial class MainWindow : Window
                         PoblarGraficoSaldos(dashboard);
                         PoblarGraficoPie(dashboard);
                     });
+                VerificarDiaCerradoAsync();
             }
         };
     }
@@ -168,6 +170,7 @@ public partial class MainWindow : Window
         await cierreWindow.ShowDialog(this);
         _viewModel?.RefrescarDatos();
         CargarUltimasOperaciones();
+        VerificarDiaCerradoAsync();
     }
 
     private async void BtnMiCuenta_Click(object? sender, RoutedEventArgs e)
@@ -182,6 +185,28 @@ public partial class MainWindow : Window
     private async Task AbrirNuevaCuentaWindow() { var w = new NuevaCuentaWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos(); }
     private async Task AbrirEdicionCuentaWindow(int cuentaId) { var w = new NuevaCuentaWindow(cuentaId); await w.ShowDialog(this); _viewModel?.RefrescarDatos(); }
     private async Task AbrirDetalleCuentaWindow(int cuentaId) { var w = new DetalleCuentaWindow(cuentaId); await w.ShowDialog(this); }
+
+    private async void VerificarDiaCerradoAsync()
+    {
+        try
+        {
+            var cierre = await _apiClient.ObtenerCierreHoyAsync();
+            _diaCerrado = cierre?.Cerrado == true;
+        }
+        catch { _diaCerrado = false; }
+
+        if (_diaCerrado)
+        {
+            btnToolbarCompra.IsEnabled = false;
+            btnToolbarVenta.IsEnabled = false;
+            btnToolbarCreditoDebito.IsEnabled = false;
+            btnCompra.IsEnabled = false;
+            btnVenta.IsEnabled = false;
+            btnCreditoDebito.IsEnabled = false;
+            borderDiaCerrado.IsVisible = true;
+            Services.NotificationService.Warning("Día cerrado", "Las operaciones del día están bloqueadas.");
+        }
+    }
 
     private void MostrarMensajeEnUI(string titulo, string mensaje)
     {
@@ -220,9 +245,21 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task AbrirCompraWindow() { var w = new CompraWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos(); }
-    private async Task AbrirVentaWindow() { var w = new VentaWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos(); }
-    private async Task AbrirCreditoDebitoWindow() { var w = new CreditoDebitoWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos(); }
+    private async Task AbrirCompraWindow()
+    {
+        if (_diaCerrado) { Services.NotificationService.Warning("Día cerrado", "No se pueden registrar operaciones."); return; }
+        var w = new CompraWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos();
+    }
+    private async Task AbrirVentaWindow()
+    {
+        if (_diaCerrado) { Services.NotificationService.Warning("Día cerrado", "No se pueden registrar operaciones."); return; }
+        var w = new VentaWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos();
+    }
+    private async Task AbrirCreditoDebitoWindow()
+    {
+        if (_diaCerrado) { Services.NotificationService.Warning("Día cerrado", "No se pueden registrar operaciones."); return; }
+        var w = new CreditoDebitoWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos();
+    }
     private async Task AbrirArqueoWindow() { var w = new ArqueoWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos(); }
     private async Task AbrirMovimientosWindow() { var w = new DetalleMovimientosWindow(); await w.ShowDialog(this); }
     private async Task AbrirReportesWindow() { var w = new ReportesWindow(); await w.ShowDialog(this); }

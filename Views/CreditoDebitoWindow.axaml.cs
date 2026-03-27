@@ -89,19 +89,50 @@ namespace SistemaCambio.Views
             }
         }
 
-        private async System.Threading.Tasks.Task<bool> EjecutarOperacion()
+        private bool ValidarCampos()
         {
             decimal importeCredito = ParsearMonto(txtImporteCredito.Text);
             decimal importeDebito = ParsearMonto(txtImporteDebito.Text);
-            if (importeCredito <= 0 && importeDebito <= 0) return false;
+            if (importeCredito <= 0 && importeDebito <= 0)
+            {
+                NotificationService.Warning("Campo requerido", "Ingrese al menos un importe mayor a cero.");
+                txtImporteCredito.Focus();
+                return false;
+            }
+            var itemCredito = cmbCredito.SelectedItem as ComboBoxItem;
+            var itemDebito = cmbDebito.SelectedItem as ComboBoxItem;
+            if (itemCredito?.Tag is not CuentaMonedaTag || itemDebito?.Tag is not CuentaMonedaTag)
+            {
+                NotificationService.Warning("Selección incompleta", "Seleccione las cuentas crédito y débito.");
+                return false;
+            }
+            return true;
+        }
+
+        private void MostrarErrorServidor(string mensaje)
+        {
+            borderError.IsVisible = true;
+            txtErrorServidor.Text = mensaje;
+        }
+
+        private void OcultarErrorServidor()
+        {
+            borderError.IsVisible = false;
+            txtErrorServidor.Text = "";
+        }
+
+        private async System.Threading.Tasks.Task<bool> EjecutarOperacion()
+        {
+            OcultarErrorServidor();
+            if (!ValidarCampos()) return false;
+
+            decimal importeCredito = ParsearMonto(txtImporteCredito.Text);
+            decimal importeDebito = ParsearMonto(txtImporteDebito.Text);
 
             var itemCredito = cmbCredito.SelectedItem as ComboBoxItem;
             var itemDebito = cmbDebito.SelectedItem as ComboBoxItem;
-            if (itemCredito?.Tag is not CuentaMonedaTag tagCredito || itemDebito?.Tag is not CuentaMonedaTag tagDebito)
-            {
-                NotificationService.Warning("Seleccion incompleta", "Seleccione las cuentas");
-                return false;
-            }
+            var tagCredito = (CuentaMonedaTag)itemCredito!.Tag!;
+            var tagDebito = (CuentaMonedaTag)itemDebito!.Tag!;
 
             int? clienteId = null;
             var itemCliente = cmbCliente.SelectedItem as ComboBoxItem;
@@ -123,7 +154,7 @@ namespace SistemaCambio.Views
             var resultado = await _offlineService.GuardarCreditoDebitoAsync(request);
             if (!resultado.Exitoso)
             {
-                NotificationService.Error("Error en Credito/Debito", resultado.Mensaje);
+                MostrarErrorServidor(resultado.Mensaje);
                 return false;
             }
             return true;

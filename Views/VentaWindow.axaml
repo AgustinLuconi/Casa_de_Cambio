@@ -28,12 +28,7 @@
             <StackPanel Grid.Column="0" Spacing="12" Margin="0,0,20,0">
                 
                 <Grid ColumnDefinitions="120, *">
-                    <TextBlock Text="Moneda" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <ComboBox x:Name="cmbMoneda" Grid.Column="1" HorizontalAlignment="Stretch" SelectedIndex="0" SelectionChanged="CmbMoneda_SelectionChanged"/>
-                </Grid>
-
-                <Grid ColumnDefinitions="120, *">
-                    <TextBlock Text="Monto a Vender" VerticalAlignment="Center" 
+                    <TextBlock Text="Monto Divisa" VerticalAlignment="Center"
                                Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold"/>
                     <TextBox x:Name="txtMontoExtranjera" Grid.Column="1" Text="0.00" TextAlignment="Right" 
                              FontWeight="Bold" KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
@@ -46,7 +41,7 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="120, *">
-                    <TextBlock Text="Total (Destino)" VerticalAlignment="Center" 
+                    <TextBlock Text="Total ARS" VerticalAlignment="Center"
                                Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold"/>
                     <TextBox x:Name="txtPesos" Grid.Column="1" Text="0.00" TextAlignment="Right" 
                              FontWeight="Bold"/>
@@ -81,27 +76,38 @@
             <!-- Right Column: Accounts -->
             <StackPanel Grid.Column="1" Spacing="20">
                 
-                <!-- Debit Account -->
+                <!-- Debit Account (divisa) -->
                 <StackPanel Spacing="6">
-                    <TextBlock x:Name="lblDebitar" Text="Debitar en cuenta (Origen)" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource DangerBrush}" 
+                    <TextBlock Text="Debitar divisa de (Origen)" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource DangerBrush}"
                             BorderThickness="1" CornerRadius="8" Padding="6">
-                        <ComboBox x:Name="cmbDebitar" HorizontalAlignment="Stretch" 
+                        <ComboBox x:Name="cmbDebitar" HorizontalAlignment="Stretch"
                                   Background="Transparent" BorderThickness="0"/>
                     </Border>
                 </StackPanel>
 
-                <!-- Credit Account -->
+                <!-- Credit Account (ARS fija) -->
                 <StackPanel Spacing="6">
-                    <TextBlock x:Name="lblAcreditar" Text="Acreditar de cuenta (Destino)" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource SuccessBrush}" 
-                            BorderThickness="1" CornerRadius="8" Padding="6">
-                        <ComboBox x:Name="cmbAcreditar" HorizontalAlignment="Stretch" 
-                                  Background="Transparent" BorderThickness="0"/>
+                    <TextBlock Text="Cuenta ARS (Destino - fija)" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource SuccessBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="12,8">
+                        <TextBlock x:Name="txtCuentaARSFija" Text="Cargando..."
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
                     </Border>
                 </StackPanel>
 
-                <Panel Height="60"/>
+                <!-- Error Panel -->
+                <Border x:Name="borderError" IsVisible="False"
+                        Background="#DC262620" BorderBrush="{DynamicResource DangerBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,10,0,10">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icon:MaterialIcon Kind="AlertCircle" Foreground="{DynamicResource DangerBrush}"
+                                          Width="16" Height="16" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtErrorServidor" Text="" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource DangerBrush}" FontSize="12"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
 
                 <!-- Buttons -->
                 <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Bottom">

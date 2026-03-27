@@ -33,7 +33,20 @@ public class OperacionService : IOperacionService
             if (cuentaDestino == null) return OperacionResult.Error("Cuenta destino no encontrada");
             var saldoOrigen = ObtenerOCrearSaldo(db, cuentaOrigenId, monedaOrigen);
             var saldoDestino = ObtenerOCrearSaldo(db, cuentaDestinoId, monedaDestino);
-            if (saldoOrigen.Saldo < montoOrigen) return OperacionResult.Error($"Saldo insuficiente en '{cuentaOrigen.Nombre}' ({monedaOrigen}). Disponible: {saldoOrigen.Saldo:N2}, Requerido: {montoOrigen:N2}");
+            if (saldoOrigen.Saldo < montoOrigen)
+            {
+                decimal limiteDeuda = ObtenerLimiteDeuda(db, cuentaOrigen);
+                if (limiteDeuda > 0)
+                {
+                    decimal saldoProyectado = saldoOrigen.Saldo - montoOrigen;
+                    if (saldoProyectado < -limiteDeuda)
+                        return OperacionResult.Error($"La cuenta '{cuentaOrigen.Nombre}' superaría su límite de deuda ({limiteDeuda:N2}).\nSaldo actual: {saldoOrigen.Saldo:N2}, Requerido: {montoOrigen:N2}");
+                }
+                else
+                {
+                    return OperacionResult.Error($"Saldo insuficiente en '{cuentaOrigen.Nombre}' ({monedaOrigen}). Disponible: {saldoOrigen.Saldo:N2}, Requerido: {montoOrigen:N2}");
+                }
+            }
             var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = tipo, ClienteId = clienteId, MontoTotalOrigen = montoOrigen, MontoTotalDestino = montoDestino, CotizacionAplicada = cotizacion, Observaciones = observaciones };
             db.Operaciones.Add(operacion);
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaOrigenId, Moneda = monedaOrigen, Monto = -montoOrigen, Fecha = DateTime.UtcNow });
@@ -64,7 +77,20 @@ public class OperacionService : IOperacionService
             if (cuentaCredito == null || cuentaDebito2 == null) return OperacionResult.Error("Cuenta no encontrada");
             var saldoCredito = ObtenerOCrearSaldo(db, cuentaCreditoId, monedaCredito);
             var saldoDebito = ObtenerOCrearSaldo(db, cuentaDebitoId, monedaDebito);
-            if (saldoDebito.Saldo < montoDebito) return OperacionResult.Error($"Saldo insuficiente en '{cuentaDebito2.Nombre}' ({monedaDebito}). Disponible: {saldoDebito.Saldo:N2}");
+            if (saldoDebito.Saldo < montoDebito)
+            {
+                decimal limiteDeuda = ObtenerLimiteDeuda(db, cuentaDebito2);
+                if (limiteDeuda > 0)
+                {
+                    decimal saldoProyectado = saldoDebito.Saldo - montoDebito;
+                    if (saldoProyectado < -limiteDeuda)
+                        return OperacionResult.Error($"La cuenta '{cuentaDebito2.Nombre}' superaría su límite de deuda ({limiteDeuda:N2}).\nSaldo actual: {saldoDebito.Saldo:N2}, Requerido: {montoDebito:N2}");
+                }
+                else
+                {
+                    return OperacionResult.Error($"Saldo insuficiente en '{cuentaDebito2.Nombre}' ({monedaDebito}). Disponible: {saldoDebito.Saldo:N2}");
+                }
+            }
             var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Credito/Debito", ClienteId = clienteId, MontoTotalOrigen = montoDebito, MontoTotalDestino = montoCredito, CotizacionAplicada = cotizacion, Observaciones = observaciones };
             db.Operaciones.Add(operacion);
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaCreditoId, Moneda = monedaCredito, Monto = montoCredito, Fecha = DateTime.UtcNow });
@@ -109,6 +135,20 @@ public class OperacionService : IOperacionService
             return OperacionResult.Success(operacion.Id);
         }
         catch (Exception ex) { transaction.Rollback(); return OperacionResult.Error($"Error: {ex.Message}"); }
+    }
+
+    private decimal ObtenerLimiteDeuda(AppDbContext db, Cuenta cuenta)
+    {
+        if (cuenta.Tipo != "Cliente") return 0;
+        if (cuenta.LimiteDeuda.HasValue && cuenta.LimiteDeuda.Value > 0)
+            return cuenta.LimiteDeuda.Value;
+        var config = db.ConfiguracionSistema.Find("limite_deuda_general");
+        if (config != null && decimal.TryParse(config.Valor,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var limGeneral)
+            && limGeneral > 0)
+            return limGeneral;
+        return 0;
     }
 
     private SaldoCuenta ObtenerOCrearSaldo(AppDbContext db, int cuentaId, string moneda)

@@ -23,6 +23,8 @@ namespace SistemaCambio.Views
     {
         private readonly ICasaCambioApiClient _apiClient;
         private readonly OfflineOperacionService _offlineService;
+        private decimal _cotizacionDia;
+        private CuentaMonedaTag? _cuentaARSFija;
 
         public CompraWindow()
         {
@@ -30,6 +32,7 @@ namespace SistemaCambio.Views
             _offlineService = App.Services.GetRequiredService<OfflineOperacionService>();
 
             InitializeComponent();
+            cmbDestino.SelectionChanged += CmbDestino_SelectionChanged;
             CargarDatosAsync();
         }
 
@@ -37,15 +40,8 @@ namespace SistemaCambio.Views
         {
             try
             {
-                var monedas = await _apiClient.ObtenerMonedasAsync();
-                cmbMoneda.Items.Clear();
-                foreach (var moneda in monedas)
-                    cmbMoneda.Items.Add(new ComboBoxItem { Content = $"{moneda.Codigo} - {moneda.Nombre}", Tag = moneda.Codigo });
-                if (cmbMoneda.Items.Count > 0) cmbMoneda.SelectedIndex = 0;
-
                 var cuentas = await _apiClient.ObtenerCuentasAsync();
                 CargarComboCuentas(cuentas);
-                await CargarCotizacionDelDiaAsync();
             }
             catch (Exception ex)
             {
@@ -56,55 +52,56 @@ namespace SistemaCambio.Views
         private void CargarComboCuentas(System.Collections.Generic.List<CuentaDto> cuentas)
         {
             cmbDestino.Items.Clear();
-            cmbOrigen.Items.Clear();
+            _cuentaARSFija = null;
+
             foreach (var cuenta in cuentas.OrderBy(c => c.Nombre))
             {
-                if (cuenta.Saldos.Any())
+                // Buscar cuenta ARS fija: primera Efectivo con saldo ARS
+                if (_cuentaARSFija == null && cuenta.Tipo == "Efectivo")
                 {
-                    foreach (var saldo in cuenta.Saldos.OrderBy(s => s.Moneda))
-                    {
-                        var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = saldo.Moneda, NombreCuenta = cuenta.Nombre };
-                        var texto = $"{cuenta.Nombre} ({saldo.Moneda})";
-                        cmbDestino.Items.Add(new ComboBoxItem { Content = texto, Tag = tag });
-                        cmbOrigen.Items.Add(new ComboBoxItem { Content = texto, Tag = tag });
-                    }
+                    var saldoARS = cuenta.Saldos.FirstOrDefault(s => s.Moneda == "ARS");
+                    if (saldoARS != null)
+                        _cuentaARSFija = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = "ARS", NombreCuenta = cuenta.Nombre };
                 }
-                else
+
+                // cmbDestino: solo cuentas con moneda ≠ ARS
+                foreach (var saldo in cuenta.Saldos.Where(s => s.Moneda != "ARS").OrderBy(s => s.Moneda))
                 {
-                    var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = "ARS", NombreCuenta = cuenta.Nombre };
-                    cmbDestino.Items.Add(new ComboBoxItem { Content = $"{cuenta.Nombre} (ARS)", Tag = tag });
-                    cmbOrigen.Items.Add(new ComboBoxItem { Content = $"{cuenta.Nombre} (ARS)", Tag = tag });
+                    var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = saldo.Moneda, NombreCuenta = cuenta.Nombre };
+                    cmbDestino.Items.Add(new ComboBoxItem { Content = $"{cuenta.Nombre} ({saldo.Moneda})", Tag = tag });
                 }
             }
+
+            if (_cuentaARSFija != null)
+                txtCuentaARSFija.Text = $"{_cuentaARSFija.NombreCuenta} (ARS)";
+            else
+                txtCuentaARSFija.Text = "No se encontró cuenta Efectivo con ARS";
+
             if (cmbDestino.Items.Count > 0) cmbDestino.SelectedIndex = 0;
-            if (cmbOrigen.Items.Count > 0) cmbOrigen.SelectedIndex = 0;
         }
 
-        private void CmbMoneda_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+        private void CmbDestino_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
-            _ = CargarCotizacionDelDiaAsync();
+            if (cmbDestino.SelectedItem is ComboBoxItem item && item.Tag is CuentaMonedaTag tag)
+                _ = CargarCotizacionDelDiaAsync(tag.Moneda);
         }
 
-        private string ObtenerCodigoMonedaSeleccionada()
-        {
-            if (cmbMoneda.SelectedItem is ComboBoxItem item)
-            {
-                var content = item.Content?.ToString() ?? "";
-                if (content.Contains(" - ")) return content.Split(" - ")[0].Trim();
-            }
-            return "USD";
-        }
-
-        private void ActualizarLabelsMoneda() { }
-
-        private async System.Threading.Tasks.Task CargarCotizacionDelDiaAsync()
+        private async System.Threading.Tasks.Task CargarCotizacionDelDiaAsync(string moneda)
         {
             try
             {
-                var codigo = ObtenerCodigoMonedaSeleccionada();
                 var cotizaciones = await _apiClient.ObtenerCotizacionesHoyAsync();
-                var cot = cotizaciones.FirstOrDefault(c => c.CodigoMoneda == codigo);
-                if (cot != null) txtCotizacion.Text = cot.CotizacionCompra.ToString("N5");
+                var cot = cotizaciones.FirstOrDefault(c => c.CodigoMoneda == moneda);
+                if (cot != null)
+                {
+                    _cotizacionDia = cot.CotizacionCompra;
+                    txtCotizacion.Text = cot.CotizacionCompra.ToString("N5");
+                }
+                else
+                {
+                    _cotizacionDia = 0;
+                    txtCotizacion.Text = "0.00000";
+                }
             }
             catch { }
         }
@@ -131,28 +128,88 @@ namespace SistemaCambio.Views
             if (sender is TextBox textBox) textBox.SelectAll();
         }
 
+        private bool ValidarCampos()
+        {
+            decimal montoDestino = ParsearMonto(txtMontoDestino.Text);
+            decimal cotizacion = ParsearMonto(txtCotizacion.Text);
+
+            if (montoDestino <= 0)
+            {
+                NotificationService.Warning("Campo requerido", "Ingrese un monto destino mayor a cero.");
+                txtMontoDestino.Focus();
+                return false;
+            }
+            if (cotizacion <= 0)
+            {
+                NotificationService.Warning("Campo requerido", "Ingrese una cotización válida.");
+                txtCotizacion.Focus();
+                return false;
+            }
+            if (_cuentaARSFija == null)
+            {
+                NotificationService.Warning("Sin cuenta ARS", "No se encontró una cuenta Efectivo con saldo ARS.");
+                return false;
+            }
+            var itemDestino = cmbDestino.SelectedItem as ComboBoxItem;
+            if (itemDestino?.Tag is not CuentaMonedaTag)
+            {
+                NotificationService.Warning("Selección incompleta", "Seleccione la cuenta destino para la divisa.");
+                return false;
+            }
+            return true;
+        }
+
+        private void MostrarErrorServidor(string mensaje)
+        {
+            borderError.IsVisible = true;
+            txtErrorServidor.Text = mensaje;
+        }
+
+        private void OcultarErrorServidor()
+        {
+            borderError.IsVisible = false;
+            txtErrorServidor.Text = "";
+        }
+
         private async void BotonAceptar_Click(object? sender, RoutedEventArgs e)
         {
+            OcultarErrorServidor();
+            if (!ValidarCampos()) return;
+
             decimal montoDestino = ParsearMonto(txtMontoDestino.Text);
             decimal cotizacion = ParsearMonto(txtCotizacion.Text);
             decimal montoOrigen = ParsearMonto(txtMontoOrigen.Text);
 
-            if (montoDestino <= 0 || cotizacion <= 0) return;
-
-            var itemOrigen = cmbOrigen.SelectedItem as ComboBoxItem;
-            var itemDestino = cmbDestino.SelectedItem as ComboBoxItem;
-
-            if (itemOrigen?.Tag is not CuentaMonedaTag tagOrigen || itemDestino?.Tag is not CuentaMonedaTag tagDestino)
+            // Warning cotización inusual (>5% de diferencia con la del día)
+            if (_cotizacionDia > 0)
             {
-                NotificationService.Warning("Seleccion incompleta", "Seleccione las cuentas");
-                return;
+                decimal diffPct = Math.Abs(cotizacion - _cotizacionDia) / _cotizacionDia * 100;
+                if (diffPct > 5)
+                {
+                    var continuar = await MostrarConfirmacion(
+                        "Cotización inusual",
+                        $"La cotización ingresada ({cotizacion:N5}) difiere un {diffPct:N1}% de la cotización del día ({_cotizacionDia:N5}).\n\n¿Desea continuar?");
+                    if (!continuar) return;
+                }
             }
+
+            // Warning monto alto (>5.000.000 ARS)
+            if (montoOrigen > 5_000_000m)
+            {
+                var continuar = await MostrarConfirmacion(
+                    "Monto elevado",
+                    $"El monto en ARS (${montoOrigen:N2}) supera los $5.000.000.\n\n¿Desea continuar?");
+                if (!continuar) return;
+            }
+
+            var itemDestino = cmbDestino.SelectedItem as ComboBoxItem;
+            var tagDestino = (CuentaMonedaTag)itemDestino!.Tag!;
 
             var request = new CrearOperacionRequest
             {
-                CuentaOrigenId = tagOrigen.CuentaId,
+                CuentaOrigenId = _cuentaARSFija!.CuentaId,
                 CuentaDestinoId = tagDestino.CuentaId,
-                MonedaOrigen = tagOrigen.Moneda,
+                MonedaOrigen = "ARS",
                 MonedaDestino = tagDestino.Moneda,
                 MontoOrigen = montoOrigen,
                 MontoDestino = montoDestino,
@@ -164,7 +221,7 @@ namespace SistemaCambio.Views
 
             if (!resultado.Exitoso)
             {
-                NotificationService.Error("Error al guardar compra", resultado.Mensaje);
+                MostrarErrorServidor(resultado.Mensaje);
                 return;
             }
 

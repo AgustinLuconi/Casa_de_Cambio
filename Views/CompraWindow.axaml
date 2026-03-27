@@ -26,22 +26,14 @@
             <StackPanel Grid.Column="0" Spacing="10" Margin="0,0,20,0">
                 
                 <Grid ColumnDefinitions="120, *">
-                    <TextBlock Text="Moneda" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <ComboBox x:Name="cmbMoneda" Grid.Column="1" HorizontalAlignment="Stretch" SelectedIndex="0">
-                         <ComboBoxItem>USD - Dólar</ComboBoxItem>
-                         <ComboBoxItem>EUR - Euro</ComboBoxItem>
-                    </ComboBox>
-                </Grid>
-
-                <Grid ColumnDefinitions="120, *">
-                    <TextBlock Text="Monto (Destino)" VerticalAlignment="Center" 
+                    <TextBlock Text="Monto Divisa" VerticalAlignment="Center"
                                Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold"/>
                     <TextBox x:Name="txtMontoDestino" Grid.Column="1" Text="0.00" TextAlignment="Right" 
                              FontWeight="Bold" KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
                 </Grid>
 
                 <Grid ColumnDefinitions="120, *">
-                    <TextBlock Text="Ingresa (Pago)" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="Cliente paga (ARS)" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBox x:Name="txtPagaCon" Grid.Column="1" Text="0.00" TextAlignment="Right" 
                              KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
                 </Grid>
@@ -58,7 +50,7 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="120, *">
-                    <TextBlock Text="Total (Origen)" VerticalAlignment="Center" 
+                    <TextBlock Text="Total ARS" VerticalAlignment="Center"
                                Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold"/>
                     <TextBox x:Name="txtMontoOrigen" Grid.Column="1" Text="0.00" TextAlignment="Right" 
                              FontWeight="Bold" IsReadOnly="True"/>
@@ -83,33 +75,38 @@
             <!-- Right Column: Accounts -->
             <StackPanel Grid.Column="1" Spacing="16">
                 
-                <!-- Destination Account -->
+                <!-- Destination Account (divisa) -->
                 <StackPanel Spacing="6">
-                    <TextBlock x:Name="lblDestino" Text="Acredita en cuenta (Destino)" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource SuccessBrush}" 
+                    <TextBlock Text="Acreditar divisa en (Destino)" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource SuccessBrush}"
                             BorderThickness="1" CornerRadius="8" Padding="6">
-                        <ComboBox x:Name="cmbDestino" HorizontalAlignment="Stretch" 
-                                  Background="Transparent" BorderThickness="0">
-                            <ComboBoxItem IsSelected="True">Caja Fuerte</ComboBoxItem>
-                            <ComboBoxItem>Caja Chica</ComboBoxItem>
-                        </ComboBox>
+                        <ComboBox x:Name="cmbDestino" HorizontalAlignment="Stretch"
+                                  Background="Transparent" BorderThickness="0"/>
                     </Border>
                 </StackPanel>
 
-                <!-- Source Account -->
+                <!-- Source Account (ARS fija) -->
                 <StackPanel Spacing="6">
-                    <TextBlock x:Name="lblOrigen" Text="Debita de cuenta (Origen)" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource DangerBrush}" 
-                            BorderThickness="1" CornerRadius="8" Padding="6">
-                        <ComboBox x:Name="cmbOrigen" HorizontalAlignment="Stretch" 
-                                  Background="Transparent" BorderThickness="0">
-                            <ComboBoxItem IsSelected="True">Caja Principal (Ventanilla)</ComboBoxItem>
-                            <ComboBoxItem>Banco Galicia CC</ComboBoxItem>
-                        </ComboBox>
+                    <TextBlock Text="Cuenta ARS (Origen - fija)" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource DangerBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="12,8">
+                        <TextBlock x:Name="txtCuentaARSFija" Text="Cargando..."
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
                     </Border>
                 </StackPanel>
 
-                <Panel Height="80"/>
+                <!-- Error Panel -->
+                <Border x:Name="borderError" IsVisible="False"
+                        Background="#DC262620" BorderBrush="{DynamicResource DangerBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,10,0,10">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icon:MaterialIcon Kind="AlertCircle" Foreground="{DynamicResource DangerBrush}"
+                                          Width="16" Height="16" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtErrorServidor" Text="" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource DangerBrush}" FontSize="12"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
 
                 <!-- Buttons -->
                 <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Bottom">

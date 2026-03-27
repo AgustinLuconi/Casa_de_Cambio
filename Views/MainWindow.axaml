@@ -45,19 +45,19 @@
                             <TextBlock Text="Cuentas" FontSize="12"/>
                         </StackPanel>
                     </Button>
-                    <Button Classes="toolbar-btn" Command="{Binding AbrirCompraCommand}" ToolTip.Tip="Compra (F3)">
+                    <Button x:Name="btnToolbarCompra" Classes="toolbar-btn" Command="{Binding AbrirCompraCommand}" ToolTip.Tip="Compra (F3)">
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock Text="F3" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" FontSize="11"/>
                             <TextBlock Text="Compra" FontSize="12"/>
                         </StackPanel>
                     </Button>
-                    <Button Classes="toolbar-btn" Command="{Binding AbrirVentaCommand}" ToolTip.Tip="Venta (F4)">
+                    <Button x:Name="btnToolbarVenta" Classes="toolbar-btn" Command="{Binding AbrirVentaCommand}" ToolTip.Tip="Venta (F4)">
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock Text="F4" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" FontSize="11"/>
                             <TextBlock Text="Venta" FontSize="12"/>
                         </StackPanel>
                     </Button>
-                    <Button Classes="toolbar-btn" Command="{Binding AbrirCreditoDebitoCommand}" ToolTip.Tip="Crédito/Débito (F5)">
+                    <Button x:Name="btnToolbarCreditoDebito" Classes="toolbar-btn" Command="{Binding AbrirCreditoDebitoCommand}" ToolTip.Tip="Crédito/Débito (F5)">
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock Text="F5" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" FontSize="11"/>
                             <TextBlock Text="Créd/Déb" FontSize="12"/>
@@ -444,6 +444,18 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
                     <TextBlock Text="Sistema v1.0.0" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="Server: Local" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <Border x:Name="borderDiaCerrado"
+                            IsVisible="False"
+                            Background="#DC262620"
+                            BorderBrush="{DynamicResource DangerBrush}"
+                            BorderThickness="1" CornerRadius="4" Padding="8,3">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <icon:MaterialIcon Kind="Lock" Width="12" Height="12"
+                                               Foreground="{DynamicResource DangerBrush}"/>
+                            <TextBlock Text="DÍA CERRADO" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource DangerBrush}"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center">

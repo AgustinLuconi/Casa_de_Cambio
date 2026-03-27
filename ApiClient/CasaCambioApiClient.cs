@@ -175,6 +175,9 @@ public class CasaCambioApiClient : ICasaCambioApiClient
     public async Task<CuentaDto> CrearCuentaAsync(CrearCuentaRequest request)
         => await PostAuthenticatedAsync<CuentaDto>("api/cuentas", request);
 
+    public async Task<CuentaDto> ActualizarCuentaAsync(int cuentaId, CrearCuentaRequest request)
+        => await PutAuthenticatedAsync<CuentaDto>($"api/cuentas/{cuentaId}", request);
+
     public async Task EliminarCuentaAsync(int cuentaId)
         => await DeleteAuthenticatedAsync($"api/cuentas/{cuentaId}");
 
@@ -235,6 +238,28 @@ public class CasaCambioApiClient : ICasaCambioApiClient
 
     public async Task<CierreCajaDto> CerrarDefinitivoAsync(int id)
         => await PostAuthenticatedAsync<CierreCajaDto>($"api/cierre/{id}/cerrar", new { });
+
+    // Configuración
+
+    public async Task<string?> ObtenerConfiguracionAsync(string clave)
+    {
+        try
+        {
+            var result = await GetAuthenticatedAsync<JsonElement>($"api/configuracion/{Uri.EscapeDataString(clave)}");
+            return result.GetProperty("valor").GetString();
+        }
+        catch { return null; }
+    }
+
+    public async Task<bool> ActualizarConfiguracionAsync(string clave, string valor)
+    {
+        try
+        {
+            await PutAuthenticatedAsync<JsonElement>($"api/configuracion/{Uri.EscapeDataString(clave)}", new { Valor = valor });
+            return true;
+        }
+        catch { return false; }
+    }
 
     // PPP
 

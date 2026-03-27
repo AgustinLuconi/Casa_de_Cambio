@@ -9,7 +9,7 @@
         CanResize="False"
         Background="{DynamicResource AppBackgroundBrush}">
 
-    <Grid RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="20">
+    <Grid RowDefinitions="Auto, Auto, Auto, Auto, *, Auto" Margin="20">
         
         <!-- Header -->
         <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" 
@@ -39,8 +39,20 @@
             </ComboBox>
         </Grid>
 
+        <!-- Límite Deuda (solo para tipo Cliente) -->
+        <Grid x:Name="gridLimiteDeuda" Grid.Row="3" ColumnDefinitions="120, *"
+              Margin="0,0,0,10" IsVisible="False">
+            <TextBlock Text="Límite Deuda" VerticalAlignment="Center"
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <StackPanel Grid.Column="1" Spacing="4">
+                <TextBox x:Name="txtLimiteDeuda" Watermark="0 = usar límite general"/>
+                <TextBlock Text="Vacío o 0 = usa el límite general del sistema."
+                           Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11"/>
+            </StackPanel>
+        </Grid>
+
         <!-- Initial Balances -->
-        <Border Grid.Row="3" Background="{DynamicResource CardBackgroundBrush}" 
+        <Border Grid.Row="4" Background="{DynamicResource CardBackgroundBrush}" 
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
                 CornerRadius="8" Padding="16" Margin="0,0,0,16">
             <Grid RowDefinitions="Auto, *">
@@ -68,7 +80,7 @@
         </Border>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
             <Button Content="Guardar" Background="{DynamicResource AccentBrush}" Foreground="White" 
                     Width="110" Height="36" HorizontalContentAlignment="Center" CornerRadius="8" 
                     Cursor="Hand" Click="BtnGuardar_Click"/>

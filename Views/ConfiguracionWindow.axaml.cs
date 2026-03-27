@@ -24,6 +24,7 @@ namespace SistemaCambio.Views
             InitializeComponent();
             dpFechaCotizacion.SelectedDate = new DateTimeOffset(DateTime.Today);
             CargarMonedasAsync();
+            CargarLimiteDeudaAsync();
         }
 
         private void ToggleTema_Changed(object? sender, RoutedEventArgs e)
@@ -156,6 +157,31 @@ namespace SistemaCambio.Views
                 BtnCargarCotizaciones_Click(sender, e);
             }
             catch (Exception ex) { await MostrarMensaje("Error", ex.Message); }
+        }
+
+        private async void CargarLimiteDeudaAsync()
+        {
+            try
+            {
+                var valor = await _apiClient.ObtenerConfiguracionAsync("limite_deuda_general");
+                if (valor != null) txtLimiteDeudaGeneral.Text = valor;
+            }
+            catch { }
+        }
+
+        private async void BtnGuardarLimiteDeuda_Click(object? sender, RoutedEventArgs e)
+        {
+            var texto = txtLimiteDeudaGeneral.Text?.Trim() ?? "0";
+            if (!decimal.TryParse(texto, out var limite) || limite < 0)
+            {
+                await MostrarMensaje("Error", "Ingrese un valor numérico válido (0 o mayor).");
+                return;
+            }
+            var ok = await _apiClient.ActualizarConfiguracionAsync("limite_deuda_general", limite.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            if (ok)
+                await MostrarMensaje("Éxito", $"Límite de deuda general actualizado a {limite:N2}.");
+            else
+                await MostrarMensaje("Error", "No se pudo guardar la configuración.");
         }
 
         private void BtnCerrar_Click(object? sender, RoutedEventArgs e) => Close();

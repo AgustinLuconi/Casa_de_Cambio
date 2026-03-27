@@ -28,6 +28,11 @@ namespace SistemaCambio.Views
         {
             _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
             InitializeComponent();
+            cmbTipo.SelectionChanged += (s, e) =>
+            {
+                var itemTipo = cmbTipo.SelectedItem as ComboBoxItem;
+                gridLimiteDeuda.IsVisible = itemTipo?.Content?.ToString() == "Cliente";
+            };
             CargarMonedasAsync();
         }
 
@@ -85,6 +90,10 @@ namespace SistemaCambio.Views
                     }
                     dgSaldosIniciales.ItemsSource = null;
                     dgSaldosIniciales.ItemsSource = _saldosIniciales;
+
+                    gridLimiteDeuda.IsVisible = cuenta.Tipo == "Cliente";
+                    if (cuenta.Tipo == "Cliente" && cuenta.LimiteDeuda.HasValue && cuenta.LimiteDeuda.Value > 0)
+                        txtLimiteDeuda.Text = cuenta.LimiteDeuda.Value.ToString("N2");
                 }
             }
             catch { }
@@ -96,11 +105,20 @@ namespace SistemaCambio.Views
             if (string.IsNullOrEmpty(nombre)) return;
 
             var itemTipo = cmbTipo.SelectedItem as ComboBoxItem;
-            string tipo = itemTipo?.Content?.ToString() ?? "Caja";
+            string tipo = itemTipo?.Content?.ToString() ?? "Efectivo";
+
+            decimal? limiteDeuda = null;
+            if (gridLimiteDeuda.IsVisible && decimal.TryParse(txtLimiteDeuda.Text, out var ld) && ld > 0)
+                limiteDeuda = ld;
+
+            var request = new CrearCuentaRequest { Nombre = nombre, Tipo = tipo, LimiteDeuda = limiteDeuda };
 
             try
             {
-                await _apiClient.CrearCuentaAsync(new CrearCuentaRequest { Nombre = nombre, Tipo = tipo });
+                if (_cuentaIdAEditar.HasValue)
+                    await _apiClient.ActualizarCuentaAsync(_cuentaIdAEditar.Value, request);
+                else
+                    await _apiClient.CrearCuentaAsync(request);
                 Close();
             }
             catch (Exception ex) { NotificationService.Error("Error", ex.Message); }

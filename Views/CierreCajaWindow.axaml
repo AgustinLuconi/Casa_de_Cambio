@@ -136,8 +136,44 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Operaciones del Día -->
+                <Border Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="OPERACIONES DEL DÍA" FontWeight="SemiBold" FontSize="13"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock x:Name="txtCantidadOps" Text="(0)"
+                                       Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <DataGrid x:Name="dgOperacionesDia" AutoGenerateColumns="False"
+                                  MaxHeight="200" IsReadOnly="True"
+                                  BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
+                                  HeadersVisibility="Column"
+                                  Background="Transparent">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="HORA"
+                                    Binding="{Binding Fecha, StringFormat='{}{0:HH:mm}'}" Width="60"/>
+                                <DataGridTextColumn Header="TIPO"
+                                    Binding="{Binding TipoOperacion}" Width="110"/>
+                                <DataGridTextColumn Header="ORIGEN"
+                                    Binding="{Binding MontoTotalOrigen, StringFormat='{}{0:N2}'}" Width="120"/>
+                                <DataGridTextColumn Header="DESTINO"
+                                    Binding="{Binding MontoTotalDestino, StringFormat='{}{0:N2}'}" Width="120"/>
+                                <DataGridTextColumn Header="COTIZACIÓN"
+                                    Binding="{Binding CotizacionAplicada, StringFormat='{}{0:N4}'}" Width="100"/>
+                                <DataGridTextColumn Header="OBSERVACIONES"
+                                    Binding="{Binding Observaciones}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
                 <!-- Observations -->
-                <Border Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" 
+                <Border Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="10">
                         <TextBlock Text="OBSERVACIONES" FontWeight="SemiBold" FontSize="13" 

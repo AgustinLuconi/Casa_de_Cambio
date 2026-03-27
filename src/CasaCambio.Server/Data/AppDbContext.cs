@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<TenenciaMoneda> TenenciasMoneda { get; set; }
     public DbSet<CierreCaja> CierresCaja { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<ConfiguracionSistema> ConfiguracionSistema { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

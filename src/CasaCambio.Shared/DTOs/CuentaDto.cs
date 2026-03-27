@@ -5,5 +5,6 @@ public class CuentaDto
     public int Id { get; set; }
     public string Nombre { get; set; } = "";
     public string Tipo { get; set; } = "Efectivo";
+    public decimal? LimiteDeuda { get; set; }
     public List<SaldoCuentaDto> Saldos { get; set; } = new();
 }

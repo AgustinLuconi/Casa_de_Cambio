@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
+using SistemaCambio.Services.Offline;
 using CasaCambio.Shared.DTOs;
 using System;
 using System.Linq;
@@ -28,6 +29,7 @@ namespace SistemaCambio.Views
             txtFecha.Text = DateTime.Today.ToString("dddd, dd 'de' MMMM 'de' yyyy");
             CargarSaldosDinamicosAsync();
             CargarCierreExistenteAsync();
+            CargarOperacionesDiaAsync();
         }
 
         private async void CargarCierreExistenteAsync()
@@ -68,6 +70,7 @@ namespace SistemaCambio.Views
                 : new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#DC2626"));
 
             CargarSaldosDinamicosAsync();
+            CargarOperacionesDiaAsync();
             borderEstado.IsVisible = true;
 
             if (cierre.Cerrado)
@@ -118,6 +121,17 @@ namespace SistemaCambio.Views
         private async void BtnCerrarDefinitivo_Click(object? sender, RoutedEventArgs e)
         {
             if (_cierreId == null) return;
+
+            var offlineService = App.Services.GetRequiredService<OfflineOperacionService>();
+            int pendientes = await offlineService.ObtenerPendientesCountAsync();
+            if (pendientes > 0)
+            {
+                NotificationService.Warning(
+                    "Operaciones pendientes",
+                    $"Hay {pendientes} operación(es) sin sincronizar. Esperá a que se sincronicen antes de cerrar.");
+                return;
+            }
+
             var confirma = await MostrarConfirmacion("Cerrar el dia definitivamente?", "Esta accion NO se puede deshacer.\n\nUna vez cerrado:\n- No se pueden agregar mas operaciones a este dia\n- Los datos quedan bloqueados para auditoria");
             if (!confirma) return;
 
@@ -131,6 +145,20 @@ namespace SistemaCambio.Views
         }
 
         private void BtnCancelar_Click(object? sender, RoutedEventArgs e) => Close();
+
+        private async void CargarOperacionesDiaAsync()
+        {
+            try
+            {
+                var hoy = DateTime.Today;
+                var manana = hoy.AddDays(1);
+                var response = await _apiClient.ObtenerOperacionesAsync(
+                    desde: hoy, hasta: manana, pageSize: 200);
+                dgOperacionesDia.ItemsSource = response.Items;
+                txtCantidadOps.Text = $"({response.Items.Count})";
+            }
+            catch { }
+        }
 
         private async System.Threading.Tasks.Task<bool> MostrarConfirmacion(string titulo, string mensaje)
         {

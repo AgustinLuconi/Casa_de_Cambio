@@ -32,6 +32,7 @@ public interface ICasaCambioApiClient
     // Cuentas
     Task<List<CuentaDto>> ObtenerCuentasAsync();
     Task<CuentaDto> CrearCuentaAsync(CrearCuentaRequest request);
+    Task<CuentaDto> ActualizarCuentaAsync(int cuentaId, CrearCuentaRequest request);
     Task EliminarCuentaAsync(int cuentaId);
     Task<List<MovimientoDto>> ObtenerMovimientosCuentaAsync(int cuentaId, DateTime? desde = null, DateTime? hasta = null);
     Task<List<SaldoCuentaDto>> ObtenerSaldosCuentaAsync(int cuentaId);
@@ -56,6 +57,10 @@ public interface ICasaCambioApiClient
     Task<CierreCajaDto?> ObtenerCierreHoyAsync();
     Task<CierreCajaDto> GenerarCierreAsync(string observaciones = "");
     Task<CierreCajaDto> CerrarDefinitivoAsync(int id);
+
+    // Configuración
+    Task<string?> ObtenerConfiguracionAsync(string clave);
+    Task<bool> ActualizarConfiguracionAsync(string clave, string valor);
 
     // PPP
     Task<decimal> ObtenerPPPAsync(string moneda);

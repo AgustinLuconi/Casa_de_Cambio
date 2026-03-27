@@ -22,7 +22,7 @@ public class CuentasController : ControllerBase
         var cuentas = db.Cuentas.Include(c => c.Saldos).AsNoTracking().ToList();
         return Ok(cuentas.Select(c => new CuentaDto
         {
-            Id = c.Id, Nombre = c.Nombre, Tipo = c.Tipo,
+            Id = c.Id, Nombre = c.Nombre, Tipo = c.Tipo, LimiteDeuda = c.LimiteDeuda,
             Saldos = c.Saldos.Select(s => new SaldoCuentaDto { Moneda = s.Moneda, Saldo = s.Saldo }).ToList()
         }));
     }
@@ -31,10 +31,11 @@ public class CuentasController : ControllerBase
     public IActionResult CrearCuenta([FromBody] CrearCuentaRequest req)
     {
         using var db = _contextFactory.CreateDbContext();
-        var cuenta = new Models.Cuenta { Nombre = req.Nombre, Tipo = req.Tipo };
+        var cuenta = new Models.Cuenta { Nombre = req.Nombre, Tipo = req.Tipo, LimiteDeuda = req.LimiteDeuda };
         db.Cuentas.Add(cuenta);
         db.SaveChanges();
-        return CreatedAtAction(nameof(GetCuentas), new { id = cuenta.Id }, new CuentaDto { Id = cuenta.Id, Nombre = cuenta.Nombre, Tipo = cuenta.Tipo });
+        return CreatedAtAction(nameof(GetCuentas), new { id = cuenta.Id },
+            new CuentaDto { Id = cuenta.Id, Nombre = cuenta.Nombre, Tipo = cuenta.Tipo, LimiteDeuda = cuenta.LimiteDeuda });
     }
 
     [HttpGet("{id}/movimientos")]
@@ -58,6 +59,19 @@ public class CuentasController : ControllerBase
         using var db = _contextFactory.CreateDbContext();
         var saldos = db.SaldosCuenta.Where(s => s.CuentaId == id).AsNoTracking().ToList();
         return Ok(saldos.Select(s => new SaldoCuentaDto { Moneda = s.Moneda, Saldo = s.Saldo }));
+    }
+
+    [HttpPut("{id}")]
+    public IActionResult ActualizarCuenta(int id, [FromBody] CrearCuentaRequest req)
+    {
+        using var db = _contextFactory.CreateDbContext();
+        var cuenta = db.Cuentas.Find(id);
+        if (cuenta == null) return NotFound();
+        cuenta.Nombre = req.Nombre;
+        cuenta.Tipo = req.Tipo;
+        cuenta.LimiteDeuda = req.LimiteDeuda;
+        db.SaveChanges();
+        return Ok(new CuentaDto { Id = cuenta.Id, Nombre = cuenta.Nombre, Tipo = cuenta.Tipo, LimiteDeuda = cuenta.LimiteDeuda });
     }
 
     [HttpDelete("{id}")]
