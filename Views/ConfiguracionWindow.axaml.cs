@@ -5,6 +5,7 @@ using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
+using SistemaCambio.Views.Helpers;
 using CasaCambio.Shared.DTOs;
 using CasaCambio.Shared.Requests;
 using System;
@@ -41,7 +42,7 @@ namespace SistemaCambio.Views
                 dgMonedas.ItemsSource = monedas;
                 CargarMonedaCombo(monedas);
             }
-            catch (Exception ex) { await MostrarMensaje("Error", ex.Message); }
+            catch (Exception ex) { await DialogHelper.MensajeAsync(this,"Error", ex.Message); }
         }
 
         private void CargarMonedaCombo(List<MonedaDto> monedas)
@@ -58,7 +59,7 @@ namespace SistemaCambio.Views
             var nombre = txtNuevoNombre.Text?.Trim();
             if (string.IsNullOrEmpty(codigo) || string.IsNullOrEmpty(nombre))
             {
-                await MostrarMensaje("Error", "Debe ingresar el codigo y el nombre de la moneda.");
+                await DialogHelper.MensajeAsync(this,"Error", "Debe ingresar el codigo y el nombre de la moneda.");
                 return;
             }
             try
@@ -68,7 +69,7 @@ namespace SistemaCambio.Views
                 txtNuevoNombre.Text = "";
                 CargarMonedasAsync();
             }
-            catch (Exception ex) { await MostrarMensaje("Error", ex.Message); }
+            catch (Exception ex) { await DialogHelper.MensajeAsync(this,"Error", ex.Message); }
         }
 
         private async void BtnGuardarCambios_Click(object? sender, RoutedEventArgs e)
@@ -85,9 +86,9 @@ namespace SistemaCambio.Views
                 catch (HttpRequestException ex) { errores.Add($"{m.Codigo}: {ex.Message}"); }
             }
             if (errores.Any())
-                await MostrarMensaje("Error", string.Join("\n", errores));
+                await DialogHelper.MensajeAsync(this,"Error", string.Join("\n", errores));
             else
-                await MostrarMensaje("Éxito", $"{monedas.Count} moneda(s) actualizadas correctamente.");
+                await DialogHelper.MensajeAsync(this,"Éxito", $"{monedas.Count} moneda(s) actualizadas correctamente.");
             CargarMonedasAsync();
         }
 
@@ -97,28 +98,18 @@ namespace SistemaCambio.Views
         {
             if ((sender as Button)?.DataContext is not MonedaDto moneda) return;
 
-            var dialog = new Window { Title = "Eliminar Moneda", Width = 420, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#161b22")) };
-            var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 15 };
-            panel.Children.Add(new TextBlock { Text = $"¿Está seguro que desea eliminar la moneda \"{moneda.Codigo} - {moneda.Nombre}\"?\nEsta acción no se puede deshacer.", TextWrapping = Avalonia.Media.TextWrapping.Wrap, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#e6edf3")) });
-            var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
-            bool resultado = false;
-            var btnSi = new Button { Content = "Sí, eliminar", Width = 140, HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#da3633")), Foreground = Avalonia.Media.Brushes.White };
-            var btnNo = new Button { Content = "Cancelar", Width = 100, HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, Background = Avalonia.Media.Brushes.Transparent, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#e6edf3")) };
-            btnSi.Click += (s, ev) => { resultado = true; dialog.Close(); };
-            btnNo.Click += (s, ev) => dialog.Close();
-            btnPanel.Children.Add(btnSi); btnPanel.Children.Add(btnNo);
-            panel.Children.Add(btnPanel);
-            dialog.Content = panel;
-            await dialog.ShowDialog(this);
-
+            var resultado = await DialogHelper.ConfirmarAsync(this,
+                "Eliminar Moneda",
+                $"¿Está seguro que desea eliminar la moneda \"{moneda.Codigo} - {moneda.Nombre}\"?\nEsta acción no se puede deshacer.",
+                "Sí, eliminar", destructivo: true);
             if (!resultado) return;
             try
             {
                 await _apiClient.EliminarMonedaAsync(moneda.Id);
-                await MostrarMensaje("Éxito", $"La moneda \"{moneda.Codigo}\" fue eliminada.");
+                await DialogHelper.MensajeAsync(this,"Éxito", $"La moneda \"{moneda.Codigo}\" fue eliminada.");
                 CargarMonedasAsync();
             }
-            catch (HttpRequestException ex) { await MostrarMensaje("Error", ex.Message); }
+            catch (HttpRequestException ex) { await DialogHelper.MensajeAsync(this,"Error", ex.Message); }
         }
 
         private async void BtnCargarCotizaciones_Click(object? sender, RoutedEventArgs e)
@@ -134,10 +125,10 @@ namespace SistemaCambio.Views
                     CotizacionVenta = c.CotizacionVenta
                 }).ToList();
             }
-            catch (Exception ex) { await MostrarMensaje("Error", ex.Message); }
+            catch (Exception ex) { await DialogHelper.MensajeAsync(this,"Error", ex.Message); }
         }
 
-        private decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
+        private static decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
 
         private async void BtnGuardarCotizacion_Click(object? sender, RoutedEventArgs e)
         {
@@ -156,7 +147,7 @@ namespace SistemaCambio.Views
                 });
                 BtnCargarCotizaciones_Click(sender, e);
             }
-            catch (Exception ex) { await MostrarMensaje("Error", ex.Message); }
+            catch (Exception ex) { await DialogHelper.MensajeAsync(this,"Error", ex.Message); }
         }
 
         private async void CargarLimiteDeudaAsync()
@@ -166,7 +157,7 @@ namespace SistemaCambio.Views
                 var valor = await _apiClient.ObtenerConfiguracionAsync("limite_deuda_general");
                 if (valor != null) txtLimiteDeudaGeneral.Text = valor;
             }
-            catch { }
+            catch (Exception ex) { AppLogger.Warn("CargarLimiteDeudaAsync", ex); }
         }
 
         private async void BtnGuardarLimiteDeuda_Click(object? sender, RoutedEventArgs e)
@@ -174,29 +165,18 @@ namespace SistemaCambio.Views
             var texto = txtLimiteDeudaGeneral.Text?.Trim() ?? "0";
             if (!decimal.TryParse(texto, out var limite) || limite < 0)
             {
-                await MostrarMensaje("Error", "Ingrese un valor numérico válido (0 o mayor).");
+                await DialogHelper.MensajeAsync(this,"Error", "Ingrese un valor numérico válido (0 o mayor).");
                 return;
             }
             var ok = await _apiClient.ActualizarConfiguracionAsync("limite_deuda_general", limite.ToString(System.Globalization.CultureInfo.InvariantCulture));
             if (ok)
-                await MostrarMensaje("Éxito", $"Límite de deuda general actualizado a {limite:N2}.");
+                await DialogHelper.MensajeAsync(this,"Éxito", $"Límite de deuda general actualizado a {limite:N2}.");
             else
-                await MostrarMensaje("Error", "No se pudo guardar la configuración.");
+                await DialogHelper.MensajeAsync(this,"Error", "No se pudo guardar la configuración.");
         }
 
         private void BtnCerrar_Click(object? sender, RoutedEventArgs e) => Close();
 
-        private async System.Threading.Tasks.Task MostrarMensaje(string titulo, string mensaje)
-        {
-            var dialog = new Window { Title = titulo, Width = 400, Height = 150, WindowStartupLocation = WindowStartupLocation.CenterOwner, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#161b22")) };
-            var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 15 };
-            panel.Children.Add(new TextBlock { Text = mensaje, TextWrapping = Avalonia.Media.TextWrapping.Wrap, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#e6edf3")) });
-            var btnOk = new Button { Content = "OK", Width = 100, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#238636")), Foreground = Avalonia.Media.Brushes.White };
-            btnOk.Click += (s, ev) => dialog.Close();
-            panel.Children.Add(btnOk);
-            dialog.Content = panel;
-            await dialog.ShowDialog(this);
-        }
     }
 
     public class CotizacionView

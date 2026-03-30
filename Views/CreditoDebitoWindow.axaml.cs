@@ -63,7 +63,7 @@ namespace SistemaCambio.Views
             catch (Exception ex) { NotificationService.Error("Error al cargar datos", ex.Message); }
         }
 
-        private decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
+        private static decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
 
         private void Recalcular_KeyUp(object? sender, KeyEventArgs e)
         {
@@ -158,25 +158,6 @@ namespace SistemaCambio.Views
                 return false;
             }
             return true;
-        }
-
-        private async System.Threading.Tasks.Task<bool> MostrarConfirmacion(string titulo, string mensaje)
-        {
-            var dialog = new Window { Title = titulo, Width = 480, Height = 220, WindowStartupLocation = WindowStartupLocation.CenterOwner, CanResize = false };
-            var panel = new StackPanel { Margin = new Avalonia.Thickness(20) };
-            panel.Children.Add(new TextBlock { Text = mensaje, TextWrapping = Avalonia.Media.TextWrapping.Wrap, MaxWidth = 440 });
-            var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, Margin = new Avalonia.Thickness(0, 15, 0, 0), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
-            bool continuar = false;
-            var btnContinuar = new Button { Content = "Continuar de todas formas" };
-            var btnCancelar = new Button { Content = "Cancelar" };
-            btnContinuar.Click += (s, ev) => { continuar = true; dialog.Close(); };
-            btnCancelar.Click += (s, ev) => dialog.Close();
-            btnPanel.Children.Add(btnContinuar);
-            btnPanel.Children.Add(btnCancelar);
-            panel.Children.Add(btnPanel);
-            dialog.Content = panel;
-            await dialog.ShowDialog(this);
-            return continuar;
         }
 
         private void BtnCancelar_Click(object? sender, RoutedEventArgs e) => Close();

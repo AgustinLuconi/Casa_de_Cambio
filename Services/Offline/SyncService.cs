@@ -18,8 +18,6 @@ public class SyncService : BackgroundService
     private readonly IDbContextFactory<LocalDbContext> _localDbFactory;
     private readonly ConnectivityChecker _connectivity;
     private readonly AuthTokenStore _tokenStore;
-    private const int BatchSize = 10;
-    private const int MaxRetries = 5;
 
     public event Action<int>? OnSyncCompleted;
     public event Action<string>? OnSyncError;
@@ -42,7 +40,7 @@ public class SyncService : BackgroundService
         {
             try
             {
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                await Task.Delay(AppConstants.IntervaloSincronizacion, stoppingToken);
                 if (!_connectivity.IsOnline || !_tokenStore.IsAuthenticated) continue;
                 await SyncPendingAsync();
             }
@@ -60,9 +58,9 @@ public class SyncService : BackgroundService
 
         var pendientes = await db.OperacionesPendientes
             .Where(o => (o.EstadoSync == EstadoSincronizacion.Pendiente || o.EstadoSync == EstadoSincronizacion.Error)
-                        && o.IntentosSyncCount < MaxRetries)
+                        && o.IntentosSyncCount < AppConstants.SyncMaxRetries)
             .OrderBy(o => o.FechaCreacionLocal)
-            .Take(BatchSize)
+            .Take(AppConstants.SyncBatchSize)
             .ToListAsync();
 
         if (pendientes.Count == 0) return;
@@ -111,7 +109,7 @@ public class SyncService : BackgroundService
                     op.EstadoSync = EstadoSincronizacion.Error;
                     op.ErrorSync = resultado.Mensaje;
                     op.IntentosSyncCount++;
-                    if (op.IntentosSyncCount >= MaxRetries)
+                    if (op.IntentosSyncCount >= AppConstants.SyncMaxRetries)
                         op.EstadoSync = EstadoSincronizacion.RequiereRevision;
                 }
             }
@@ -165,9 +163,9 @@ public class SyncService : BackgroundService
 
             await db.SaveChangesAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            // Cache refresh failure is non-critical
+            AppLogger.Warn("RefreshCacheAsync", ex);
         }
     }
 }

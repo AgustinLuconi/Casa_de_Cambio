@@ -39,3 +39,10 @@ Thumbs.db
 *.user
 *.userossscache
 *.sln.docstates
+
+# Secrets locales — nunca commitear
+src/CasaCambio.Server/appsettings.local.json
+src/CasaCambio.Server/appsettings.Development.local.json
+
+# Archivos de análisis/debug temporales
+.dialog_analysis.txt

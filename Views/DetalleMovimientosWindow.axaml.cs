@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
+using SistemaCambio.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -46,7 +47,7 @@ namespace SistemaCambio.Views
 
                 dgMovimientos.ItemsSource = _movimientos;
             }
-            catch { }
+            catch (Exception ex) { AppLogger.Warn("CargarDatosAsync", ex); }
         }
 
         private async void BtnBuscar_Click(object? sender, RoutedEventArgs e)
@@ -94,7 +95,7 @@ namespace SistemaCambio.Views
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { AppLogger.Warn("BtnBuscar_Click", ex); }
 
             txtResultados.Text = $"{_movimientos.Count} movimiento(s) encontrado(s)";
         }

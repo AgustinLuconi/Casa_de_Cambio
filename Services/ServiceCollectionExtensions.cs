@@ -18,7 +18,7 @@ namespace SistemaCambio.Services
             services.AddHttpClient<ICasaCambioApiClient, CasaCambioApiClient>(client =>
             {
                 client.BaseAddress = new Uri(apiBaseUrl);
-                client.Timeout = TimeSpan.FromSeconds(15);
+                client.Timeout = AppConstants.HttpTimeout;
             });
 
             // SQLite local database

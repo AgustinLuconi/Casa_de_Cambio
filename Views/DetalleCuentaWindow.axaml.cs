@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
+using SistemaCambio.Services;
 
 namespace SistemaCambio.Views
 {
@@ -73,7 +74,7 @@ namespace SistemaCambio.Views
                     if (Movimientos.Count == 0) txtSinMovimientos.IsVisible = true;
                 }
             }
-            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Error: {ex.Message}"); }
+            catch (Exception ex) { AppLogger.Warn("CargarDatosAsync", ex); }
         }
 
         private void BtnCerrar_Click(object? sender, RoutedEventArgs e) => Close();

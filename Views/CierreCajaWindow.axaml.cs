@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
 using SistemaCambio.Services.Offline;
+using SistemaCambio.Views.Helpers;
 using CasaCambio.Shared.DTOs;
 using System;
 using System.Linq;
@@ -39,7 +40,7 @@ namespace SistemaCambio.Views
                 var cierre = await _apiClient.ObtenerCierreHoyAsync();
                 if (cierre != null) MostrarCierre(cierre);
             }
-            catch { }
+            catch (Exception ex) { AppLogger.Warn("CargarCierreExistenteAsync", ex); }
         }
 
         private async void BtnGenerar_Click(object? sender, RoutedEventArgs e)
@@ -115,7 +116,7 @@ namespace SistemaCambio.Views
                 }
                 icSaldos.ItemsSource = items;
             }
-            catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex); }
+            catch (Exception ex) { AppLogger.Warn("CargarSaldosDinamicosAsync", ex); }
         }
 
         private async void BtnCerrarDefinitivo_Click(object? sender, RoutedEventArgs e)
@@ -132,7 +133,7 @@ namespace SistemaCambio.Views
                 return;
             }
 
-            var confirma = await MostrarConfirmacion("Cerrar el dia definitivamente?", "Esta accion NO se puede deshacer.\n\nUna vez cerrado:\n- No se pueden agregar mas operaciones a este dia\n- Los datos quedan bloqueados para auditoria");
+            var confirma = await DialogHelper.ConfirmarAsync(this, "Cerrar el dia definitivamente?", "Esta accion NO se puede deshacer.\n\nUna vez cerrado:\n- No se pueden agregar mas operaciones a este dia\n- Los datos quedan bloqueados para auditoria", "Si, cerrar definitivamente", destructivo: true);
             if (!confirma) return;
 
             try
@@ -157,23 +158,8 @@ namespace SistemaCambio.Views
                 dgOperacionesDia.ItemsSource = response.Items;
                 txtCantidadOps.Text = $"({response.Items.Count})";
             }
-            catch { }
+            catch (Exception ex) { AppLogger.Warn("CargarOperacionesDiaAsync", ex); }
         }
 
-        private async System.Threading.Tasks.Task<bool> MostrarConfirmacion(string titulo, string mensaje)
-        {
-            var dialog = new Window { Title = titulo, Width = 450, Height = 220, WindowStartupLocation = WindowStartupLocation.CenterOwner, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#161b22")) };
-            var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 15 };
-            panel.Children.Add(new TextBlock { Text = mensaje, TextWrapping = Avalonia.Media.TextWrapping.Wrap, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#e6edf3")) });
-            var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Avalonia.Thickness(0, 10, 0, 0) };
-            bool resultado = false;
-            var btnSi = new Button { Content = "Si, cerrar definitivamente", Width = 180, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#da3633")), Foreground = Avalonia.Media.Brushes.White };
-            var btnNo = new Button { Content = "Cancelar", Width = 100, Background = Avalonia.Media.Brushes.Transparent, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#e6edf3")) };
-            btnSi.Click += (s, ev) => { resultado = true; dialog.Close(); };
-            btnNo.Click += (s, ev) => { resultado = false; dialog.Close(); };
-            btnPanel.Children.Add(btnSi); btnPanel.Children.Add(btnNo); panel.Children.Add(btnPanel); dialog.Content = panel;
-            await dialog.ShowDialog(this);
-            return resultado;
-        }
     }
 }

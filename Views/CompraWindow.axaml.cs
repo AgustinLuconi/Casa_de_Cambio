@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
 using SistemaCambio.Services.Offline;
+using SistemaCambio.Views.Helpers;
 using CasaCambio.Shared.DTOs;
 using CasaCambio.Shared.Requests;
 using System;
@@ -103,10 +104,10 @@ namespace SistemaCambio.Views
                     txtCotizacion.Text = "0.00000";
                 }
             }
-            catch { }
+            catch (Exception ex) { AppLogger.Warn("CargarCotizacionDelDiaAsync", ex); }
         }
 
-        private decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
+        private static decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
 
         private void Recalcular_KeyUp(object? sender, KeyEventArgs e)
         {
@@ -184,21 +185,23 @@ namespace SistemaCambio.Views
             if (_cotizacionDia > 0)
             {
                 decimal diffPct = Math.Abs(cotizacion - _cotizacionDia) / _cotizacionDia * 100;
-                if (diffPct > 5)
+                if (diffPct > AppConstants.CotizacionDiffPctUmbral)
                 {
-                    var continuar = await MostrarConfirmacion(
+                    var continuar = await DialogHelper.ConfirmarAsync(this,
                         "Cotización inusual",
-                        $"La cotización ingresada ({cotizacion:N5}) difiere un {diffPct:N1}% de la cotización del día ({_cotizacionDia:N5}).\n\n¿Desea continuar?");
+                        $"La cotización ingresada ({cotizacion:N5}) difiere un {diffPct:N1}% de la cotización del día ({_cotizacionDia:N5}).\n\n¿Desea continuar?",
+                        "Continuar de todas formas");
                     if (!continuar) return;
                 }
             }
 
             // Warning monto alto (>5.000.000 ARS)
-            if (montoOrigen > 5_000_000m)
+            if (montoOrigen > AppConstants.MontoAltoARS)
             {
-                var continuar = await MostrarConfirmacion(
+                var continuar = await DialogHelper.ConfirmarAsync(this,
                     "Monto elevado",
-                    $"El monto en ARS (${montoOrigen:N2}) supera los $5.000.000.\n\n¿Desea continuar?");
+                    $"El monto en ARS (${montoOrigen:N2}) supera los $5.000.000.\n\n¿Desea continuar?",
+                    "Continuar de todas formas");
                 if (!continuar) return;
             }
 
@@ -230,25 +233,6 @@ namespace SistemaCambio.Views
             else
                 NotificationService.OperacionGuardada("Compra", resultado.OperacionId ?? 0);
             Close();
-        }
-
-        private async System.Threading.Tasks.Task<bool> MostrarConfirmacion(string titulo, string mensaje)
-        {
-            var dialog = new Window { Title = titulo, Width = 480, Height = 220, WindowStartupLocation = WindowStartupLocation.CenterOwner, CanResize = false };
-            var panel = new StackPanel { Margin = new Avalonia.Thickness(20) };
-            panel.Children.Add(new TextBlock { Text = mensaje, TextWrapping = Avalonia.Media.TextWrapping.Wrap, MaxWidth = 440 });
-            var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, Margin = new Avalonia.Thickness(0, 15, 0, 0), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
-            bool continuar = false;
-            var btnContinuar = new Button { Content = "Continuar de todas formas" };
-            var btnCancelar = new Button { Content = "Cancelar" };
-            btnContinuar.Click += (s, ev) => { continuar = true; dialog.Close(); };
-            btnCancelar.Click += (s, ev) => dialog.Close();
-            btnPanel.Children.Add(btnContinuar);
-            btnPanel.Children.Add(btnCancelar);
-            panel.Children.Add(btnPanel);
-            dialog.Content = panel;
-            await dialog.ShowDialog(this);
-            return continuar;
         }
 
         private void BotonCancelar_Click(object? sender, RoutedEventArgs e) => Close();

@@ -59,7 +59,7 @@ namespace SistemaCambio.Views
                 }
                 dgSaldosIniciales.ItemsSource = _saldosIniciales;
             }
-            catch { }
+            catch (Exception ex) { AppLogger.Warn("CargarMonedasAsync", ex); }
         }
 
         private async void CargarDatosCuentaEdicionAsync()
@@ -96,7 +96,7 @@ namespace SistemaCambio.Views
                         txtLimiteDeuda.Text = cuenta.LimiteDeuda.Value.ToString("N2");
                 }
             }
-            catch { }
+            catch (Exception ex) { AppLogger.Warn("CargarDatosCuentaEdicionAsync", ex); }
         }
 
         private async void BtnGuardar_Click(object? sender, RoutedEventArgs e)

@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
+using SistemaCambio.Services;
 using CasaCambio.Shared.DTOs;
 using System;
 using System.Collections.Generic;
@@ -33,7 +34,7 @@ namespace SistemaCambio.Views
                 var response = await _apiClient.ObtenerOperacionesAsync(fechaDesde, fechaHasta, pageSize: 500);
                 dgOperaciones.ItemsSource = response.Items;
             }
-            catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+            catch (Exception ex) { AppLogger.Warn("BtnGenerarOperaciones_Click", ex); }
         }
 
         private async void BtnGenerarSaldos_Click(object? sender, RoutedEventArgs e)
@@ -46,7 +47,7 @@ namespace SistemaCambio.Views
                 if (tipo != "Todos") cuentas = cuentas.Where(c => c.Tipo == tipo).ToList();
                 dgSaldos.ItemsSource = cuentas.OrderBy(c => c.Nombre).ToList();
             }
-            catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+            catch (Exception ex) { AppLogger.Warn("BtnGenerarSaldos_Click", ex); }
         }
 
         private async void BtnExportarOperaciones_Click(object? sender, RoutedEventArgs e)

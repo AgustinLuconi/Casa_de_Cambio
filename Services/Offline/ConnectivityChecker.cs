@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using SistemaCambio.ApiClient;
+using SistemaCambio.Services;
 
 namespace SistemaCambio.Services.Offline;
 
@@ -18,7 +19,7 @@ public class ConnectivityChecker : IDisposable
     public ConnectivityChecker(ICasaCambioApiClient apiClient)
     {
         _apiClient = apiClient;
-        _timer = new Timer(async _ => await CheckAsync(), null, TimeSpan.Zero, TimeSpan.FromSeconds(15));
+        _timer = new Timer(async _ => await CheckAsync(), null, TimeSpan.Zero, AppConstants.IntervaloVerificacionConectividad);
     }
 
     public async Task<bool> CheckAsync()
@@ -33,8 +34,9 @@ public class ConnectivityChecker : IDisposable
             }
             return _isOnline;
         }
-        catch
+        catch (Exception ex)
         {
+            AppLogger.Warn("ConnectivityChecker.CheckAsync", ex);
             if (_isOnline)
             {
                 _isOnline = false;

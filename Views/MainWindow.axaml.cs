@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
 using SistemaCambio.ViewModels;
+using SistemaCambio.Views.Helpers;
 using CasaCambio.Shared.DTOs;
 using System;
 using System.IO;
@@ -37,7 +38,7 @@ public partial class MainWindow : Window
                 _viewModel.SolicitarDetalleCuenta += async (id) => await AbrirDetalleCuentaWindow(id);
                 _viewModel.SolicitarEdicionCuenta += async (id) => await AbrirEdicionCuentaWindow(id);
                 _viewModel.MostrarMensajeEvent += MostrarMensajeEnUI;
-                _viewModel.MostrarConfirmacionEvent += MostrarConfirmacionEnUI;
+                _viewModel.MostrarConfirmacionEvent += (t, m) => DialogHelper.ConfirmarAsync(this, t, m, "Si, eliminar cuenta", destructivo: true);
                 _viewModel.DashboardCargado += dashboard =>
                     Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
@@ -47,6 +48,9 @@ public partial class MainWindow : Window
                         txtSaldoARS.Text = $"${dashboard.SaldosCaja.Where(s => s.Moneda == "ARS").Sum(s => s.Saldo):N2}";
                         PoblarGraficoSaldos(dashboard);
                         PoblarGraficoPie(dashboard);
+                        PoblarGraficoOperacionesDiarias(dashboard);
+                        PoblarGraficoComparativo(dashboard);
+                        PoblarGraficoDistribucion(dashboard);
                     });
                 VerificarDiaCerradoAsync();
             }
@@ -102,7 +106,7 @@ public partial class MainWindow : Window
             var opsResponse = await _apiClient.ObtenerOperacionesAsync(page: 1, pageSize: 10);
             dgUltimasOperaciones.ItemsSource = opsResponse.Items;
         }
-        catch (Exception ex) { Console.WriteLine($"Error cargando operaciones: {ex.Message}"); }
+        catch (Exception ex) { AppLogger.Warn("CargarUltimasOperaciones", ex); }
     }
 
     private void PoblarGraficoSaldos(CasaCambio.Shared.DTOs.DashboardDto dashboard)
@@ -112,7 +116,7 @@ public partial class MainWindow : Window
             .Where(s => s.Saldo != 0)
             .OrderByDescending(s => Math.Abs(s.Saldo))
             .Take(8).ToList();
-        if (!monedas.Any()) return;
+        if (!monedas.Any()) { MostrarSinDatos(pltBalanceEvolution.Plot); pltBalanceEvolution.Refresh(); return; }
 
         var values = monedas.Select(s => (double)Math.Abs(s.Saldo)).ToArray();
         var bar = pltBalanceEvolution.Plot.Add.Bars(values);
@@ -128,9 +132,7 @@ public partial class MainWindow : Window
             tickGen.AddMajor(i + 1, monedas[i].Moneda);
         pltBalanceEvolution.Plot.Axes.Bottom.TickGenerator = tickGen;
         pltBalanceEvolution.Plot.Axes.Left.Label.Text = "Saldo";
-        pltBalanceEvolution.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#14232b");
-        pltBalanceEvolution.Plot.DataBackground.Color   = ScottPlot.Color.FromHex("#0c151a");
-        pltBalanceEvolution.Plot.Axes.Color(ScottPlot.Color.FromHex("#94a3b8"));
+        ConfigurarTemaOscuro(pltBalanceEvolution.Plot);
         pltBalanceEvolution.Refresh();
     }
 
@@ -141,7 +143,7 @@ public partial class MainWindow : Window
             .Where(s => s.Saldo > 0)
             .OrderByDescending(s => s.Saldo)
             .Take(6).ToList();
-        if (!positivos.Any()) return;
+        if (!positivos.Any()) { MostrarSinDatos(pltCurrencyDistribution.Plot); pltCurrencyDistribution.Refresh(); return; }
 
         var pie = pltCurrencyDistribution.Plot.Add.Pie(
             positivos.Select(s => (double)s.Saldo).ToArray());
@@ -152,10 +154,101 @@ public partial class MainWindow : Window
             pie.Slices[i].FillColor = ScottPlot.Color.FromHex(colores[i % colores.Length]);
         }
         pltCurrencyDistribution.Plot.ShowLegend();
-        pltCurrencyDistribution.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#14232b");
-        pltCurrencyDistribution.Plot.DataBackground.Color   = ScottPlot.Color.FromHex("#0c151a");
-        pltCurrencyDistribution.Plot.Axes.Color(ScottPlot.Color.FromHex("#94a3b8"));
+        ConfigurarTemaOscuro(pltCurrencyDistribution.Plot);
         pltCurrencyDistribution.Refresh();
+    }
+
+    private static void ConfigurarTemaOscuro(ScottPlot.Plot plot)
+    {
+        plot.FigureBackground.Color = ScottPlot.Color.FromHex("#14232b");
+        plot.DataBackground.Color   = ScottPlot.Color.FromHex("#0c151a");
+        plot.Axes.Color(ScottPlot.Color.FromHex("#94a3b8"));
+    }
+
+    private static void MostrarSinDatos(ScottPlot.Plot plot, string mensaje = "Sin datos")
+    {
+        plot.Clear();
+        plot.Add.Annotation(mensaje);
+        ConfigurarTemaOscuro(plot);
+    }
+
+    private void PoblarGraficoOperacionesDiarias(DashboardDto dashboard)
+    {
+        pltOperacionesDiarias.Plot.Clear();
+        var data = dashboard.OperacionesPorDia;
+        if (!data.Any()) { MostrarSinDatos(pltOperacionesDiarias.Plot); pltOperacionesDiarias.Refresh(); return; }
+
+        var xs      = data.Select(d => d.Fecha.ToOADate()).ToArray();
+        var compras = data.Select(d => (double)d.CantidadCompras).ToArray();
+        var ventas  = data.Select(d => (double)d.CantidadVentas).ToArray();
+
+        var scCompras = pltOperacionesDiarias.Plot.Add.Scatter(xs, compras);
+        scCompras.Color = ScottPlot.Color.FromHex("#13a4ec");
+        scCompras.LegendText = "Compras";
+
+        var scVentas = pltOperacionesDiarias.Plot.Add.Scatter(xs, ventas);
+        scVentas.Color = ScottPlot.Color.FromHex("#22c55e");
+        scVentas.LegendText = "Ventas";
+
+        pltOperacionesDiarias.Plot.Axes.DateTimeTicksBottom();
+        pltOperacionesDiarias.Plot.ShowLegend();
+        ConfigurarTemaOscuro(pltOperacionesDiarias.Plot);
+        pltOperacionesDiarias.Refresh();
+    }
+
+    private void PoblarGraficoComparativo(DashboardDto dashboard)
+    {
+        pltComparativoMensual.Plot.Clear();
+        var meses = dashboard.ComparativoMensual;
+        if (!meses.Any()) { MostrarSinDatos(pltComparativoMensual.Plot); pltComparativoMensual.Refresh(); return; }
+
+        int n = meses.Count;
+        var barsCompras = meses.Select((m, i) => new ScottPlot.Bar
+        {
+            Position  = i * 2.5,
+            Value     = (double)m.VolumenComprasARS / 1_000,
+            FillColor = ScottPlot.Color.FromHex("#13a4ec"),
+            Size      = 1.0
+        }).ToList();
+        var barsVentas = meses.Select((m, i) => new ScottPlot.Bar
+        {
+            Position  = i * 2.5 + 1.0,
+            Value     = (double)m.VolumenVentasARS / 1_000,
+            FillColor = ScottPlot.Color.FromHex("#22c55e"),
+            Size      = 1.0
+        }).ToList();
+
+        var bcCompras = pltComparativoMensual.Plot.Add.Bars(barsCompras);
+        bcCompras.LegendText = "Compras";
+        var bcVentas = pltComparativoMensual.Plot.Add.Bars(barsVentas);
+        bcVentas.LegendText = "Ventas";
+
+        var tickGen = new ScottPlot.TickGenerators.NumericManual();
+        for (int i = 0; i < n; i++)
+            tickGen.AddMajor(i * 2.5 + 0.5, $"{new DateTime(meses[i].Anio, meses[i].Mes, 1):MMM/yy}");
+        pltComparativoMensual.Plot.Axes.Bottom.TickGenerator = tickGen;
+        pltComparativoMensual.Plot.Axes.Left.Label.Text = "Miles ARS";
+        pltComparativoMensual.Plot.ShowLegend();
+        ConfigurarTemaOscuro(pltComparativoMensual.Plot);
+        pltComparativoMensual.Refresh();
+    }
+
+    private void PoblarGraficoDistribucion(DashboardDto dashboard)
+    {
+        pltDistribucionMonedas.Plot.Clear();
+        var data = dashboard.DistribucionMonedas.Take(6).ToList();
+        if (!data.Any()) { MostrarSinDatos(pltDistribucionMonedas.Plot); pltDistribucionMonedas.Refresh(); return; }
+
+        var pie = pltDistribucionMonedas.Plot.Add.Pie(data.Select(d => (double)d.VolumenTotal).ToArray());
+        var colores = new[] { "#13a4ec", "#0d79b3", "#1e3441", "#22c55e", "#eab308", "#94a3b8" };
+        for (int i = 0; i < pie.Slices.Count; i++)
+        {
+            pie.Slices[i].Label     = data[i].Moneda;
+            pie.Slices[i].FillColor = ScottPlot.Color.FromHex(colores[i % colores.Length]);
+        }
+        pltDistribucionMonedas.Plot.ShowLegend();
+        ConfigurarTemaOscuro(pltDistribucionMonedas.Plot);
+        pltDistribucionMonedas.Refresh();
     }
 
     private async void BtnCompra_Click(object? sender, RoutedEventArgs e) => await AbrirCompraWindow();
@@ -212,22 +305,6 @@ public partial class MainWindow : Window
     {
         if (titulo == "Error") Services.NotificationService.Error(titulo, mensaje);
         else Services.NotificationService.Success(titulo, mensaje);
-    }
-
-    private async Task<bool> MostrarConfirmacionEnUI(string titulo, string mensaje)
-    {
-        var dialog = new Window { Title = titulo, Width = 450, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#161b22")) };
-        var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 15 };
-        panel.Children.Add(new TextBlock { Text = mensaje, TextWrapping = Avalonia.Media.TextWrapping.Wrap, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#e6edf3")) });
-        var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Avalonia.Thickness(0, 10, 0, 0) };
-        bool resultado = false;
-        var btnSi = new Button { Content = "Si, eliminar cuenta", Width = 160, HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#da3633")), Foreground = Avalonia.Media.Brushes.White };
-        var btnNo = new Button { Content = "Cancelar", Width = 100, HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, Background = Avalonia.Media.Brushes.Transparent, Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#e6edf3")) };
-        btnSi.Click += (s, ev) => { resultado = true; dialog.Close(); };
-        btnNo.Click += (s, ev) => { resultado = false; dialog.Close(); };
-        btnPanel.Children.Add(btnSi); btnPanel.Children.Add(btnNo); panel.Children.Add(btnPanel); dialog.Content = panel;
-        await dialog.ShowDialog(this);
-        return resultado;
     }
 
     private async void BtnExportar_Click(object? sender, RoutedEventArgs e)
