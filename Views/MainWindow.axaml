@@ -320,6 +320,30 @@
                             </Border>
                         </Grid>
 
+                        <!-- Operaciones Diarias (30 días) -->
+                        <Border Background="#0Cffffff" BorderBrush="#22ffffff" BorderThickness="1" CornerRadius="16" Padding="24">
+                            <StackPanel>
+                                <TextBlock Text="Operaciones Diarias (últimos 30 días)" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <sp:AvaPlot x:Name="pltOperacionesDiarias" Height="280" Margin="0,16,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Comparativo Mensual + Distribución por Moneda -->
+                        <Grid ColumnDefinitions="1*, 1*">
+                            <Border Grid.Column="0" Margin="0,0,12,0" Background="#0Cffffff" BorderBrush="#22ffffff" BorderThickness="1" CornerRadius="16" Padding="24">
+                                <StackPanel>
+                                    <TextBlock Text="Comparativo Mensual (6 meses)" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <sp:AvaPlot x:Name="pltComparativoMensual" Height="280" Margin="0,16,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Margin="12,0,0,0" Background="#0Cffffff" BorderBrush="#22ffffff" BorderThickness="1" CornerRadius="16" Padding="24">
+                                <StackPanel>
+                                    <TextBlock Text="Distribución por Moneda (30 días)" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <sp:AvaPlot x:Name="pltDistribucionMonedas" Height="280" Margin="0,16,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
                         <!-- Cotizaciones del Día -->
                         <Border Background="#0Cffffff" BorderBrush="#22ffffff"
                                 BorderThickness="1" CornerRadius="16" Padding="24">

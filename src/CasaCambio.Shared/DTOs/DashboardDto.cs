@@ -9,4 +9,7 @@ public class DashboardDto
     public decimal VolumenVentasARS { get; set; }
     public List<SaldoCuentaDto> SaldosCaja { get; set; } = new();
     public List<CotizacionDto> CotizacionesHoy { get; set; } = new();
+    public List<OperacionPorDiaDto> OperacionesPorDia { get; set; } = new();
+    public List<ComparativoMensualDto> ComparativoMensual { get; set; } = new();
+    public List<OperacionPorMonedaDto> DistribucionMonedas { get; set; } = new();
 }
