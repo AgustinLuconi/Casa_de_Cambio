@@ -27,6 +27,8 @@ namespace SistemaCambio.Views
         {
             _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
             InitializeComponent();
+            NotificationService.Initialize(notificationPanel);
+            Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             txtFecha.Text = DateTime.Today.ToString("dddd, dd 'de' MMMM 'de' yyyy");
             CargarSaldosDinamicosAsync();
             CargarCierreExistenteAsync();
@@ -123,7 +125,7 @@ namespace SistemaCambio.Views
         {
             if (_cierreId == null) return;
 
-            var offlineService = App.Services.GetRequiredService<OfflineOperacionService>();
+            var offlineService = App.Services.GetRequiredService<IOfflineOperacionService>();
             int pendientes = await offlineService.ObtenerPendientesCountAsync();
             if (pendientes > 0)
             {

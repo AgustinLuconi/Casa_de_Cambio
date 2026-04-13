@@ -31,8 +31,6 @@ public class DashboardController : ControllerBase
 
         var opsPorDia = db.Operaciones
             .Where(o => o.Fecha >= hace30Dias)
-            .AsNoTracking()
-            .ToList()
             .GroupBy(o => o.Fecha.Date)
             .Select(g => new OperacionPorDiaDto
             {
@@ -41,30 +39,27 @@ public class DashboardController : ControllerBase
                 CantidadVentas  = g.Count(o => o.TipoOperacion == "Venta")
             })
             .OrderBy(x => x.Fecha)
+            .AsNoTracking()
             .ToList();
 
         var compMensual = db.Operaciones
             .Where(o => o.Fecha >= hace6Meses)
-            .AsNoTracking()
-            .ToList()
             .GroupBy(o => new { o.Fecha.Year, o.Fecha.Month })
             .Select(g => new ComparativoMensualDto
             {
                 Anio              = g.Key.Year,
                 Mes               = g.Key.Month,
-                VolumenComprasARS = g.Where(o => o.TipoOperacion == "Compra").Sum(o => o.MontoTotalOrigen),
-                VolumenVentasARS  = g.Where(o => o.TipoOperacion == "Venta").Sum(o => o.MontoTotalDestino)
+                VolumenComprasARS = g.Where(o => o.TipoOperacion == "Compra").Sum(o => (decimal?)o.MontoTotalOrigen) ?? 0,
+                VolumenVentasARS  = g.Where(o => o.TipoOperacion == "Venta").Sum(o => (decimal?)o.MontoTotalDestino) ?? 0
             })
             .OrderBy(x => x.Anio).ThenBy(x => x.Mes)
+            .AsNoTracking()
             .ToList();
 
-        var distMonedas = db.Operaciones
-            .Include(o => o.Movimientos)
-            .Where(o => o.Fecha >= hace30Dias)
+        var distMonedas = db.Movimientos
+            .Where(m => m.Fecha >= hace30Dias && m.Monto > 0)
             .AsNoTracking()
             .ToList()
-            .SelectMany(o => o.Movimientos)
-            .Where(m => m.Monto > 0)
             .GroupBy(m => m.Moneda)
             .Select(g => new OperacionPorMonedaDto
             {

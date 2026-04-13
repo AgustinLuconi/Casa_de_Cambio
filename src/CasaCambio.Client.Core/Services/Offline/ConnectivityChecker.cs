@@ -2,11 +2,10 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using SistemaCambio.ApiClient;
-using SistemaCambio.Services;
 
 namespace SistemaCambio.Services.Offline;
 
-public class ConnectivityChecker : IDisposable
+public class ConnectivityChecker : IConnectivityChecker, IDisposable
 {
     private readonly ICasaCambioApiClient _apiClient;
     private readonly Timer _timer;
@@ -16,10 +15,15 @@ public class ConnectivityChecker : IDisposable
     public bool IsOnline => _isOnline;
     public event Action<bool>? OnConnectivityChanged;
 
+    // Constructor de producción — usa el intervalo de AppConstants
     public ConnectivityChecker(ICasaCambioApiClient apiClient)
+        : this(apiClient, AppConstants.IntervaloVerificacionConectividad) { }
+
+    // Constructor testeable — permite inyectar un intervalo arbitrario
+    public ConnectivityChecker(ICasaCambioApiClient apiClient, TimeSpan intervalo)
     {
         _apiClient = apiClient;
-        _timer = new Timer(async _ => await CheckAsync(), null, TimeSpan.Zero, AppConstants.IntervaloVerificacionConectividad);
+        _timer = new Timer(async _ => await CheckAsync(), null, TimeSpan.Zero, intervalo);
     }
 
     public async Task<bool> CheckAsync()

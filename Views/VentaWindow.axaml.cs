@@ -15,16 +15,18 @@ namespace SistemaCambio.Views
     public partial class VentaWindow : Window
     {
         private readonly ICasaCambioApiClient _apiClient;
-        private readonly OfflineOperacionService _offlineService;
+        private readonly IOfflineOperacionService _offlineService;
         private decimal _cotizacionDia;
         private CuentaMonedaTag? _cuentaARSFija;
 
         public VentaWindow()
         {
             _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
-            _offlineService = App.Services.GetRequiredService<OfflineOperacionService>();
+            _offlineService = App.Services.GetRequiredService<IOfflineOperacionService>();
 
             InitializeComponent();
+            NotificationService.Initialize(notificationPanel);
+            Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             cmbDebitar.SelectionChanged += CmbDebitar_SelectionChanged;
             CargarDatosAsync();
         }

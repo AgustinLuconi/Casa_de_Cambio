@@ -83,7 +83,7 @@
                     </Button>
                 </StackPanel>
 
-                <!-- Mi Cuenta -->
+                <!-- Mi Cuenta + Historial -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                     <Button Classes="toolbar-btn" Click="BtnMiCuenta_Click" ToolTip.Tip="Mi Cuenta">
                         <StackPanel Orientation="Horizontal" Spacing="5">
@@ -91,6 +91,22 @@
                                                Foreground="{DynamicResource AccentBrush}"/>
                             <TextBlock Text="Mi Cuenta" FontSize="12"/>
                         </StackPanel>
+                    </Button>
+                    <Button x:Name="btnHistorial" Classes="toolbar-btn"
+                            Click="BtnHistorial_Click" ToolTip.Tip="Historial de notificaciones">
+                        <Panel>
+                            <icon:MaterialIcon Kind="Bell" Width="16" Height="16"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <Border x:Name="badgeHistorial"
+                                    Background="{DynamicResource DangerBrush}"
+                                    CornerRadius="6" Width="14" Height="14"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Margin="0,-4,-4,0" IsVisible="False">
+                                <TextBlock x:Name="txtBadgeCount" Text="0" FontSize="9"
+                                           FontWeight="Bold" Foreground="White"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </Panel>
                     </Button>
                 </StackPanel>
             </Grid>
@@ -511,10 +527,85 @@
         </Border>
 
         <!-- Notification Panel -->
-        <controls:NotificationPanel x:Name="notificationPanel" 
-                                     Grid.Row="0" 
+        <controls:NotificationPanel x:Name="notificationPanel"
+                                     Grid.Row="0"
                                      Grid.RowSpan="3"
                                      VerticalAlignment="Top"
                                      HorizontalAlignment="Right"/>
+
+        <!-- Panel historial de notificaciones (overlay) -->
+        <Border x:Name="panelHistorial"
+                IsVisible="False"
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1" CornerRadius="10"
+                Width="380" MaxHeight="520"
+                Grid.Row="0" Grid.RowSpan="3"
+                VerticalAlignment="Top" HorizontalAlignment="Right"
+                Margin="0,50,16,0"
+                BoxShadow="0 8 24 0 #AA000000"
+                ZIndex="100">
+            <Grid RowDefinitions="Auto, *, Auto" Margin="16">
+                <!-- Header -->
+                <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,12">
+                    <TextBlock Text="Historial de Notificaciones"
+                               FontWeight="SemiBold" FontSize="14"
+                               Foreground="{DynamicResource PrimaryTextBrush}"
+                               VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Limpiar"
+                            Classes="secondary-btn"
+                            FontSize="11" Padding="8,4"
+                            Click="BtnLimpiarHistorial_Click"/>
+                </Grid>
+
+                <!-- Lista -->
+                <ScrollViewer Grid.Row="1" MaxHeight="400">
+                    <ItemsControl x:Name="icHistorial">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:CompileBindings="False">
+                                <Border BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="0,0,0,1"
+                                        Padding="0,8">
+                                    <Grid ColumnDefinitions="8, *">
+                                        <Border Grid.Column="0"
+                                                Width="4" CornerRadius="2"
+                                                Background="{Binding ColorIndicador}"
+                                                VerticalAlignment="Stretch"
+                                                Margin="0,2,8,2"/>
+                                        <StackPanel Grid.Column="1" Spacing="2">
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <TextBlock Text="{Binding Title}"
+                                                           FontWeight="SemiBold" FontSize="12"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Timestamp, StringFormat='{}{0:HH:mm}'}"
+                                                           FontSize="10"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <TextBlock Text="{Binding Message}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       IsVisible="{Binding TieneMessage}"
+                                                       TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Sin notificaciones -->
+                <TextBlock Grid.Row="2"
+                           x:Name="txtSinNotificaciones"
+                           Text="Sin notificaciones recientes"
+                           FontSize="12"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           HorizontalAlignment="Center"
+                           Margin="0,12,0,4"
+                           IsVisible="False"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

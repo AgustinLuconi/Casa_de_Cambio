@@ -1,10 +1,13 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
+using SistemaCambio.Models;
 using SistemaCambio.Services;
 using SistemaCambio.ViewModels;
+using SistemaCambio.Views.Controls;
 using SistemaCambio.Views.Helpers;
 using CasaCambio.Shared.DTOs;
 using System;
@@ -21,6 +24,8 @@ public partial class MainWindow : Window
     private MainWindowViewModel? _viewModel;
     private readonly ICasaCambioApiClient _apiClient;
     private bool _diaCerrado;
+    private bool _historialVisible;
+    private int _notificacionesNoVistas;
 
     public MainWindow()
     {
@@ -28,6 +33,8 @@ public partial class MainWindow : Window
 
         InitializeComponent();
         Services.NotificationService.Initialize(notificationPanel);
+        Services.NotificationService.HistorialActualizado += ActualizarBadgeHistorial;
+        AddHandler(PointerPressedEvent, VentanaPointerPressed, handledEventsToo: false);
 
         DataContextChanged += (s, e) =>
         {
@@ -341,4 +348,73 @@ public partial class MainWindow : Window
     private async Task AbrirMovimientosWindow() { var w = new DetalleMovimientosWindow(); await w.ShowDialog(this); }
     private async Task AbrirReportesWindow() { var w = new ReportesWindow(); await w.ShowDialog(this); }
     private async Task AbrirConfiguracionWindow() { var w = new ConfiguracionWindow(); await w.ShowDialog(this); }
+
+    // ── Historial de notificaciones ──────────────────────────────────────────
+
+    public void RestaurarNotificationPanel()
+    {
+        Services.NotificationService.Initialize(notificationPanel);
+    }
+
+    private void BtnHistorial_Click(object? sender, RoutedEventArgs e)
+    {
+        _historialVisible = !_historialVisible;
+        panelHistorial.IsVisible = _historialVisible;
+
+        if (_historialVisible)
+        {
+            _notificacionesNoVistas = 0;
+            ActualizarBadgeHistorial();
+            ActualizarListaHistorial();
+        }
+    }
+
+    private void BtnLimpiarHistorial_Click(object? sender, RoutedEventArgs e)
+    {
+        Services.NotificationService.LimpiarHistorial();
+        ActualizarListaHistorial();
+    }
+
+    private void ActualizarBadgeHistorial()
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (!_historialVisible)
+                _notificacionesNoVistas++;
+
+            var count = _notificacionesNoVistas;
+            badgeHistorial.IsVisible = count > 0;
+            txtBadgeCount.Text = count > 9 ? "9+" : count.ToString();
+        });
+    }
+
+    private void ActualizarListaHistorial()
+    {
+        var items = Services.NotificationService.Historial
+            .Select(n => new HistorialNotificacionItem
+            {
+                Title     = n.Title,
+                Message   = n.Message,
+                Timestamp = n.Timestamp,
+                Type      = n.Type
+            }).ToList();
+
+        icHistorial.ItemsSource = items;
+        txtSinNotificaciones.IsVisible = items.Count == 0;
+    }
+
+    private void VentanaPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!_historialVisible) return;
+
+        var pos = e.GetPosition(panelHistorial);
+        var bounds = panelHistorial.Bounds;
+        bool dentroPanel = pos.X >= 0 && pos.Y >= 0 && pos.X <= bounds.Width && pos.Y <= bounds.Height;
+
+        if (!dentroPanel)
+        {
+            _historialVisible = false;
+            panelHistorial.IsVisible = false;
+        }
+    }
 }

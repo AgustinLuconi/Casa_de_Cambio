@@ -55,5 +55,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Usuario>()
             .HasIndex(u => u.Username)
             .IsUnique();
+
+        modelBuilder.Entity<Operacion>().HasIndex(o => o.Fecha);
+        modelBuilder.Entity<Operacion>().HasIndex(o => new { o.TipoOperacion, o.Fecha });
+        modelBuilder.Entity<Movimiento>().HasIndex(m => new { m.CuentaId, m.Fecha });
+        modelBuilder.Entity<Movimiento>().HasIndex(m => m.Fecha);
+        modelBuilder.Entity<CierreCaja>().HasIndex(c => c.Fecha);
+        modelBuilder.Entity<Arqueo>().HasIndex(a => a.Fecha);
     }
 }

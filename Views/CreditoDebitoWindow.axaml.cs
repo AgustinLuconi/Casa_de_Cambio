@@ -14,14 +14,16 @@ namespace SistemaCambio.Views
     public partial class CreditoDebitoWindow : Window
     {
         private readonly ICasaCambioApiClient _apiClient;
-        private readonly OfflineOperacionService _offlineService;
+        private readonly IOfflineOperacionService _offlineService;
 
         public CreditoDebitoWindow()
         {
             _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
-            _offlineService = App.Services.GetRequiredService<OfflineOperacionService>();
+            _offlineService = App.Services.GetRequiredService<IOfflineOperacionService>();
 
             InitializeComponent();
+            NotificationService.Initialize(notificationPanel);
+            Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             CargarDatosAsync();
         }
 

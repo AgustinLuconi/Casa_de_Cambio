@@ -23,6 +23,8 @@ namespace SistemaCambio.Views
         {
             _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
             InitializeComponent();
+            NotificationService.Initialize(notificationPanel);
+            Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             dpFechaCotizacion.SelectedDate = new DateTimeOffset(DateTime.Today);
             CargarMonedasAsync();
             CargarLimiteDeudaAsync();

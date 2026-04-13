@@ -64,8 +64,8 @@ namespace SistemaCambio.Views
             {
                 if (cuentaId > 0)
                 {
-                    var movimientos = await _apiClient.ObtenerMovimientosCuentaAsync(cuentaId, fechaDesde, fechaHasta);
-                    foreach (var mov in movimientos)
+                    var movimientosPage = await _apiClient.ObtenerMovimientosCuentaAsync(cuentaId, fechaDesde, fechaHasta);
+                    foreach (var mov in movimientosPage.Items)
                     {
                         _movimientos.Add(new MovimientoDetalle
                         {

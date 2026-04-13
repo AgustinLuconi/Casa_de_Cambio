@@ -19,6 +19,8 @@ namespace SistemaCambio.Views.Controls
         public NotificationToast()
         {
             InitializeComponent();
+            this.RenderTransform = new TranslateTransform(80, 0);
+            this.Opacity = 0;
         }
 
         public void Show(NotificationMessage notification)
@@ -88,26 +90,44 @@ namespace SistemaCambio.Views.Controls
 
         private async void AnimarEntrada()
         {
-            // Simple fade in
-            for (double i = 0; i <= 1; i += 0.1)
+            const int steps = 12;
+            const int delayMs = 16; // ~60fps
+
+            for (int i = 0; i <= steps; i++)
             {
-                this.Opacity = i;
-                await System.Threading.Tasks.Task.Delay(20);
+                double progress = (double)i / steps;
+                double eased = 1 - Math.Pow(1 - progress, 3); // ease-out cubic
+
+                this.Opacity = eased;
+                if (this.RenderTransform is TranslateTransform t)
+                    t.X = 80 * (1 - eased);
+
+                await System.Threading.Tasks.Task.Delay(delayMs);
             }
+
             this.Opacity = 1;
+            if (this.RenderTransform is TranslateTransform tf)
+                tf.X = 0;
         }
 
         private async void Cerrar()
         {
-            // Simple fade out
-            for (double i = 1; i >= 0; i -= 0.1)
-            {
-                this.Opacity = i;
-                await System.Threading.Tasks.Task.Delay(15);
-            }
-            this.Opacity = 0;
+            const int steps = 10;
+            const int delayMs = 15;
 
-            // Notificar que se cerró
+            for (int i = steps; i >= 0; i--)
+            {
+                double progress = (double)i / steps;
+                double eased = Math.Pow(progress, 2); // ease-in cuadratic
+
+                this.Opacity = eased;
+                if (this.RenderTransform is TranslateTransform t)
+                    t.X = 80 * (1 - eased);
+
+                await System.Threading.Tasks.Task.Delay(delayMs);
+            }
+
+            this.Opacity = 0;
             Closed?.Invoke(this, EventArgs.Empty);
         }
 

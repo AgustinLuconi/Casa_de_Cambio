@@ -9,18 +9,18 @@ using SistemaCambio.LocalDb;
 
 namespace SistemaCambio.Services.Offline;
 
-public class OfflineOperacionService
+public class OfflineOperacionService : IOfflineOperacionService
 {
     private readonly ICasaCambioApiClient _apiClient;
     private readonly IDbContextFactory<LocalDbContext> _localDbFactory;
-    private readonly ConnectivityChecker _connectivity;
+    private readonly IConnectivityChecker _connectivity;
 
     public event Action<string>? OnOperacionGuardadaOffline;
 
     public OfflineOperacionService(
         ICasaCambioApiClient apiClient,
         IDbContextFactory<LocalDbContext> localDbFactory,
-        ConnectivityChecker connectivity)
+        IConnectivityChecker connectivity)
     {
         _apiClient = apiClient;
         _localDbFactory = localDbFactory;
@@ -44,7 +44,6 @@ public class OfflineOperacionService
             }
             catch (Exception ex)
             {
-                // Fall through to offline
                 return await GuardarLocalAsync(new LocalOperacion
                 {
                     TipoOperacion = "CreditoDebito",

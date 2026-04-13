@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
         x:Class="SistemaCambio.Views.ConfiguracionWindow"
         x:CompileBindings="False"
         Title="Configuración"
@@ -222,5 +223,10 @@
             <Button Content="Cerrar" Classes="Secondary" Width="100" Height="36" 
                     HorizontalContentAlignment="Center" Click="BtnCerrar_Click"/>
         </StackPanel>
+        <controls:NotificationPanel x:Name="notificationPanel"
+                                         Grid.RowSpan="3"
+                                         VerticalAlignment="Top"
+                                         HorizontalAlignment="Right"
+                                         ZIndex="100"/>
     </Grid>
 </Window>

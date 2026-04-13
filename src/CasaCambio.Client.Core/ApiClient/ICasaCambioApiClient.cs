@@ -34,7 +34,7 @@ public interface ICasaCambioApiClient
     Task<CuentaDto> CrearCuentaAsync(CrearCuentaRequest request);
     Task<CuentaDto> ActualizarCuentaAsync(int cuentaId, CrearCuentaRequest request);
     Task EliminarCuentaAsync(int cuentaId);
-    Task<List<MovimientoDto>> ObtenerMovimientosCuentaAsync(int cuentaId, DateTime? desde = null, DateTime? hasta = null);
+    Task<PaginatedResponse<MovimientoDto>> ObtenerMovimientosCuentaAsync(int cuentaId, DateTime? desde = null, DateTime? hasta = null, int page = 1, int pageSize = 200);
     Task<List<SaldoCuentaDto>> ObtenerSaldosCuentaAsync(int cuentaId);
 
     // Monedas

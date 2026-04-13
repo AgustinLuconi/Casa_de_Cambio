@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
         x:Class="SistemaCambio.Views.CreditoDebitoWindow"
         Title="Crédito/Débito"
         Width="750" SizeToContent="WidthAndHeight"
@@ -151,5 +152,10 @@
             <Button Content="Cancelar" Classes="Secondary" Width="110" Height="36" 
                     HorizontalContentAlignment="Center" Click="BtnCancelar_Click"/>
         </StackPanel>
+        <controls:NotificationPanel x:Name="notificationPanel"
+                                         Grid.RowSpan="3"
+                                         VerticalAlignment="Top"
+                                         HorizontalAlignment="Right"
+                                         ZIndex="100"/>
     </Grid>
 </Window>

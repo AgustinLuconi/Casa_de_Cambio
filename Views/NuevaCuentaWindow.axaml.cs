@@ -28,6 +28,8 @@ namespace SistemaCambio.Views
         {
             _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
             InitializeComponent();
+            NotificationService.Initialize(notificationPanel);
+            Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             cmbTipo.SelectionChanged += (s, e) =>
             {
                 var itemTipo = cmbTipo.SelectedItem as ComboBoxItem;

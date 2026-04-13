@@ -55,12 +55,12 @@ namespace SistemaCambio.Views
                     }
                     icSaldos.ItemsSource = Saldos;
 
-                    var movimientos = await _apiClient.ObtenerMovimientosCuentaAsync(_cuentaId);
+                    var movimientosPage = await _apiClient.ObtenerMovimientosCuentaAsync(_cuentaId);
                     var dangerBrush = (ISolidColorBrush)this.FindResource("DangerBrush")!;
                     var successBrush = (ISolidColorBrush)this.FindResource("SuccessBrush")!;
                     var fgBrush = (ISolidColorBrush)this.FindResource("PrimaryTextBrush")!;
 
-                    foreach (var m in movimientos)
+                    foreach (var m in movimientosPage.Items)
                     {
                         string prefijo = m.Monto > 0 ? "+" : "";
                         var color = m.Monto > 0 ? successBrush : (m.Monto < 0 ? dangerBrush : fgBrush);

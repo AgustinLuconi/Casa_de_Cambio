@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using CasaCambio.Server.Data;
 using CasaCambio.Shared.DTOs;
 using CasaCambio.Shared.Requests;
+using CasaCambio.Shared.Responses;
 
 namespace CasaCambio.Server.Controllers;
 
@@ -39,18 +40,26 @@ public class CuentasController : ControllerBase
     }
 
     [HttpGet("{id}/movimientos")]
-    public IActionResult GetMovimientos(int id, [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
+    public IActionResult GetMovimientos(int id,
+        [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 200)
     {
         using var db = _contextFactory.CreateDbContext();
         IQueryable<Models.Movimiento> query = db.Movimientos.Include(m => m.Cuenta).Include(m => m.Operacion).Where(m => m.CuentaId == id);
         if (desde.HasValue) query = query.Where(m => m.Fecha >= desde.Value);
         if (hasta.HasValue) query = query.Where(m => m.Fecha < hasta.Value);
-        var movimientos = query.OrderByDescending(m => m.Fecha).Take(500).AsNoTracking().ToList();
-        return Ok(movimientos.Select(m => new MovimientoDto
+        var totalCount = query.Count();
+        var items = query.OrderByDescending(m => m.Fecha)
+            .Skip((page - 1) * pageSize).Take(pageSize).AsNoTracking().ToList();
+        return Ok(new PaginatedResponse<MovimientoDto>
         {
-            Id = m.Id, OperacionId = m.OperacionId, CuentaId = m.CuentaId,
-            NombreCuenta = m.Cuenta?.Nombre ?? "", Moneda = m.Moneda, Monto = m.Monto, Fecha = m.Fecha
-        }));
+            Items = items.Select(m => new MovimientoDto
+            {
+                Id = m.Id, OperacionId = m.OperacionId, CuentaId = m.CuentaId,
+                NombreCuenta = m.Cuenta?.Nombre ?? "", Moneda = m.Moneda, Monto = m.Monto, Fecha = m.Fecha
+            }).ToList(),
+            TotalCount = totalCount, Page = page, PageSize = pageSize
+        });
     }
 
     [HttpGet("{id}/saldos")]

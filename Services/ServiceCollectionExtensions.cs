@@ -11,10 +11,10 @@ namespace SistemaCambio.Services
     {
         public static IServiceCollection ConfigurarServicios(this IServiceCollection services, string apiBaseUrl = "https://casa-cambio-api.fly.dev")
         {
-            // Auth token store (singleton, shared across all services)
+            // Auth token store (Singleton — comparte estado de autenticación en toda la app)
             services.AddSingleton<AuthTokenStore>();
 
-            // API Client via HttpClientFactory
+            // API Client via HttpClientFactory (Transient gestionado por la factory)
             services.AddHttpClient<ICasaCambioApiClient, CasaCambioApiClient>(client =>
             {
                 client.BaseAddress = new Uri(apiBaseUrl);
@@ -25,10 +25,29 @@ namespace SistemaCambio.Services
             services.AddDbContextFactory<LocalDbContext>(options =>
                 options.UseSqlite($"Data Source={LocalDbContext.GetDefaultDbPath()}"));
 
-            // Offline services
-            services.AddSingleton<ConnectivityChecker>();
-            services.AddSingleton<OfflineOperacionService>();
-            services.AddHostedService<SyncService>();
+            // ConnectivityChecker: Singleton con Timer interno — registrado por su interfaz
+            services.AddSingleton<IConnectivityChecker, ConnectivityChecker>();
+
+            // OfflineOperacionService: factory delegate que resuelve el captive dependency.
+            // Usamos IHttpClientFactory (Singleton) para crear el HttpClient en vez de
+            // capturar ICasaCambioApiClient (Transient) directamente en el Singleton.
+            services.AddSingleton<IOfflineOperacionService>(sp =>
+            {
+                var httpClientFactory = sp.GetRequiredService<System.Net.Http.IHttpClientFactory>();
+                var tokenStore = sp.GetRequiredService<AuthTokenStore>();
+                // typeof(CasaCambioApiClient).Name es la key que AddHttpClient<> registra internamente
+                var httpClient = httpClientFactory.CreateClient(typeof(CasaCambioApiClient).Name);
+                var apiClient = new CasaCambioApiClient(httpClient, tokenStore);
+                var localDbFactory = sp.GetRequiredService<IDbContextFactory<LocalDbContext>>();
+                var connectivity = sp.GetRequiredService<IConnectivityChecker>();
+                return new OfflineOperacionService(apiClient, localDbFactory, connectivity);
+            });
+
+            // SyncService registrado como Singleton Y como HostedService:
+            // — Singleton: permite resolver App.Services.GetRequiredService<SyncService>() para suscribir eventos
+            // — HostedService: arranca el BackgroundService al iniciar la app
+            services.AddSingleton<SyncService>();
+            services.AddHostedService(sp => sp.GetRequiredService<SyncService>());
 
             return services;
         }

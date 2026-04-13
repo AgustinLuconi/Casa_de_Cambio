@@ -16,7 +16,7 @@ public class SyncService : BackgroundService
 {
     private readonly ICasaCambioApiClient _apiClient;
     private readonly IDbContextFactory<LocalDbContext> _localDbFactory;
-    private readonly ConnectivityChecker _connectivity;
+    private readonly IConnectivityChecker _connectivity;
     private readonly AuthTokenStore _tokenStore;
 
     public event Action<int>? OnSyncCompleted;
@@ -25,7 +25,7 @@ public class SyncService : BackgroundService
     public SyncService(
         ICasaCambioApiClient apiClient,
         IDbContextFactory<LocalDbContext> localDbFactory,
-        ConnectivityChecker connectivity,
+        IConnectivityChecker connectivity,
         AuthTokenStore tokenStore)
     {
         _apiClient = apiClient;
@@ -140,7 +140,6 @@ public class SyncService : BackgroundService
         {
             var pullData = await _apiClient.SyncPullAsync();
 
-            // Update cuentas cache
             db.CacheSaldos.RemoveRange(db.CacheSaldos);
             db.CacheCuentas.RemoveRange(db.CacheCuentas);
             foreach (var cuenta in pullData.Cuentas)
@@ -151,12 +150,10 @@ public class SyncService : BackgroundService
                     db.CacheSaldos.Add(new CacheSaldo { CuentaId = cuenta.Id, Moneda = saldo.Moneda, Saldo = saldo.Saldo });
             }
 
-            // Update monedas cache
             db.CacheMonedas.RemoveRange(db.CacheMonedas);
             foreach (var moneda in pullData.Monedas)
                 db.CacheMonedas.Add(new CacheMoneda { Id = moneda.Id, Codigo = moneda.Codigo, Nombre = moneda.Nombre, Activa = moneda.Activa });
 
-            // Update cotizaciones cache
             db.CacheCotizaciones.RemoveRange(db.CacheCotizaciones);
             foreach (var cot in pullData.Cotizaciones)
                 db.CacheCotizaciones.Add(new CacheCotizacion { CodigoMoneda = cot.CodigoMoneda, Fecha = cot.Fecha, CotizacionCompra = cot.CotizacionCompra, CotizacionVenta = cot.CotizacionVenta });

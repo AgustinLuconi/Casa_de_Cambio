@@ -1,6 +1,7 @@
 using SistemaCambio.Models;
 using SistemaCambio.Views.Controls;
 using System;
+using System.Collections.Generic;
 
 namespace SistemaCambio.Services
 {
@@ -11,6 +12,12 @@ namespace SistemaCambio.Services
     public static class NotificationService
     {
         private static NotificationPanel? _panel;
+
+        private static readonly List<NotificationMessage> _historial = new();
+        private const int MaxHistorial = 50;
+
+        public static IReadOnlyList<NotificationMessage> Historial => _historial.AsReadOnly();
+        public static event Action? HistorialActualizado;
 
         /// <summary>
         /// Inicializar con el panel de la ventana principal
@@ -57,6 +64,11 @@ namespace SistemaCambio.Services
         /// </summary>
         public static void Show(NotificationMessage notification)
         {
+            _historial.Insert(0, notification);
+            if (_historial.Count > MaxHistorial)
+                _historial.RemoveAt(_historial.Count - 1);
+            HistorialActualizado?.Invoke();
+
             if (_panel == null)
             {
                 Console.WriteLine($"[Notification] {notification.Type}: {notification.Title}");
@@ -67,11 +79,17 @@ namespace SistemaCambio.Services
         }
 
         /// <summary>
-        /// Limpiar todas las notificaciones
+        /// Limpiar todas las notificaciones visibles
         /// </summary>
         public static void Clear()
         {
             _panel?.Clear();
+        }
+
+        public static void LimpiarHistorial()
+        {
+            _historial.Clear();
+            HistorialActualizado?.Invoke();
         }
 
         // ============ Métodos convenientes para casos comunes ============

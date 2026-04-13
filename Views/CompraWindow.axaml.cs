@@ -23,16 +23,18 @@ namespace SistemaCambio.Views
     public partial class CompraWindow : Window
     {
         private readonly ICasaCambioApiClient _apiClient;
-        private readonly OfflineOperacionService _offlineService;
+        private readonly IOfflineOperacionService _offlineService;
         private decimal _cotizacionDia;
         private CuentaMonedaTag? _cuentaARSFija;
 
         public CompraWindow()
         {
             _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
-            _offlineService = App.Services.GetRequiredService<OfflineOperacionService>();
+            _offlineService = App.Services.GetRequiredService<IOfflineOperacionService>();
 
             InitializeComponent();
+            NotificationService.Initialize(notificationPanel);
+            Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             cmbDestino.SelectionChanged += CmbDestino_SelectionChanged;
             CargarDatosAsync();
         }

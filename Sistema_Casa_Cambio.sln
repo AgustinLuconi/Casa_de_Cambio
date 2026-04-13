@@ -12,6 +12,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasaCambio.Server", "src\Ca
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasaCambio.Tests", "src\CasaCambio.Tests\CasaCambio.Tests.csproj", "{559DAF32-76FF-4269-BE89-D2604001A8E6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasaCambio.Client.Core", "src\CasaCambio.Client.Core\CasaCambio.Client.Core.csproj", "{9739E9FA-5542-4202-9347-31933AB51256}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasaCambio.Client.Tests", "src\CasaCambio.Client.Tests\CasaCambio.Client.Tests.csproj", "{75D8F43D-F3C9-40A7-8D3C-34FA9ACF6138}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,6 +38,14 @@ Global
 		{559DAF32-76FF-4269-BE89-D2604001A8E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{559DAF32-76FF-4269-BE89-D2604001A8E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{559DAF32-76FF-4269-BE89-D2604001A8E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9739E9FA-5542-4202-9347-31933AB51256}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9739E9FA-5542-4202-9347-31933AB51256}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9739E9FA-5542-4202-9347-31933AB51256}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9739E9FA-5542-4202-9347-31933AB51256}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75D8F43D-F3C9-40A7-8D3C-34FA9ACF6138}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75D8F43D-F3C9-40A7-8D3C-34FA9ACF6138}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75D8F43D-F3C9-40A7-8D3C-34FA9ACF6138}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75D8F43D-F3C9-40A7-8D3C-34FA9ACF6138}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -45,5 +57,7 @@ Global
 		{11FF2A58-5B30-468F-84D3-25D53F696180} = {DE634562-295C-412E-8F44-8E02DF0CCD67}
 		{5C75CB2B-4C16-4AFD-AAC9-2BEB1D58963F} = {DE634562-295C-412E-8F44-8E02DF0CCD67}
 		{559DAF32-76FF-4269-BE89-D2604001A8E6} = {DE634562-295C-412E-8F44-8E02DF0CCD67}
+		{9739E9FA-5542-4202-9347-31933AB51256} = {DE634562-295C-412E-8F44-8E02DF0CCD67}
+		{75D8F43D-F3C9-40A7-8D3C-34FA9ACF6138} = {DE634562-295C-412E-8F44-8E02DF0CCD67}
 	EndGlobalSection
 EndGlobal

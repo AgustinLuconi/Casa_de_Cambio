@@ -86,7 +86,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    public IActionResult Register([FromBody] RegisterRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.NombreCompleto) || string.IsNullOrWhiteSpace(request.Email))
             return BadRequest(new ApiErrorResponse { Code = 400, Message = "Nombre completo y email son obligatorios." });
@@ -115,8 +115,11 @@ public class AuthController : ControllerBase
         db.Usuarios.Add(usuario);
         db.SaveChanges();
 
-        try { await _emailService.EnviarConfirmacionAsync(request.Email, request.NombreCompleto, confirmToken); }
-        catch { /* no bloquear el registro si el envio de email falla */ }
+        _ = Task.Run(async () =>
+        {
+            try { await _emailService.EnviarConfirmacionAsync(request.Email, request.NombreCompleto, confirmToken); }
+            catch { /* no bloquear el registro si el envio de email falla */ }
+        });
 
         return Ok(new RegisterResponse
         {
@@ -142,7 +145,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("recuperar")]
-    public async Task<IActionResult> Recuperar([FromBody] RecuperarPasswordRequest request)
+    public IActionResult Recuperar([FromBody] RecuperarPasswordRequest request)
     {
         const string mensajeGenerico = "Si el email existe, recibir\u00e1s instrucciones para recuperar tu contrase\u00f1a.";
 
@@ -156,8 +159,11 @@ public class AuthController : ControllerBase
             usuario.TokenRecuperacion = recoveryToken;
             usuario.TokenExpiracion = DateTime.UtcNow.AddHours(1);
             db.SaveChanges();
-            try { await _emailService.EnviarRecuperacionAsync(usuario.Email, usuario.NombreCompleto, recoveryToken); }
-            catch { }
+            _ = Task.Run(async () =>
+            {
+                try { await _emailService.EnviarRecuperacionAsync(usuario.Email, usuario.NombreCompleto, recoveryToken); }
+                catch { }
+            });
         }
 
         return Ok(new RegisterResponse { Exitoso = true, Mensaje = mensajeGenerico });
@@ -208,7 +214,7 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpPost("reenviar-confirmacion")]
-    public async Task<IActionResult> ReenviarConfirmacion()
+    public IActionResult ReenviarConfirmacion()
     {
         var userId = ObtenerUserIdDelToken();
         using var db = _contextFactory.CreateDbContext();
@@ -224,8 +230,11 @@ public class AuthController : ControllerBase
         usuario.TokenConfirmacion = confirmToken;
         db.SaveChanges();
 
-        try { await _emailService.EnviarConfirmacionAsync(usuario.Email, usuario.NombreCompleto, confirmToken); }
-        catch { /* falla silenciosa */ }
+        _ = Task.Run(async () =>
+        {
+            try { await _emailService.EnviarConfirmacionAsync(usuario.Email, usuario.NombreCompleto, confirmToken); }
+            catch { /* falla silenciosa */ }
+        });
 
         return Ok(new RegisterResponse
         {
@@ -236,7 +245,7 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpPut("me")]
-    public async Task<IActionResult> ActualizarPerfil([FromBody] ActualizarPerfilRequest request)
+    public IActionResult ActualizarPerfil([FromBody] ActualizarPerfilRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.NombreCompleto) || string.IsNullOrWhiteSpace(request.Email))
             return BadRequest(new ApiErrorResponse { Code = 400, Message = "Nombre completo y email son obligatorios." });
@@ -262,8 +271,11 @@ public class AuthController : ControllerBase
                 .Replace("+", "-").Replace("/", "_").TrimEnd('=');
             usuario.TokenConfirmacion = confirmToken;
             db.SaveChanges();
-            try { await _emailService.EnviarConfirmacionAsync(request.Email, usuario.NombreCompleto, confirmToken); }
-            catch { }
+            _ = Task.Run(async () =>
+            {
+                try { await _emailService.EnviarConfirmacionAsync(request.Email, usuario.NombreCompleto, confirmToken); }
+                catch { }
+            });
         }
         else
         {

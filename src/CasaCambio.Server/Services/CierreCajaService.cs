@@ -16,7 +16,7 @@ public class CierreCajaService : ICierreCajaService
     {
         using var db = _contextFactory.CreateDbContext();
         var hoy = DateTime.UtcNow.Date;
-        var cierreExistente = db.CierresCaja.AsEnumerable().FirstOrDefault(c => c.Fecha.Date == hoy);
+        var cierreExistente = db.CierresCaja.FirstOrDefault(c => c.Fecha >= hoy && c.Fecha < hoy.AddDays(1));
         if (cierreExistente != null && cierreExistente.Cerrado)
             return CierreResult.Error($"Ya existe un cierre cerrado para el dia {hoy:dd/MM/yyyy}.");
 
@@ -34,7 +34,7 @@ public class CierreCajaService : ICierreCajaService
         cierre.SaldoCajaARS = db.SaldosCuenta.Where(s => s.Moneda == "ARS" && s.Cuenta.Tipo == "Efectivo").Sum(s => s.Saldo);
         cierre.SaldoCajaUSD = db.SaldosCuenta.Where(s => s.Moneda == "USD" && s.Cuenta.Tipo == "Efectivo").Sum(s => s.Saldo);
         cierre.SaldoCajaEUR = db.SaldosCuenta.Where(s => s.Moneda == "EUR" && s.Cuenta.Tipo == "Efectivo").Sum(s => s.Saldo);
-        cierre.TotalDiferencias = db.Arqueos.AsEnumerable().Where(a => a.Fecha.Date == hoy).Sum(a => a.Diferencia);
+        cierre.TotalDiferencias = db.Arqueos.Where(a => a.Fecha >= hoy && a.Fecha < hoy.AddDays(1)).Sum(a => (decimal?)a.Diferencia) ?? 0;
 
         if (cierreExistente != null)
         {
@@ -66,13 +66,13 @@ public class CierreCajaService : ICierreCajaService
 
     public bool HayDiaCerrado()
     {
-        try { using var db = _contextFactory.CreateDbContext(); var hoy = DateTime.UtcNow.Date; return db.CierresCaja.Where(c => c.Cerrado).AsEnumerable().Any(c => c.Fecha.Date == hoy); }
+        try { using var db = _contextFactory.CreateDbContext(); var hoy = DateTime.UtcNow.Date; return db.CierresCaja.Any(c => c.Cerrado && c.Fecha >= hoy && c.Fecha < hoy.AddDays(1)); }
         catch { return false; }
     }
 
     public CierreCaja? ObtenerCierreDeHoy()
     {
-        try { using var db = _contextFactory.CreateDbContext(); var hoy = DateTime.UtcNow.Date; return db.CierresCaja.AsEnumerable().FirstOrDefault(c => c.Fecha.Date == hoy); }
+        try { using var db = _contextFactory.CreateDbContext(); var hoy = DateTime.UtcNow.Date; return db.CierresCaja.AsNoTracking().FirstOrDefault(c => c.Fecha >= hoy && c.Fecha < hoy.AddDays(1)); }
         catch { return null; }
     }
 

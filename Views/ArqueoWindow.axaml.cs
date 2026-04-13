@@ -20,6 +20,8 @@ namespace SistemaCambio.Views
         {
             _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
             InitializeComponent();
+            NotificationService.Initialize(notificationPanel);
+            Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             txtFecha.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
             CargarDatosAsync();
         }

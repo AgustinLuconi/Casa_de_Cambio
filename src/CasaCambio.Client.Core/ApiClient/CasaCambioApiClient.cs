@@ -181,13 +181,12 @@ public class CasaCambioApiClient : ICasaCambioApiClient
     public async Task EliminarCuentaAsync(int cuentaId)
         => await DeleteAuthenticatedAsync($"api/cuentas/{cuentaId}");
 
-    public async Task<List<MovimientoDto>> ObtenerMovimientosCuentaAsync(int cuentaId, DateTime? desde = null, DateTime? hasta = null)
+    public async Task<PaginatedResponse<MovimientoDto>> ObtenerMovimientosCuentaAsync(int cuentaId, DateTime? desde = null, DateTime? hasta = null, int page = 1, int pageSize = 200)
     {
-        var query = $"api/cuentas/{cuentaId}/movimientos";
-        var sep = '?';
-        if (desde.HasValue) { query += $"{sep}desde={desde.Value:O}"; sep = '&'; }
-        if (hasta.HasValue) { query += $"{sep}hasta={hasta.Value:O}"; }
-        return await GetAuthenticatedAsync<List<MovimientoDto>>(query);
+        var query = $"api/cuentas/{cuentaId}/movimientos?page={page}&pageSize={pageSize}";
+        if (desde.HasValue) query += $"&desde={desde.Value:O}";
+        if (hasta.HasValue) query += $"&hasta={hasta.Value:O}";
+        return await GetAuthenticatedAsync<PaginatedResponse<MovimientoDto>>(query);
     }
 
     public async Task<List<SaldoCuentaDto>> ObtenerSaldosCuentaAsync(int cuentaId)
