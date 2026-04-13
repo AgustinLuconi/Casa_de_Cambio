@@ -80,9 +80,24 @@ public class AuthController : ControllerBase
     [HttpGet("health")]
     public async Task<IActionResult> Health()
     {
-        await using var db = await _contextFactory.CreateDbContextAsync();
-        var canConnect = await db.Database.CanConnectAsync();
-        return Ok(new { status = canConnect ? "healthy" : "degraded", timestamp = DateTime.UtcNow });
+        try
+        {
+            await using var db = await _contextFactory.CreateDbContextAsync();
+            var canConnect = await db.Database.CanConnectAsync();
+            
+            if (canConnect)
+            {
+                // Ejecutar una consulta real para que Supabase registre actividad y no se pause
+                await db.Database.ExecuteSqlRawAsync("SELECT 1");
+                return Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
+            }
+            
+            return Ok(new { status = "degraded", timestamp = DateTime.UtcNow });
+        }
+        catch
+        {
+            return Ok(new { status = "degraded", timestamp = DateTime.UtcNow });
+        }
     }
 
     [HttpPost("register")]
