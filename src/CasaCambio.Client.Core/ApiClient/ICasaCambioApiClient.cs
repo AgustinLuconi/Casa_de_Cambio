@@ -36,6 +36,7 @@ public interface ICasaCambioApiClient
     Task EliminarCuentaAsync(int cuentaId);
     Task<PaginatedResponse<MovimientoDto>> ObtenerMovimientosCuentaAsync(int cuentaId, DateTime? desde = null, DateTime? hasta = null, int page = 1, int pageSize = 200);
     Task<List<SaldoCuentaDto>> ObtenerSaldosCuentaAsync(int cuentaId);
+    Task<bool> ObtenerEstadoDiaCerradoAsync();
 
     // Monedas
     Task<List<MonedaDto>> ObtenerMonedasAsync();

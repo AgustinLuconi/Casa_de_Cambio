@@ -5,9 +5,12 @@ using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
 using SistemaCambio.Services.Offline;
+using CasaCambio.Shared.DTOs;
 using CasaCambio.Shared.Requests;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SistemaCambio.Views
 {
@@ -15,6 +18,8 @@ namespace SistemaCambio.Views
     {
         private readonly ICasaCambioApiClient _apiClient;
         private readonly IOfflineOperacionService _offlineService;
+        private List<CuentaDto> _todasLasCuentas = new();
+        private List<MonedaDto> _monedasApi = new();
 
         public CreditoDebitoWindow()
         {
@@ -27,83 +32,164 @@ namespace SistemaCambio.Views
             CargarDatosAsync();
         }
 
+        // ── Carga inicial ────────────────────────────────────────────
+
         private async void CargarDatosAsync()
         {
             try
             {
-                var cuentas = await _apiClient.ObtenerCuentasAsync();
-                cmbCredito.Items.Clear();
-                cmbDebito.Items.Clear();
-                foreach (var cuenta in cuentas.OrderBy(c => c.Nombre))
-                {
-                    if (cuenta.Saldos.Any())
-                    {
-                        foreach (var saldo in cuenta.Saldos.OrderBy(s => s.Moneda))
-                        {
-                            var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = saldo.Moneda, NombreCuenta = cuenta.Nombre };
-                            var texto = $"{cuenta.Nombre} ({saldo.Moneda})";
-                            cmbCredito.Items.Add(new ComboBoxItem { Content = texto, Tag = tag });
-                            cmbDebito.Items.Add(new ComboBoxItem { Content = texto, Tag = tag });
-                        }
-                    }
-                    else
-                    {
-                        var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = "ARS", NombreCuenta = cuenta.Nombre };
-                        cmbCredito.Items.Add(new ComboBoxItem { Content = $"{cuenta.Nombre} (ARS)", Tag = tag });
-                        cmbDebito.Items.Add(new ComboBoxItem { Content = $"{cuenta.Nombre} (ARS)", Tag = tag });
-                    }
-                }
-                if (cmbCredito.Items.Count > 0) cmbCredito.SelectedIndex = 0;
-                if (cmbDebito.Items.Count > 0) cmbDebito.SelectedIndex = 0;
+                var cuentasTask = _apiClient.ObtenerCuentasAsync();
+                var monedasTask = _apiClient.ObtenerMonedasAsync();
+                await Task.WhenAll(cuentasTask, monedasTask);
 
+                _todasLasCuentas = cuentasTask.Result;
+                _monedasApi = monedasTask.Result;
+
+                CargarCombos();
+                await CargarClientesAsync();
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Error("Error al cargar datos", ex.Message);
+            }
+        }
+
+        private void CargarCombos()
+        {
+            // ── cmbMoneda: todas las monedas del catálogo ────────────
+            cmbMoneda.Items.Clear();
+            foreach (var m in _monedasApi.OrderBy(m => m.Codigo))
+                cmbMoneda.Items.Add(new ComboBoxItem { Content = m.Codigo, Tag = m });
+
+            // ── cmbCredito / cmbDebito: cuentas con saldos ───────────
+            cmbCredito.Items.Clear();
+            cmbDebito.Items.Clear();
+            foreach (var cuenta in _todasLasCuentas.OrderBy(c => c.Nombre))
+            {
+                var saldos = cuenta.Saldos.Any() ? cuenta.Saldos.OrderBy(s => s.Moneda).ToList() : null;
+                if (saldos == null)
+                {
+                    var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = "ARS", NombreCuenta = cuenta.Nombre };
+                    cmbCredito.Items.Add(new ComboBoxItem { Content = $"{cuenta.Nombre} (ARS)", Tag = tag });
+                    cmbDebito.Items.Add(new ComboBoxItem { Content = $"{cuenta.Nombre} (ARS)", Tag = tag });
+                    continue;
+                }
+                foreach (var saldo in saldos)
+                {
+                    var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = saldo.Moneda, NombreCuenta = cuenta.Nombre };
+                    var texto = $"{cuenta.Nombre} ({saldo.Moneda})";
+                    cmbCredito.Items.Add(new ComboBoxItem { Content = texto, Tag = tag });
+                    cmbDebito.Items.Add(new ComboBoxItem { Content = texto, Tag = tag });
+                }
+            }
+            if (cmbCredito.Items.Count > 0) cmbCredito.SelectedIndex = 0;
+            if (cmbDebito.Items.Count > 0)  cmbDebito.SelectedIndex = 0;
+
+            // Seleccionar primera moneda (dispara CmbMoneda_SelectionChanged)
+            if (cmbMoneda.Items.Count > 0)
+                cmbMoneda.SelectedIndex = 0;
+        }
+
+        private async Task CargarClientesAsync()
+        {
+            try
+            {
                 var clientes = await _apiClient.ObtenerClientesAsync();
+                cmbCliente.Items.Clear();
                 cmbCliente.Items.Add(new ComboBoxItem { Content = "(Sin cliente)", Tag = null });
                 foreach (var cliente in clientes)
                     cmbCliente.Items.Add(new ComboBoxItem { Content = cliente.Nombre, Tag = cliente.Id });
                 cmbCliente.SelectedIndex = 0;
             }
-            catch (Exception ex) { NotificationService.Error("Error al cargar datos", ex.Message); }
+            catch (Exception ex) { AppLogger.Warn("CargarClientesAsync", ex); }
         }
 
-        private static decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
+        // ── Eventos ─────────────────────────────────────────────────
 
-        private void Recalcular_KeyUp(object? sender, KeyEventArgs e)
+        private void CmbMoneda_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
-            txtImporteDebito.Text = txtImporteCredito.Text;
+            if (cmbMoneda.SelectedItem is not ComboBoxItem { Tag: MonedaDto moneda }) return;
+            txtMonedaDescripcion.Text = moneda.Nombre;
+            _ = CargarCotizacionesDelDiaAsync(moneda.Codigo);
+        }
+
+        private async Task CargarCotizacionesDelDiaAsync(string moneda)
+        {
+            try
+            {
+                var cotizaciones = await _apiClient.ObtenerCotizacionesHoyAsync();
+                var cot = cotizaciones.FirstOrDefault(c => c.CodigoMoneda == moneda);
+                if (cot != null)
+                {
+                    txtCotizacionCredito.Text = cot.CotizacionCompra.ToString("N5");
+                    txtCotizacionDebito.Text  = cot.CotizacionVenta.ToString("N5");
+                }
+                else
+                {
+                    txtCotizacionCredito.Text = "0.00000";
+                    txtCotizacionDebito.Text  = "0.00000";
+                }
+                RecalcularCredito();
+                RecalcularDebito();
+            }
+            catch (Exception ex) { AppLogger.Warn("CargarCotizacionesDelDiaAsync", ex); }
+        }
+
+        private void RecalcularCredito_KeyUp(object? sender, KeyEventArgs e) => RecalcularCredito();
+        private void RecalcularDebito_KeyUp(object? sender, KeyEventArgs e)  => RecalcularDebito();
+
+        private void RecalcularCredito()
+        {
+            decimal importe   = ParsearMonto(txtImporteCredito.Text);
+            decimal cotizacion = ParsearMonto(txtCotizacionCredito.Text);
+            decimal pesos      = Math.Round(importe * cotizacion, 2, MidpointRounding.AwayFromZero);
+            txtPesosCredito.Text = pesos.ToString("N2");
+        }
+
+        private void RecalcularDebito()
+        {
+            decimal importe   = ParsearMonto(txtImporteDebito.Text);
+            decimal cotizacion = ParsearMonto(txtCotizacionDebito.Text);
+            decimal pesos      = Math.Round(importe * cotizacion, 2, MidpointRounding.AwayFromZero);
+            txtPesosDebito.Text = pesos.ToString("N2");
         }
 
         public void TextBox_GotFocus(object? sender, GotFocusEventArgs e)
         {
-            if (sender is TextBox textBox) textBox.SelectAll();
+            if (sender is TextBox tb) tb.SelectAll();
         }
 
-        private async void BtnEjecutar_Click(object? sender, RoutedEventArgs e)
+        // ── Siguiente: saltar a la pestaña Cliente ──────────────────
+
+        private void BtnSiguiente_Click(object? sender, RoutedEventArgs e)
         {
-            await EjecutarOperacion();
+            if (tabRoot.Items.Count > 1)
+                tabRoot.SelectedIndex = 1;
         }
 
-        private async void BtnAceptar_Click(object? sender, RoutedEventArgs e)
-        {
-            if (await EjecutarOperacion())
-            {
-                NotificationService.Success("Credito/Debito registrado", "Operacion completada");
-                Close();
-            }
-        }
+        // ── Helpers ──────────────────────────────────────────────────
+
+        private static decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
+
+        private CuentaMonedaTag? ObtenerTagCredito()
+            => (cmbCredito.SelectedItem as ComboBoxItem)?.Tag as CuentaMonedaTag;
+
+        private CuentaMonedaTag? ObtenerTagDebito()
+            => (cmbDebito.SelectedItem as ComboBoxItem)?.Tag as CuentaMonedaTag;
+
+        // ── Validación ───────────────────────────────────────────────
 
         private bool ValidarCampos()
         {
             decimal importeCredito = ParsearMonto(txtImporteCredito.Text);
-            decimal importeDebito = ParsearMonto(txtImporteDebito.Text);
+            decimal importeDebito  = ParsearMonto(txtImporteDebito.Text);
             if (importeCredito <= 0 && importeDebito <= 0)
             {
                 NotificationService.Warning("Campo requerido", "Ingrese al menos un importe mayor a cero.");
                 txtImporteCredito.Focus();
                 return false;
             }
-            var itemCredito = cmbCredito.SelectedItem as ComboBoxItem;
-            var itemDebito = cmbDebito.SelectedItem as ComboBoxItem;
-            if (itemCredito?.Tag is not CuentaMonedaTag || itemDebito?.Tag is not CuentaMonedaTag)
+            if (ObtenerTagCredito() == null || ObtenerTagDebito() == null)
             {
                 NotificationService.Warning("Selección incompleta", "Seleccione las cuentas crédito y débito.");
                 return false;
@@ -123,34 +209,42 @@ namespace SistemaCambio.Views
             txtErrorServidor.Text = "";
         }
 
-        private async System.Threading.Tasks.Task<bool> EjecutarOperacion()
+        // ── Aceptar / Cancelar ───────────────────────────────────────
+
+        private async void BtnAceptar_Click(object? sender, RoutedEventArgs e)
+        {
+            if (await EjecutarOperacion())
+            {
+                NotificationService.Success("Crédito/Débito registrado", "Operación completada");
+                Close();
+            }
+        }
+
+        private async Task<bool> EjecutarOperacion()
         {
             OcultarErrorServidor();
             if (!ValidarCampos()) return false;
 
             decimal importeCredito = ParsearMonto(txtImporteCredito.Text);
-            decimal importeDebito = ParsearMonto(txtImporteDebito.Text);
+            decimal importeDebito  = ParsearMonto(txtImporteDebito.Text);
 
-            var itemCredito = cmbCredito.SelectedItem as ComboBoxItem;
-            var itemDebito = cmbDebito.SelectedItem as ComboBoxItem;
-            var tagCredito = (CuentaMonedaTag)itemCredito!.Tag!;
-            var tagDebito = (CuentaMonedaTag)itemDebito!.Tag!;
+            var tagCredito = ObtenerTagCredito()!;
+            var tagDebito  = ObtenerTagDebito()!;
 
             int? clienteId = null;
-            var itemCliente = cmbCliente.SelectedItem as ComboBoxItem;
-            if (itemCliente?.Tag is int cId) clienteId = cId;
+            if ((cmbCliente.SelectedItem as ComboBoxItem)?.Tag is int cId) clienteId = cId;
 
             var request = new CrearCreditoDebitoRequest
             {
                 CuentaCreditoId = tagCredito.CuentaId,
-                CuentaDebitoId = tagDebito.CuentaId,
-                MonedaCredito = tagCredito.Moneda,
-                MonedaDebito = tagDebito.Moneda,
-                MontoCredito = importeCredito,
-                MontoDebito = importeDebito,
-                Cotizacion = ParsearMonto(txtCotizacion.Text),
-                ClienteId = clienteId,
-                Observaciones = txtObservaciones.Text ?? ""
+                CuentaDebitoId  = tagDebito.CuentaId,
+                MonedaCredito   = tagCredito.Moneda,
+                MonedaDebito    = tagDebito.Moneda,
+                MontoCredito    = importeCredito,
+                MontoDebito     = importeDebito,
+                Cotizacion      = ParsearMonto(txtCotizacionCredito.Text),
+                ClienteId       = clienteId,
+                Observaciones   = txtObservaciones.Text ?? ""
             };
 
             var resultado = await _offlineService.GuardarCreditoDebitoAsync(request);

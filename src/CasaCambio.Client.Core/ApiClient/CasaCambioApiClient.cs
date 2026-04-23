@@ -34,7 +34,17 @@ public class CasaCambioApiClient : ICasaCambioApiClient
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
         var response = await _http.PostAsJsonAsync("api/auth/login", request);
-        response.EnsureSuccessStatusCode();
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                var error = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(JsonOptions);
+                throw new Exception(error?.Message ?? "Usuario o contraseña incorrectos.");
+            }
+            response.EnsureSuccessStatusCode(); 
+        }
+
         var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
         _tokenStore.SetTokens(auth!);
         return auth!;
@@ -191,6 +201,16 @@ public class CasaCambioApiClient : ICasaCambioApiClient
 
     public async Task<List<SaldoCuentaDto>> ObtenerSaldosCuentaAsync(int cuentaId)
         => await GetAuthenticatedAsync<List<SaldoCuentaDto>>($"api/cuentas/{cuentaId}/saldos");
+
+    public async Task<bool> ObtenerEstadoDiaCerradoAsync()
+    {
+        try
+        {
+            var result = await GetAuthenticatedAsync<JsonElement>("api/cuentas/estado-dia");
+            return result.TryGetProperty("cerrado", out var prop) && prop.GetBoolean();
+        }
+        catch { return false; }
+    }
 
     // Monedas
 

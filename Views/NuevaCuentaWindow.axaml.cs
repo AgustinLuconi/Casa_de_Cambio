@@ -32,16 +32,34 @@ namespace SistemaCambio.Views
             Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             cmbTipo.SelectionChanged += (s, e) =>
             {
-                var itemTipo = cmbTipo.SelectedItem as ComboBoxItem;
-                gridLimiteDeuda.IsVisible = itemTipo?.Content?.ToString() == "Cliente";
+                var tipo = (cmbTipo.SelectedItem as ComboBoxItem)?.Content?.ToString();
+                gridLimiteDeuda.IsVisible    = tipo == "Cliente";
+                bool esEfectivo              = tipo == "Efectivo";
+                gridMonedaEfectivo.IsVisible = esEfectivo;
+                dgSaldosIniciales.IsVisible  = !esEfectivo;
             };
             CargarMonedasAsync();
+            VerificarDiaCerradoAsync();
         }
 
         public NuevaCuentaWindow(int cuentaId) : this()
         {
             _cuentaIdAEditar = cuentaId;
             CargarDatosCuentaEdicionAsync();
+        }
+
+        private async void VerificarDiaCerradoAsync()
+        {
+            try
+            {
+                bool cerrado = await _apiClient.ObtenerEstadoDiaCerradoAsync();
+                if (cerrado)
+                {
+                    btnGuardar.IsEnabled = false;
+                    ToolTip.SetTip(btnGuardar, "El día está cerrado. Reabra la caja para modificar cuentas.");
+                }
+            }
+            catch (Exception ex) { AppLogger.Warn("VerificarDiaCerradoAsync", ex); }
         }
 
         private async void CargarMonedasAsync()
@@ -60,6 +78,15 @@ namespace SistemaCambio.Views
                     };
                 }
                 dgSaldosIniciales.ItemsSource = _saldosIniciales;
+
+                cmbMonedaEfectivo.Items.Clear();
+                foreach (var saldo in _saldosIniciales.OrderBy(s => s.Moneda))
+                    cmbMonedaEfectivo.Items.Add(new ComboBoxItem
+                    {
+                        Content = $"{saldo.Moneda} — {saldo.Nombre}",
+                        Tag     = saldo.Moneda
+                    });
+                if (cmbMonedaEfectivo.Items.Count > 0) cmbMonedaEfectivo.SelectedIndex = 0;
             }
             catch (Exception ex) { AppLogger.Warn("CargarMonedasAsync", ex); }
         }
@@ -96,6 +123,21 @@ namespace SistemaCambio.Views
                     gridLimiteDeuda.IsVisible = cuenta.Tipo == "Cliente";
                     if (cuenta.Tipo == "Cliente" && cuenta.LimiteDeuda.HasValue && cuenta.LimiteDeuda.Value > 0)
                         txtLimiteDeuda.Text = cuenta.LimiteDeuda.Value.ToString("N2");
+
+                    bool esEfectivo              = cuenta.Tipo == "Efectivo";
+                    gridMonedaEfectivo.IsVisible = esEfectivo;
+                    dgSaldosIniciales.IsVisible  = !esEfectivo;
+                    if (esEfectivo)
+                    {
+                        var saldoUnico = cuenta.Saldos.FirstOrDefault(s => s.Saldo != 0) ?? cuenta.Saldos.FirstOrDefault();
+                        if (saldoUnico != null)
+                        {
+                            for (int i = 0; i < cmbMonedaEfectivo.Items.Count; i++)
+                                if (cmbMonedaEfectivo.Items[i] is ComboBoxItem ci && ci.Tag?.ToString() == saldoUnico.Moneda)
+                                { cmbMonedaEfectivo.SelectedIndex = i; break; }
+                            txtSaldoEfectivo.Text = saldoUnico.Saldo.ToString("N2");
+                        }
+                    }
                 }
             }
             catch (Exception ex) { AppLogger.Warn("CargarDatosCuentaEdicionAsync", ex); }
@@ -103,7 +145,7 @@ namespace SistemaCambio.Views
 
         private async void BtnGuardar_Click(object? sender, RoutedEventArgs e)
         {
-            string nombre = txtNombre.Text?.Trim() ?? "";
+            string nombre = (txtNombre.Text?.Trim() ?? "").ToUpperInvariant();
             if (string.IsNullOrEmpty(nombre)) return;
 
             var itemTipo = cmbTipo.SelectedItem as ComboBoxItem;
@@ -113,7 +155,20 @@ namespace SistemaCambio.Views
             if (gridLimiteDeuda.IsVisible && decimal.TryParse(txtLimiteDeuda.Text, out var ld) && ld > 0)
                 limiteDeuda = ld;
 
-            var request = new CrearCuentaRequest { Nombre = nombre, Tipo = tipo, LimiteDeuda = limiteDeuda };
+            var saldos = new List<SaldoCuentaDto>();
+            if (tipo == "Efectivo")
+            {
+                var monedaSel = (cmbMonedaEfectivo.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+                if (!string.IsNullOrEmpty(monedaSel) && decimal.TryParse(txtSaldoEfectivo.Text, out var saldoEf))
+                    saldos.Add(new SaldoCuentaDto { Moneda = monedaSel, Saldo = saldoEf });
+            }
+            else
+            {
+                foreach (var s in _saldosIniciales)
+                    saldos.Add(new SaldoCuentaDto { Moneda = s.Moneda, Saldo = s.Saldo });
+            }
+
+            var request = new CrearCuentaRequest { Nombre = nombre, Tipo = tipo, LimiteDeuda = limiteDeuda, Saldos = saldos };
 
             try
             {
@@ -121,9 +176,10 @@ namespace SistemaCambio.Views
                     await _apiClient.ActualizarCuentaAsync(_cuentaIdAEditar.Value, request);
                 else
                     await _apiClient.CrearCuentaAsync(request);
+                NotificationService.Success("Cuenta guardada", "Saldos actualizados correctamente.");
                 Close();
             }
-            catch (Exception ex) { NotificationService.Error("Error", ex.Message); }
+            catch (Exception ex) { NotificationService.Error("Error al guardar", ex.Message); }
         }
 
         private void BtnCancelar_Click(object? sender, RoutedEventArgs e) => Close();

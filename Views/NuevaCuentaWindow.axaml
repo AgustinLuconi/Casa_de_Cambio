@@ -53,12 +53,14 @@
         </Grid>
 
         <!-- Initial Balances -->
-        <Border Grid.Row="4" Background="{DynamicResource CardBackgroundBrush}" 
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
+        <Border Grid.Row="4" Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="8" Padding="16" Margin="0,0,0,16">
             <Grid RowDefinitions="Auto, *">
-                <TextBlock Grid.Row="0" x:Name="txtSaldosTitulo" Text="Saldos Iniciales por Divisa" FontWeight="SemiBold" 
+                <TextBlock Grid.Row="0" x:Name="txtSaldosTitulo" Text="Saldos Iniciales por Divisa" FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,10"/>
+
+                <!-- Multi-moneda: para cuentas Banco/Cliente/Proveedor -->
                 <DataGrid Grid.Row="1" x:Name="dgSaldosIniciales" AutoGenerateColumns="False"
                           BorderThickness="0" IsReadOnly="True"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
@@ -69,21 +71,39 @@
                         <DataGridTemplateColumn Header="SALDO INICIAL" Width="150">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{Binding Saldo, Mode=TwoWay}" Background="Transparent" 
-                                             BorderThickness="0" Foreground="{DynamicResource PrimaryTextBrush}" 
+                                    <TextBox Text="{Binding Saldo, Mode=TwoWay}" Background="Transparent"
+                                             BorderThickness="0" Foreground="{DynamicResource PrimaryTextBrush}"
                                              Padding="5,3" TextAlignment="Right"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <!-- Mono-moneda: solo para cuentas Efectivo (caja física única denominación) -->
+                <Grid x:Name="gridMonedaEfectivo" Grid.Row="1" IsVisible="False"
+                      RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="Auto, *">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Moneda"
+                               VerticalAlignment="Center" Margin="0,0,12,8"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1" x:Name="cmbMonedaEfectivo"
+                              HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Saldo inicial"
+                               VerticalAlignment="Center" Margin="0,0,12,8"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="txtSaldoEfectivo"
+                             Text="0.00" TextAlignment="Right" Margin="0,0,0,8"/>
+                    <TextBlock Grid.Row="2" Grid.ColumnSpan="2"
+                               Text="Las cajas Efectivo operan con una única moneda."
+                               FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </Grid>
             </Grid>
         </Border>
 
         <!-- Buttons -->
         <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-            <Button Content="Guardar" Background="{DynamicResource AccentBrush}" Foreground="White" 
-                    Width="110" Height="36" HorizontalContentAlignment="Center" CornerRadius="8" 
+            <Button x:Name="btnGuardar" Content="Guardar" Background="{DynamicResource AccentBrush}" Foreground="White"
+                    Width="110" Height="36" HorizontalContentAlignment="Center" CornerRadius="8"
                     Cursor="Hand" Click="BtnGuardar_Click"/>
             <Button Content="Cancelar" Classes="Secondary" Width="110" Height="36" 
                     HorizontalContentAlignment="Center" Click="BtnCancelar_Click"/>

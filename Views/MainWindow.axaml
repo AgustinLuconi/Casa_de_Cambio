@@ -404,22 +404,19 @@
                     <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" 
                             BorderThickness="1" CornerRadius="10" Padding="16">
                         <StackPanel Orientation="Horizontal" Spacing="12">
-                            <TextBox Watermark="Buscar por ID o Nombre..." Width="250"/>
-                            <ComboBox Width="150" SelectedIndex="0">
-                                <ComboBoxItem>Todos los Tipos</ComboBoxItem>
-                                <ComboBoxItem>Caja</ComboBoxItem>
-                                <ComboBoxItem>Banco</ComboBoxItem>
-                                <ComboBoxItem>Cliente</ComboBoxItem>
-                            </ComboBox>
-                            <ComboBox Width="150" SelectedIndex="0">
-                                <ComboBoxItem>Todas las Monedas</ComboBoxItem>
-                                <ComboBoxItem>USD</ComboBoxItem>
-                                <ComboBoxItem>EUR</ComboBoxItem>
-                                <ComboBoxItem>ARS</ComboBoxItem>
-                            </ComboBox>
-                            <Button Background="{DynamicResource HoverBackgroundBrush}" BorderThickness="1" 
-                                    BorderBrush="{DynamicResource BorderBrush}" CornerRadius="6" Padding="8">
-                                <icon:MaterialIcon Kind="Refresh" Width="16" Height="16" 
+                            <TextBox Watermark="Buscar por ID o Nombre..." Width="250"
+                                     Text="{Binding TextoBusqueda}"/>
+                            <ComboBox Width="150"
+                                      ItemsSource="{Binding TiposFiltro}"
+                                      SelectedItem="{Binding FiltroTipoSeleccionado}"/>
+                            <ComboBox Width="150"
+                                      ItemsSource="{Binding MonedasFiltro}"
+                                      SelectedItem="{Binding FiltroMonedaSeleccionada}"/>
+                            <Button Background="{DynamicResource HoverBackgroundBrush}" BorderThickness="1"
+                                    BorderBrush="{DynamicResource BorderBrush}" CornerRadius="6" Padding="8"
+                                    Command="{Binding LimpiarFiltrosCommand}"
+                                    ToolTip.Tip="Limpiar filtros">
+                                <icon:MaterialIcon Kind="Refresh" Width="16" Height="16"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </Button>
                         </StackPanel>

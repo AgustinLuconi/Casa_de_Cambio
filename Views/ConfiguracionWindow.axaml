@@ -39,6 +39,7 @@
 
             <!-- Tab: General -->
             <TabItem Header="General">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="20" Spacing="20">
                     
                     <!-- Theme -->
@@ -99,6 +100,7 @@
                     </Border>
 
                 </StackPanel>
+                </ScrollViewer>
             </TabItem>
 
             <!-- Tab: Monedas -->

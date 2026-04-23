@@ -31,8 +31,8 @@ public class ArqueoService : IArqueoService
                 var tipoAjuste = diferencia > 0 ? "Sobrante Caja" : "Faltante Caja";
                 var opAjuste = new Operacion { Fecha = DateTime.Now, TipoOperacion = tipoAjuste, MontoTotalOrigen = Math.Abs(diferencia), MontoTotalDestino = Math.Abs(diferencia), CotizacionAplicada = 1, Observaciones = $"Ajuste automatico por arqueo #{arqueo.Id}" };
                 db.Operaciones.Add(opAjuste);
-                db.Movimientos.Add(new Movimiento { Operacion = opAjuste, CuentaId = cuentaId, Monto = diferencia, Fecha = DateTime.Now });
-                db.Movimientos.Add(new Movimiento { Operacion = opAjuste, CuentaId = cuentaAjuste.Id, Monto = -diferencia, Fecha = DateTime.Now });
+                db.Movimientos.Add(new Movimiento { Operacion = opAjuste, CuentaId = cuentaId, Moneda = moneda, Monto = diferencia, Fecha = DateTime.Now });
+                db.Movimientos.Add(new Movimiento { Operacion = opAjuste, CuentaId = cuentaAjuste.Id, Moneda = moneda, Monto = -diferencia, Fecha = DateTime.Now });
                 if (saldoCuenta != null) saldoCuenta.Saldo = montoContado;
                 else db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = cuentaId, Moneda = moneda, Saldo = montoContado });
                 var saldoAjuste = db.SaldosCuenta.FirstOrDefault(s => s.CuentaId == cuentaAjuste.Id && s.Moneda == moneda);

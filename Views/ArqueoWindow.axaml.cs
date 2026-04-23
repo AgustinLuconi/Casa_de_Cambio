@@ -1,20 +1,38 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
+using CasaCambio.Shared.DTOs;
 using CasaCambio.Shared.Requests;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace SistemaCambio.Views
 {
+    public partial class ArqueoItemViewModel : ObservableObject
+    {
+        public string CodigoMoneda { get; set; } = "";
+        public string NombreMoneda { get; set; } = "";
+        public decimal SaldoSistema { get; set; }
+        public List<(int CuentaId, decimal Saldo)> Cajas { get; set; } = new();
+
+        [ObservableProperty] private decimal arqueoFisico;
+        [ObservableProperty] private decimal diferencia;
+
+        partial void OnArqueoFisicoChanged(decimal value)
+        {
+            Diferencia = value - SaldoSistema;
+        }
+    }
+
     public partial class ArqueoWindow : Window
     {
         private readonly ICasaCambioApiClient _apiClient;
-        private ObservableCollection<ArqueoItem> _items = new();
-        private bool _isInitializing = true;
+        private readonly ObservableCollection<ArqueoItemViewModel> _items = new();
 
         public ArqueoWindow()
         {
@@ -22,7 +40,7 @@ namespace SistemaCambio.Views
             InitializeComponent();
             NotificationService.Initialize(notificationPanel);
             Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
-            txtFecha.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+            dgArqueo.ItemsSource = _items;
             CargarDatosAsync();
         }
 
@@ -31,118 +49,75 @@ namespace SistemaCambio.Views
             try
             {
                 _items.Clear();
-                var cuentas = await _apiClient.ObtenerCuentasAsync();
-                var cajas = cuentas.Where(c => c.Tipo == "Efectivo").OrderBy(c => c.Nombre).ToList();
+                var cuentasTask = _apiClient.ObtenerCuentasAsync();
+                var monedasTask = _apiClient.ObtenerMonedasAsync();
+                await System.Threading.Tasks.Task.WhenAll(cuentasTask, monedasTask);
 
-                cmbCaja.Items.Clear();
-                cmbCaja.Items.Add(new ComboBoxItem { Content = "TODAS", Tag = 0 });
-                foreach (var caja in cajas)
-                    cmbCaja.Items.Add(new ComboBoxItem { Content = caja.Nombre, Tag = caja.Id });
-                cmbCaja.SelectedIndex = 0;
+                var cajas = cuentasTask.Result.Where(c => c.Tipo == "Efectivo").ToList();
+                var catalogoMonedas = monedasTask.Result;
 
-                CargarArqueoItems(0, cuentas.Where(c => c.Tipo == "Efectivo").ToList());
-                _isInitializing = false;
-            }
-            catch (Exception ex) { NotificationService.Error("Error", ex.Message); }
-        }
-
-        private void CargarArqueoItems(int cajaId, System.Collections.Generic.List<CasaCambio.Shared.DTOs.CuentaDto> cajas)
-        {
-            _items.Clear();
-            var filtered = cajaId > 0 ? cajas.Where(c => c.Id == cajaId) : cajas;
-
-            if (cajaId > 0)
-            {
-                var caja = cajas.FirstOrDefault(c => c.Id == cajaId);
-                txtTitulo.Text = $"Arqueo - Caja: {caja?.Nombre ?? ""}";
-            }
-            else txtTitulo.Text = "Arqueo - Caja: TODAS";
-
-            foreach (var cuenta in filtered.OrderBy(c => c.Nombre))
-            {
-                foreach (var saldo in cuenta.Saldos.OrderBy(s => s.Moneda))
-                {
-                    _items.Add(new ArqueoItem
+                var agregados = cajas
+                    .SelectMany(c => c.Saldos.Select(s => new { Cuenta = c, Saldo = s }))
+                    .GroupBy(x => x.Saldo.Moneda)
+                    .OrderBy(g => g.Key)
+                    .Select(g => new ArqueoItemViewModel
                     {
-                        CuentaId = cuenta.Id, Codigo = saldo.Moneda,
-                        Moneda = $"{cuenta.Nombre} ({saldo.Moneda})",
-                        SaldoSistema = saldo.Saldo, SaldoArqueo = saldo.Saldo, Diferencia = 0,
-                        MonedaCodigo = saldo.Moneda, NombreCuenta = cuenta.Nombre
+                        CodigoMoneda = g.Key,
+                        NombreMoneda = catalogoMonedas.FirstOrDefault(m => m.Codigo == g.Key)?.Nombre ?? g.Key,
+                        SaldoSistema = g.Sum(x => x.Saldo.Saldo),
+                        ArqueoFisico = g.Sum(x => x.Saldo.Saldo),
+                        Cajas = g.Select(x => (x.Cuenta.Id, x.Saldo.Saldo)).ToList()
                     });
-                }
+
+                foreach (var item in agregados)
+                    _items.Add(item);
             }
-            dgArqueo.ItemsSource = _items;
-            CalcularTotalDiferencia();
-        }
-
-        private void CmbCaja_SelectionChanged(object? sender, SelectionChangedEventArgs e)
-        {
-            if (_isInitializing) return;
-            // Re-fetch would be needed, but for simplicity just filter cached data
-        }
-
-        private void BtnRefrescar_Click(object? sender, RoutedEventArgs e) => CargarDatosAsync();
-
-        private void CalcularTotalDiferencia()
-        {
-            decimal total = _items.Sum(i => i.Diferencia);
-            txtTotalDiferencia.Text = total.ToString("N2");
-            txtTotalDiferencia.Foreground = total == 0
-                ? new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#238636"))
-                : new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#da3633"));
+            catch (Exception ex) { NotificationService.Error("Error al cargar datos", ex.Message); }
         }
 
         private async void BtnAceptar_Click(object? sender, RoutedEventArgs e)
         {
-            var itemsConDiferencia = _items.Where(i => i.Diferencia != 0).ToList();
+            var itemsConDiferencia = _items.Where(i => i.Diferencia != 0 && i.Cajas.Count > 0).ToList();
+            if (itemsConDiferencia.Count == 0)
+            {
+                NotificationService.Success("Arqueo completado", "Sin diferencias — caja cuadra perfectamente.");
+                Close();
+                return;
+            }
 
+            int ajustes = 0;
             foreach (var item in itemsConDiferencia)
             {
+                var primeraCaja = item.Cajas.First();
+                decimal nuevoSaldoPrimera = primeraCaja.Saldo + item.Diferencia;
                 try
                 {
                     await _apiClient.RealizarArqueoAsync(new CrearArqueoRequest
                     {
-                        CuentaId = item.CuentaId, Moneda = item.MonedaCodigo,
-                        SaldoArqueo = item.SaldoArqueo,
+                        CuentaId = primeraCaja.CuentaId,
+                        Moneda = item.CodigoMoneda,
+                        SaldoArqueo = nuevoSaldoPrimera,
                         Observaciones = item.Diferencia > 0 ? "Sobrante de caja" : "Faltante de caja"
                     });
+                    ajustes++;
                 }
                 catch (Exception ex)
                 {
-                    NotificationService.Error($"Error en {item.Moneda}", ex.Message);
+                    NotificationService.Error($"Error en {item.CodigoMoneda}", ex.Message);
                     return;
                 }
             }
 
-            decimal totalDiferencia = _items.Sum(i => i.Diferencia);
-            int ajustes = itemsConDiferencia.Count;
-            if (ajustes > 0)
-            {
-                if (totalDiferencia > 0) Services.NotificationService.Warning("Arqueo completado", $"Sobrante: ${totalDiferencia:N2} ({ajustes} ajuste(s))");
-                else if (totalDiferencia < 0) Services.NotificationService.Warning("Arqueo completado", $"Faltante: ${Math.Abs(totalDiferencia):N2} ({ajustes} ajuste(s))");
-                else Services.NotificationService.Success("Arqueo completado", $"{ajustes} ajuste(s) realizado(s)");
-            }
-            else Services.NotificationService.Success("Arqueo completado", "Sin diferencias - Caja cuadra perfectamente");
+            decimal totalDiferencia = itemsConDiferencia.Sum(i => i.Diferencia);
+            if (totalDiferencia > 0)
+                NotificationService.Warning("Arqueo completado", $"Sobrante: ${totalDiferencia:N2} ({ajustes} ajuste(s))");
+            else if (totalDiferencia < 0)
+                NotificationService.Warning("Arqueo completado", $"Faltante: ${Math.Abs(totalDiferencia):N2} ({ajustes} ajuste(s))");
+            else
+                NotificationService.Success("Arqueo completado", $"{ajustes} ajuste(s) realizado(s)");
             Close();
         }
 
         private void BtnSalir_Click(object? sender, RoutedEventArgs e) => Close();
-    }
-
-    public class ArqueoItem
-    {
-        public int CuentaId { get; set; }
-        public string Codigo { get; set; } = "";
-        public string Moneda { get; set; } = "";
-        public string MonedaCodigo { get; set; } = "";
-        public string NombreCuenta { get; set; } = "";
-        public decimal SaldoSistema { get; set; }
-        private decimal _saldoArqueo;
-        public decimal SaldoArqueo
-        {
-            get => _saldoArqueo;
-            set { _saldoArqueo = value; Diferencia = _saldoArqueo - SaldoSistema; }
-        }
-        public decimal Diferencia { get; set; }
     }
 }

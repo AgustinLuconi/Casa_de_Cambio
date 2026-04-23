@@ -31,6 +31,10 @@ public class OperacionService : IOperacionService
             var cuentaDestino = db.Cuentas.Find(cuentaDestinoId);
             if (cuentaOrigen == null) return OperacionResult.Error("Cuenta origen no encontrada");
             if (cuentaDestino == null) return OperacionResult.Error("Cuenta destino no encontrada");
+            var errOrigen = ValidarMonoMonedaEfectivo(db, cuentaOrigenId, monedaOrigen);
+            if (errOrigen != null) return errOrigen;
+            var errDestino = ValidarMonoMonedaEfectivo(db, cuentaDestinoId, monedaDestino);
+            if (errDestino != null) return errDestino;
             var saldoOrigen = ObtenerOCrearSaldo(db, cuentaOrigenId, monedaOrigen);
             var saldoDestino = ObtenerOCrearSaldo(db, cuentaDestinoId, monedaDestino);
             if (saldoOrigen.Saldo < montoOrigen)
@@ -149,6 +153,19 @@ public class OperacionService : IOperacionService
             && limGeneral > 0)
             return limGeneral;
         return 0;
+    }
+
+    private OperacionResult? ValidarMonoMonedaEfectivo(AppDbContext db, int cuentaId, string moneda)
+    {
+        var cuenta = db.Cuentas.Find(cuentaId);
+        if (cuenta?.Tipo != "Efectivo") return null;
+        var monedaExistente = db.SaldosCuenta
+            .Where(s => s.CuentaId == cuentaId)
+            .Select(s => s.Moneda)
+            .FirstOrDefault();
+        if (monedaExistente != null && monedaExistente != moneda)
+            return OperacionResult.Error($"La caja '{cuenta.Nombre}' es mono-moneda ({monedaExistente}). No puede operar en {moneda}.");
+        return null;
     }
 
     private SaldoCuenta ObtenerOCrearSaldo(AppDbContext db, int cuentaId, string moneda)

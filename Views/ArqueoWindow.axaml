@@ -1,87 +1,113 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
         x:Class="SistemaCambio.Views.ArqueoWindow"
         x:CompileBindings="False"
         Title="Arqueo - Caja: TODAS"
-        Width="850" Height="600"
+        Width="720" Height="500"
         WindowStartupLocation="CenterOwner"
         CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">
 
-    <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="16">
-        
-        <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" 
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
-                CornerRadius="8" Padding="14,10" Margin="0,0,0,16">
-            <Grid ColumnDefinitions="Auto, *, Auto">
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
-                    <icon:MaterialIcon Kind="Calculator" Foreground="{DynamicResource AccentBrush}" Width="22" Height="22"/>
-                    <TextBlock x:Name="txtTitulo" Text="Arqueo - Caja: TODAS" FontWeight="SemiBold" FontSize="14" 
-                               Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
-                </StackPanel>
-                <TextBlock Grid.Column="2" x:Name="txtFecha" Text="" 
-                           Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-            </Grid>
-        </Border>
+    <Grid RowDefinitions="*, Auto" Margin="10">
 
-        <!-- Filter -->
-        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" 
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
-                CornerRadius="8" Padding="16" Margin="0,0,0,16">
-            <StackPanel Orientation="Horizontal" Spacing="15">
-                <TextBlock Text="Filtrar por Caja:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <ComboBox x:Name="cmbCaja" Width="250" SelectedIndex="0" SelectionChanged="CmbCaja_SelectionChanged">
-                    <ComboBoxItem Content="TODAS" Tag="0"/>
-                </ComboBox>
-                <Button Content="Refrescar" Background="{DynamicResource HoverBackgroundBrush}" 
-                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6"
-                        Foreground="{DynamicResource PrimaryTextBrush}" Click="BtnRefrescar_Click"/>
-            </StackPanel>
-        </Border>
-
-        <!-- DataGrid -->
-        <DataGrid Grid.Row="2" x:Name="dgArqueo" AutoGenerateColumns="False" 
-                  BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
-                  GridLinesVisibility="Horizontal"
-                  HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
+        <DataGrid Grid.Row="0" x:Name="dgArqueo"
+                  AutoGenerateColumns="False"
                   HeadersVisibility="Column"
-                  CanUserResizeColumns="True">
-            
+                  GridLinesVisibility="All"
+                  HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
+                  VerticalGridLinesBrush="{DynamicResource BorderBrush}"
+                  BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+                  RowHeight="26"
+                  CanUserReorderColumns="False"
+                  CanUserSortColumns="False"
+                  SelectionMode="Single">
+
             <DataGrid.Columns>
-                <DataGridTextColumn Header="CÓDIGO" Binding="{Binding Codigo}" Width="100" IsReadOnly="True"/>
-                <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="180" IsReadOnly="True"/>
-                <DataGridTextColumn Header="SALDO SISTEMA" Binding="{Binding SaldoSistema, StringFormat='{}{0:N2}'}" Width="150" IsReadOnly="True"/>
-                <DataGridTextColumn Header="ARQUEO" Binding="{Binding SaldoArqueo, StringFormat='{}{0:N2}'}" Width="150"/>
-                <DataGridTextColumn Header="DIFERENCIA" Binding="{Binding Diferencia, StringFormat='{}{0:N2}'}" Width="150" IsReadOnly="True"/>
+
+                <DataGridTemplateColumn Header="Código" Width="80" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding CodigoMoneda}"
+                                       VerticalAlignment="Center" Margin="8,0"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Moneda" Width="220" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding NombreMoneda}"
+                                       VerticalAlignment="Center" Margin="8,0"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Saldo" Width="140" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding SaldoSistema, StringFormat='{}{0:N2}'}"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"
+                                       Margin="8,0"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Arqueo" Width="140">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding ArqueoFisico, StringFormat='{}{0:N2}'}"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"
+                                       Margin="8,0"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding ArqueoFisico, Mode=TwoWay}"
+                                     HorizontalContentAlignment="Right"
+                                     Padding="6,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Diferencia" Width="140" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Diferencia, StringFormat='{}{0:N2}'}"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"
+                                       Margin="8,0"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Footer -->
-        <Grid Grid.Row="3" ColumnDefinitions="*, Auto" Margin="0,16,0,0">
-            <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" 
-                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
-                    CornerRadius="6" Padding="16,8">
-                <StackPanel Orientation="Horizontal" Spacing="10">
-                    <TextBlock Text="Total Diferencias:" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock x:Name="txtTotalDiferencia" Text="0.00" FontWeight="Bold" 
-                               Foreground="{DynamicResource WarningBrush}"/>
-                </StackPanel>
-            </Border>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                <Button Content="Aceptar" Background="{DynamicResource AccentBrush}" Foreground="White" 
-                        Width="110" Height="36" HorizontalContentAlignment="Center" CornerRadius="8" 
-                        Cursor="Hand" Click="BtnAceptar_Click"/>
-                <Button Content="Salir" Classes="Secondary" Width="110" Height="36" 
-                        HorizontalContentAlignment="Center" Click="BtnSalir_Click"/>
-            </StackPanel>
-        </Grid>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10"
+                    HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button HotKey="Alt+A"
+                    Background="{DynamicResource AccentBrush}" Foreground="White"
+                    Width="110" Height="34"
+                    HorizontalContentAlignment="Center"
+                    CornerRadius="6" Cursor="Hand"
+                    Click="BtnAceptar_Click">
+                <AccessText Text="_Aceptar"/>
+            </Button>
+            <Button HotKey="Alt+S" Classes="Secondary"
+                    Width="110" Height="34"
+                    HorizontalContentAlignment="Center"
+                    Click="BtnSalir_Click">
+                <AccessText Text="_Salir"/>
+            </Button>
+        </StackPanel>
+
         <controls:NotificationPanel x:Name="notificationPanel"
-                                         Grid.RowSpan="4"
-                                         VerticalAlignment="Top"
-                                         HorizontalAlignment="Right"
-                                         ZIndex="100"/>
+                                    Grid.RowSpan="2"
+                                    VerticalAlignment="Top"
+                                    HorizontalAlignment="Right"
+                                    ZIndex="100"/>
     </Grid>
 </Window>

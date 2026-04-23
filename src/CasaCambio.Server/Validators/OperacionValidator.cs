@@ -17,6 +17,10 @@ public class OperacionValidator
         var cuentaDestino = db.Cuentas.Find(cuentaDestinoId);
         if (cuentaOrigen == null) { result.AddError("Cuenta origen no existe", $"ID: {cuentaOrigenId}"); return result; }
         if (cuentaDestino == null) { result.AddError("Cuenta destino no existe", $"ID: {cuentaDestinoId}"); return result; }
+        if (tipoOperacion == "Compra" && monedaOrigen != "ARS")
+            result.AddError("Las compras deben realizarse siempre en ARS como moneda de origen");
+        if (tipoOperacion == "Venta" && monedaDestino != "ARS")
+            result.AddError("Las ventas deben realizarse siempre en ARS como moneda de destino");
         if (montoOrigen <= 0) result.AddError("Monto origen debe ser mayor a cero");
         if (montoDestino <= 0) result.AddError("Monto destino debe ser mayor a cero");
         if (cotizacion <= 0) result.AddError("Cotizacion debe ser mayor a cero");
@@ -38,6 +42,8 @@ public class OperacionValidator
         if (montoCredito <= 0) result.AddError("Monto credito debe ser mayor a cero");
         if (montoDebito <= 0) result.AddError("Monto debito debe ser mayor a cero");
         if (cuentaCreditoId == cuentaDebitoId && monedaCredito == monedaDebito) result.AddError("No se puede hacer credito/debito en la misma cuenta y moneda");
+        if (monedaCredito != monedaDebito && monedaCredito != "ARS" && monedaDebito != "ARS")
+            result.AddError("Toda operación cambiaria debe tener ARS como una de las monedas.", $"Recibido: {monedaDebito} → {monedaCredito}");
         var saldoDebito = db.SaldosCuenta.FirstOrDefault(s => s.CuentaId == cuentaDebitoId && s.Moneda == monedaDebito);
         if ((saldoDebito?.Saldo ?? 0) < montoDebito) result.AddError($"Saldo insuficiente en '{cuentaDebito.Nombre}' ({monedaDebito})");
         return result;
@@ -56,6 +62,8 @@ public class OperacionValidator
         if (montoDestino <= 0) result.AddError("Monto destino debe ser mayor a cero");
         if (cuentaOrigenId == cuentaDestinoId) result.AddError("La cuenta origen y destino no pueden ser la misma");
         if (monedaOrigen == monedaDestino) result.AddError("Arbitraje requiere monedas diferentes");
+        if (monedaOrigen != "ARS" && monedaDestino != "ARS")
+            result.AddError("Toda operación cambiaria debe tener ARS como una de las monedas.", $"Recibido: {monedaOrigen} ↔ {monedaDestino}");
         var saldoOrigen = db.SaldosCuenta.FirstOrDefault(s => s.CuentaId == cuentaOrigenId && s.Moneda == monedaOrigen);
         if ((saldoOrigen?.Saldo ?? 0) < montoOrigen) result.AddError($"Saldo insuficiente en '{cuentaOrigen!.Nombre}' ({monedaOrigen})");
         var saldoDestino = db.SaldosCuenta.FirstOrDefault(s => s.CuentaId == cuentaDestinoId && s.Moneda == monedaDestino);

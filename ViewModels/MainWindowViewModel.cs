@@ -31,9 +31,17 @@ namespace SistemaCambio.ViewModels
     public partial class MainWindowViewModel : ViewModelBase
     {
         private readonly ICasaCambioApiClient _apiClient;
+        private List<CuentaGrupoItem> _cuentasTodas = new();
 
         [ObservableProperty]
         private ObservableCollection<CuentaGrupoItem> cuentas;
+
+        [ObservableProperty] private string textoBusqueda = "";
+        [ObservableProperty] private string filtroTipoSeleccionado = "Todos los Tipos";
+        [ObservableProperty] private string filtroMonedaSeleccionada = "Todas las Monedas";
+
+        public List<string> TiposFiltro { get; } = new() { "Todos los Tipos", "Caja", "Banco", "Cliente", "Externo" };
+        public List<string> MonedasFiltro { get; } = new() { "Todas las Monedas", "USD", "EUR", "ARS" };
 
         [ObservableProperty]
         private int cuentasCount;
@@ -55,6 +63,7 @@ namespace SistemaCambio.ViewModels
         [ObservableProperty] private decimal _volumenNetoARS;
         [ObservableProperty] private List<CotizacionDto> _cotizacionesHoy = new();
 
+        public ICommand LimpiarFiltrosCommand { get; }
         public ICommand AbrirDashboardCommand { get; }
         public ICommand AbrirCuentasCommand { get; }
         public ICommand AbrirCompraCommand { get; }
@@ -77,6 +86,13 @@ namespace SistemaCambio.ViewModels
         {
             _apiClient = apiClient;
             Cuentas = new ObservableCollection<CuentaGrupoItem>();
+
+            LimpiarFiltrosCommand = new RelayCommand(() =>
+            {
+                TextoBusqueda = "";
+                FiltroTipoSeleccionado = "Todos los Tipos";
+                FiltroMonedaSeleccionada = "Todas las Monedas";
+            });
 
             AbrirDashboardCommand = new RelayCommand(() => SolicitarAbrirVentana?.Invoke("Dashboard"));
             AbrirCuentasCommand = new RelayCommand(() => SolicitarAbrirVentana?.Invoke("Cuentas"));
@@ -123,8 +139,39 @@ namespace SistemaCambio.ViewModels
 
         public void RefrescarDatos()
         {
+            _cuentasTodas.Clear();
             Cuentas.Clear();
+            TextoBusqueda = "";
+            FiltroTipoSeleccionado = "Todos los Tipos";
+            FiltroMonedaSeleccionada = "Todas las Monedas";
             CargarDatosAsync();
+        }
+
+        partial void OnTextoBusquedaChanged(string value) => AplicarFiltros();
+        partial void OnFiltroTipoSeleccionadoChanged(string value) => AplicarFiltros();
+        partial void OnFiltroMonedaSeleccionadaChanged(string value) => AplicarFiltros();
+
+        private void AplicarFiltros()
+        {
+            var query = _cuentasTodas.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(TextoBusqueda))
+            {
+                var busqueda = TextoBusqueda.Trim().ToLowerInvariant();
+                query = query.Where(c =>
+                    c.Id.ToString().Contains(busqueda) ||
+                    c.Nombre.ToLowerInvariant().Contains(busqueda));
+            }
+
+            if (FiltroTipoSeleccionado != "Todos los Tipos")
+                query = query.Where(c => c.Tipo == FiltroTipoSeleccionado);
+
+            if (FiltroMonedaSeleccionada != "Todas las Monedas")
+                query = query.Where(c => c.Saldos.Any(s => s.Moneda == FiltroMonedaSeleccionada));
+
+            Cuentas.Clear();
+            foreach (var c in query)
+                Cuentas.Add(c);
         }
 
         private async void CargarDatosAsync()
@@ -165,7 +212,7 @@ namespace SistemaCambio.ViewModels
                         ? string.Join("  |  ", saldos.Select(s => $"{s.Moneda}: {s.Saldo:N2}"))
                         : "Sin saldos";
 
-                    Cuentas.Add(new CuentaGrupoItem
+                    _cuentasTodas.Add(new CuentaGrupoItem
                     {
                         Id = cuenta.Id,
                         Nombre = cuenta.Nombre,
@@ -175,8 +222,9 @@ namespace SistemaCambio.ViewModels
                         Saldos = saldos
                     });
                 }
+                AplicarFiltros();
 
-                CuentasCount = cuentasApi.Count;
+                CuentasCount = _cuentasTodas.Count;
                 var allSaldos = cuentasApi.SelectMany(c => c.Saldos).ToList();
                 TotalDebito = allSaldos.Where(s => s.Saldo < 0).Sum(s => Math.Abs(s.Saldo));
                 TotalCredito = allSaldos.Where(s => s.Saldo > 0).Sum(s => s.Saldo);

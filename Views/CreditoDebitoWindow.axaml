@@ -4,158 +4,227 @@
         xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
         x:Class="SistemaCambio.Views.CreditoDebitoWindow"
         Title="Crédito/Débito"
-        Width="750" SizeToContent="WidthAndHeight"
+        Width="580" Height="720"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
         Background="{DynamicResource AppBackgroundBrush}">
 
-    <Grid RowDefinitions="Auto, *, Auto" Margin="16">
-        
-        <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" 
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
-                CornerRadius="8" Padding="14,10" Margin="0,0,0,16">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-                <icon:MaterialIcon Kind="SwapHorizontal" Foreground="{DynamicResource WarningBrush}" Width="22" Height="22"/>
-                <TextBlock Text="Crédito / Débito entre Cuentas" FontWeight="SemiBold" FontSize="14" 
-                           Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
-            </StackPanel>
-        </Border>
+    <Grid RowDefinitions="*, Auto, Auto" Margin="12">
 
-        <!-- Tabs -->
-        <TabControl Grid.Row="1" Background="Transparent">
+        <!-- ─────────── TABS CON CONTENIDO ─────────── -->
+        <TabControl x:Name="tabRoot" Grid.Row="0" Background="Transparent" Padding="0">
             <TabControl.Styles>
                 <Style Selector="TabItem">
-                    <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
-                    <Setter Property="Padding" Value="20,10"/>
+                    <Setter Property="Background"     Value="{DynamicResource SidebarBackgroundBrush}"/>
+                    <Setter Property="Foreground"     Value="{DynamicResource SecondaryTextBrush}"/>
+                    <Setter Property="FontSize"       Value="13"/>
+                    <Setter Property="Padding"        Value="28,8"/>
+                    <Setter Property="MinHeight"      Value="34"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
                 </Style>
                 <Style Selector="TabItem:selected">
-                    <Setter Property="Background" Value="{DynamicResource SidebarBackgroundBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
                     <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
                 </Style>
             </TabControl.Styles>
 
-            <!-- Tab 1: Crédito/Débito -->
+            <!-- ── TAB 1: Credito/Debito ── -->
             <TabItem Header="Credito/Debito">
-                <Grid Margin="10" RowDefinitions="Auto, Auto, Auto, *">
-                    
-                    <!-- Note: Removed Currency textbox as per new design -->
+                <Grid Margin="16,14,16,12"
+                      ColumnDefinitions="110, *"
+                      RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
 
-                    <!-- Credit -->
-                    <Grid Grid.Row="1" ColumnDefinitions="*, *" Margin="0,10">
-                        <StackPanel Grid.Column="0" Spacing="8">
-                            <TextBlock x:Name="lblCredito" Text="Crédito (Destino)" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource DangerBrush}" 
-                                    BorderThickness="1" CornerRadius="8" Padding="6">
-                                <ComboBox x:Name="cmbCredito" HorizontalAlignment="Stretch" 
-                                          Background="Transparent" BorderThickness="0"/>
-                            </Border>
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Spacing="8" Margin="15,0,0,0">
-                            <Grid ColumnDefinitions="Auto, *">
-                                <TextBlock Text="Importe crédito" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBox x:Name="txtImporteCredito" Grid.Column="1" Text="0.00" TextAlignment="Right" 
-                                         Margin="10,0,0,0" KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
+                    <!-- Fila 0: Moneda -->
+                    <TextBlock Grid.Row="0" Grid.Column="0"
+                               Text="Moneda" VerticalAlignment="Center"
+                               Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
+                    <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="70, *" Margin="0,0,0,10">
+                        <ComboBox x:Name="cmbMoneda" Grid.Column="0"
+                                  HorizontalAlignment="Stretch"
+                                  SelectionChanged="CmbMoneda_SelectionChanged"/>
+                        <TextBox x:Name="txtMonedaDescripcion" Grid.Column="1" Margin="8,0,0,0"
+                                 IsReadOnly="True"
+                                 Background="#2F6F6F" Foreground="White" BorderBrush="#1F4F4F"/>
+                    </Grid>
+
+                    <!-- Separador arriba de Crédito -->
+                    <Border Grid.Row="1" Grid.ColumnSpan="2"
+                            Height="1" Background="{DynamicResource BorderBrush}"
+                            Margin="0,2,0,10"/>
+
+                    <!-- Fila 2: Crédito (cuenta ROJA) -->
+                    <TextBlock Grid.Row="2" Grid.Column="0"
+                               Text="Crédito" VerticalAlignment="Center"
+                               Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,10"/>
+                    <ComboBox x:Name="cmbCredito" Grid.Row="2" Grid.Column="1"
+                              HorizontalAlignment="Stretch" Margin="0,0,0,10"
+                              FontWeight="SemiBold"
+                              Background="#CC0000" Foreground="White" BorderBrush="#990000"/>
+
+                    <!-- Fila 3: Importe Crédito + sub-bloque (Cotización / Pesos) -->
+                    <TextBlock Grid.Row="3" Grid.Column="0"
+                               Text="Importe&#x0a;crédito" VerticalAlignment="Center"
+                               Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
+                    <Grid Grid.Row="3" Grid.Column="1" ColumnDefinitions="*, 230" Margin="0,0,0,10">
+                        <TextBox x:Name="txtImporteCredito" Grid.Column="0"
+                                 Text="0.00" TextAlignment="Right"
+                                 FontSize="20" FontWeight="Bold"
+                                 KeyUp="RecalcularCredito_KeyUp" GotFocus="TextBox_GotFocus"/>
+                        <StackPanel Grid.Column="1" Spacing="4" Margin="12,0,0,0">
+                            <Grid ColumnDefinitions="80, *">
+                                <TextBlock Text="Cotización" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                <TextBox x:Name="txtCotizacionCredito" Grid.Column="1"
+                                         Text="0.00000" TextAlignment="Right"
+                                         Background="{DynamicResource SidebarBackgroundBrush}"
+                                         Foreground="{DynamicResource SecondaryTextBrush}"
+                                         KeyUp="RecalcularCredito_KeyUp" GotFocus="TextBox_GotFocus"/>
                             </Grid>
-                            <Grid ColumnDefinitions="Auto, *">
-                                <TextBlock Text="Cotización" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBox x:Name="txtCotizacion" Grid.Column="1" Text="0.00000" TextAlignment="Right" Margin="10,0,0,0"/>
-                            </Grid>
-                            <Grid ColumnDefinitions="Auto, *">
-                                <TextBlock Text="Total" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBox x:Name="txtPesosCredito" Grid.Column="1" Text="0.00" TextAlignment="Right" 
-                                         Margin="10,0,0,0" IsReadOnly="True"/>
+                            <Grid ColumnDefinitions="80, *">
+                                <TextBlock Text="Pesos" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                <TextBox x:Name="txtPesosCredito" Grid.Column="1"
+                                         Text="0.00" TextAlignment="Right" IsReadOnly="True"
+                                         Background="{DynamicResource SidebarBackgroundBrush}"
+                                         Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </Grid>
                         </StackPanel>
                     </Grid>
 
-                    <!-- Debit -->
-                    <Grid Grid.Row="2" ColumnDefinitions="*, *" Margin="0,10">
-                        <StackPanel Grid.Column="0" Spacing="8">
-                            <TextBlock x:Name="lblDebito" Text="Débito (Origen)" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource SuccessBrush}" 
-                                    BorderThickness="1" CornerRadius="8" Padding="6">
-                                <ComboBox x:Name="cmbDebito" HorizontalAlignment="Stretch" 
-                                          Background="Transparent" BorderThickness="0"/>
-                            </Border>
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Spacing="8" Margin="15,0,0,0">
-                            <Grid ColumnDefinitions="Auto, *">
-                                <TextBlock Text="Importe débito" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBox x:Name="txtImporteDebito" Grid.Column="1" Text="0.00" TextAlignment="Right" 
-                                         Margin="10,0,0,0" GotFocus="TextBox_GotFocus"/>
+                    <!-- Separador entre Crédito y Débito -->
+                    <Border Grid.Row="4" Grid.ColumnSpan="2"
+                            Height="1" Background="{DynamicResource BorderBrush}"
+                            Margin="0,2,0,10"/>
+
+                    <!-- Fila 5: Débito (cuenta VERDE) -->
+                    <TextBlock Grid.Row="5" Grid.Column="0"
+                               Text="Débito" VerticalAlignment="Center"
+                               Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,10"/>
+                    <ComboBox x:Name="cmbDebito" Grid.Row="5" Grid.Column="1"
+                              HorizontalAlignment="Stretch" Margin="0,0,0,10"
+                              FontWeight="SemiBold"
+                              Background="#008800" Foreground="White" BorderBrush="#005500"/>
+
+                    <!-- Fila 6: Importe Débito + sub-bloque (Cotización / Pesos) -->
+                    <TextBlock Grid.Row="6" Grid.Column="0"
+                               Text="Importe&#x0a;débito" VerticalAlignment="Center"
+                               Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
+                    <Grid Grid.Row="6" Grid.Column="1" ColumnDefinitions="*, 230" Margin="0,0,0,10">
+                        <TextBox x:Name="txtImporteDebito" Grid.Column="0"
+                                 Text="0.00" TextAlignment="Right"
+                                 FontSize="20" FontWeight="Bold"
+                                 KeyUp="RecalcularDebito_KeyUp" GotFocus="TextBox_GotFocus"/>
+                        <StackPanel Grid.Column="1" Spacing="4" Margin="12,0,0,0">
+                            <Grid ColumnDefinitions="80, *">
+                                <TextBlock Text="Cotización" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                <TextBox x:Name="txtCotizacionDebito" Grid.Column="1"
+                                         Text="0.00000" TextAlignment="Right"
+                                         Background="{DynamicResource SidebarBackgroundBrush}"
+                                         Foreground="{DynamicResource SecondaryTextBrush}"
+                                         KeyUp="RecalcularDebito_KeyUp" GotFocus="TextBox_GotFocus"/>
                             </Grid>
-                            <Grid ColumnDefinitions="Auto, *">
-                                <TextBlock Text="Cotización" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBox x:Name="txtCotizacionDebito" Grid.Column="1" Text="0.00000" TextAlignment="Right" Margin="10,0,0,0"/>
-                            </Grid>
-                            <Grid ColumnDefinitions="Auto, *">
-                                <TextBlock Text="Total" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBox x:Name="txtPesosDebito" Grid.Column="1" Text="0.00" TextAlignment="Right" 
-                                         Margin="10,0,0,0" IsReadOnly="True"/>
+                            <Grid ColumnDefinitions="80, *">
+                                <TextBlock Text="Pesos" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                <TextBox x:Name="txtPesosDebito" Grid.Column="1"
+                                         Text="0.00" TextAlignment="Right" IsReadOnly="True"
+                                         Background="{DynamicResource SidebarBackgroundBrush}"
+                                         Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </Grid>
                         </StackPanel>
                     </Grid>
 
-                    <!-- Notes -->
-                    <Grid Grid.Row="3" ColumnDefinitions="100, *" Margin="0,10">
-                        <TextBlock Text="Observ." VerticalAlignment="Top" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,5,0,0"/>
-                        <TextBox x:Name="txtObservaciones" Grid.Column="1" Height="80" AcceptsReturn="True"/>
-                    </Grid>
+                    <!-- Separador antes de Observ -->
+                    <Border Grid.Row="7" Grid.ColumnSpan="2"
+                            Height="1" Background="{DynamicResource BorderBrush}"
+                            Margin="0,2,0,10"/>
+
+                    <!-- Fila 8: Observaciones -->
+                    <TextBlock Grid.Row="8" Grid.Column="0"
+                               Text="Observ." VerticalAlignment="Center"
+                               Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
+                    <TextBox x:Name="txtObservaciones" Grid.Row="8" Grid.Column="1"
+                             Height="32" Margin="0,0,0,10"/>
+
+                    <!-- Fila 9: Banner CREDITO/DEBITO -->
+                    <Border Grid.Row="9" Grid.ColumnSpan="2"
+                            Background="#606060" CornerRadius="2"
+                            Padding="10,12" Margin="0,2,0,10">
+                        <TextBlock Text="CREDITO/DEBITO"
+                                   FontSize="22" FontWeight="Bold"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Fila 10: Siguiente >> -->
+                    <Button Grid.Row="10" Grid.Column="1"
+                            Content="Siguiente &gt;&gt;"
+                            HorizontalAlignment="Right"
+                            Padding="16,6"
+                            Click="BtnSiguiente_Click"/>
+
                 </Grid>
             </TabItem>
 
-            <!-- Tab 2: Client -->
+            <!-- ── TAB 2: Cliente ── -->
             <TabItem Header="Cliente">
                 <StackPanel Margin="20" Spacing="15">
-                    <TextBlock Text="Asociar Cliente (Opcional)" FontSize="16" FontWeight="SemiBold" 
+                    <TextBlock Text="Asociar Cliente (Opcional)" FontSize="16" FontWeight="SemiBold"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    
-                    <Grid ColumnDefinitions="100, *">
-                        <TextBlock Text="Cliente" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                    <Grid ColumnDefinitions="110, *">
+                        <TextBlock Text="Cliente" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
                         <ComboBox x:Name="cmbCliente" Grid.Column="1" HorizontalAlignment="Stretch"/>
                     </Grid>
 
-                    <Grid ColumnDefinitions="100, *">
-                        <TextBlock Text="Documento" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <Grid ColumnDefinitions="110, *">
+                        <TextBlock Text="Documento" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
                         <TextBox x:Name="txtDocumento" Grid.Column="1" IsReadOnly="True"/>
                     </Grid>
 
-                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" 
-                            BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,20,0,0">
-                        <TextBlock Text="El cliente seleccionado se asociará a la operación de crédito/débito." 
+                    <Border Background="{DynamicResource CardBackgroundBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="15" Margin="0,20,0,0">
+                        <TextBlock Text="El cliente seleccionado se asociará a la operación de crédito/débito."
                                    Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
                     </Border>
                 </StackPanel>
             </TabItem>
         </TabControl>
 
-        <!-- Error Panel -->
-        <Border x:Name="borderError" IsVisible="False"
+        <!-- ─────────── Error panel ─────────── -->
+        <Border x:Name="borderError" Grid.Row="1" IsVisible="False"
                 Background="#DC262620" BorderBrush="{DynamicResource DangerBrush}"
                 BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,8,0,0">
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <icon:MaterialIcon Kind="AlertCircle" Foreground="{DynamicResource DangerBrush}"
-                                  Width="16" Height="16" VerticalAlignment="Center"/>
+                                   Width="16" Height="16" VerticalAlignment="Center"/>
                 <TextBlock x:Name="txtErrorServidor" Text="" TextWrapping="Wrap"
                            Foreground="{DynamicResource DangerBrush}" FontSize="12"
                            VerticalAlignment="Center"/>
             </StackPanel>
         </Border>
 
-        <!-- Footer -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Aceptar" Background="{DynamicResource AccentBrush}" Foreground="White" 
-                    Width="110" Height="36" HorizontalContentAlignment="Center" CornerRadius="8" 
-                    Cursor="Hand" Click="BtnAceptar_Click"/>
-            <Button Content="Cancelar" Classes="Secondary" Width="110" Height="36" 
-                    HorizontalContentAlignment="Center" Click="BtnCancelar_Click"/>
+        <!-- ─────────── Footer: Aceptar / Cancelar ─────────── -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10"
+                    HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Aceptar"
+                    Background="{DynamicResource AccentBrush}" Foreground="White"
+                    Width="110" Height="36" HorizontalContentAlignment="Center"
+                    CornerRadius="8" Cursor="Hand" Click="BtnAceptar_Click"/>
+            <Button Content="Cancelar" Classes="Secondary"
+                    Width="110" Height="36" HorizontalContentAlignment="Center"
+                    Click="BtnCancelar_Click"/>
         </StackPanel>
+
         <controls:NotificationPanel x:Name="notificationPanel"
-                                         Grid.RowSpan="3"
-                                         VerticalAlignment="Top"
-                                         HorizontalAlignment="Right"
-                                         ZIndex="100"/>
+                                    Grid.RowSpan="3"
+                                    VerticalAlignment="Top"
+                                    HorizontalAlignment="Right"
+                                    ZIndex="100"/>
     </Grid>
 </Window>

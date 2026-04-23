@@ -132,4 +132,64 @@ public class OperacionServiceTests
         Assert.Equal(1.01m, op.MontoTotalDestino);
         Assert.Equal(995.57777m, op.CotizacionAplicada);
     }
+
+    [Fact]
+    public void GuardarCreditoDebito_MonedasDistintasSinARS_DeberiaRetornarError()
+    {
+        using (var db = _factory.CreateDbContext())
+        {
+            db.Cuentas.Add(new Cuenta { Id = 3, Nombre = "Efectivo EUR", Tipo = "Banco" });
+            db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = 3, Moneda = "EUR", Saldo = 1000m });
+            db.SaveChanges();
+        }
+
+        var resultado = _operacionService.GuardarCreditoDebito(
+            cuentaCreditoId: 3, cuentaDebitoId: 2,
+            monedaCredito: "EUR", monedaDebito: "USD",
+            montoCredito: 100m, montoDebito: 110m, cotizacion: 1.1m);
+
+        Assert.False(resultado.Exitoso);
+        Assert.Contains("ARS", resultado.Mensaje);
+    }
+
+    [Fact]
+    public void GuardarCreditoDebito_UnaMonedaEsARS_Exitoso()
+    {
+        var resultado = _operacionService.GuardarCreditoDebito(
+            cuentaCreditoId: 1, cuentaDebitoId: 2,
+            monedaCredito: "ARS", monedaDebito: "USD",
+            montoCredito: 100000m, montoDebito: 100m, cotizacion: 1000m);
+
+        Assert.True(resultado.Exitoso);
+    }
+
+    [Fact]
+    public void GuardarOperacionInterbancaria_SinARS_DeberiaRetornarError()
+    {
+        using (var db = _factory.CreateDbContext())
+        {
+            db.Cuentas.Add(new Cuenta { Id = 4, Nombre = "Banco EUR", Tipo = "Banco" });
+            db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = 4, Moneda = "EUR", Saldo = 1000m });
+            db.SaveChanges();
+        }
+
+        var resultado = _operacionService.GuardarOperacionInterbancaria(
+            tipo: "Interbancaria", cuentaOrigenId: 2, cuentaDestinoId: 4,
+            monedaOrigen: "USD", monedaDestino: "EUR",
+            montoOrigen: 100m, montoDestino: 90m, cotizacion: 0.9m);
+
+        Assert.False(resultado.Exitoso);
+        Assert.Contains("ARS", resultado.Mensaje);
+    }
+
+    [Fact]
+    public void GuardarOperacionInterbancaria_ConARS_Exitoso()
+    {
+        var resultado = _operacionService.GuardarOperacionInterbancaria(
+            tipo: "Interbancaria", cuentaOrigenId: 2, cuentaDestinoId: 1,
+            monedaOrigen: "USD", monedaDestino: "ARS",
+            montoOrigen: 100m, montoDestino: 100000m, cotizacion: 1000m);
+
+        Assert.True(resultado.Exitoso);
+    }
 }
