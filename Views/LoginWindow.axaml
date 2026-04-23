@@ -85,7 +85,7 @@
                                      BorderBrush="#233c4a"
                                      BorderThickness="1"
                                      CornerRadius="10"
-                                     Watermark="Ingrese su usuario"/>
+                                     Watermark="Usuario o correo electrónico"/>
                             <icon:MaterialIcon Kind="AccountOutline"
                                                Width="18" Height="18"
                                                VerticalAlignment="Center"

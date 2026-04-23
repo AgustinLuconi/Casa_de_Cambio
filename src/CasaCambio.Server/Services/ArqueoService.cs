@@ -22,17 +22,17 @@ public class ArqueoService : IArqueoService
             var saldoCuenta = db.SaldosCuenta.FirstOrDefault(s => s.CuentaId == cuentaId && s.Moneda == moneda);
             decimal saldoSistema = saldoCuenta?.Saldo ?? 0;
             decimal diferencia = montoContado - saldoSistema;
-            var arqueo = new Arqueo { CuentaId = cuentaId, Fecha = DateTime.Now, SaldoSistema = saldoSistema, SaldoArqueo = montoContado, Diferencia = diferencia, Observaciones = string.IsNullOrEmpty(observaciones) ? (diferencia == 0 ? "Cuadra" : (diferencia > 0 ? "Sobrante" : "Faltante")) : observaciones };
+            var arqueo = new Arqueo { CuentaId = cuentaId, Fecha = DateTime.UtcNow, SaldoSistema = saldoSistema, SaldoArqueo = montoContado, Diferencia = diferencia, Observaciones = string.IsNullOrEmpty(observaciones) ? (diferencia == 0 ? "Cuadra" : (diferencia > 0 ? "Sobrante" : "Faltante")) : observaciones };
             db.Arqueos.Add(arqueo); db.SaveChanges();
             if (diferencia != 0)
             {
                 var cuentaAjuste = db.Cuentas.FirstOrDefault(c => c.Nombre == "Diferencias de Caja");
                 if (cuentaAjuste == null) { cuentaAjuste = new Cuenta { Nombre = "Diferencias de Caja", Tipo = "Resultado" }; db.Cuentas.Add(cuentaAjuste); db.SaveChanges(); }
                 var tipoAjuste = diferencia > 0 ? "Sobrante Caja" : "Faltante Caja";
-                var opAjuste = new Operacion { Fecha = DateTime.Now, TipoOperacion = tipoAjuste, MontoTotalOrigen = Math.Abs(diferencia), MontoTotalDestino = Math.Abs(diferencia), CotizacionAplicada = 1, Observaciones = $"Ajuste automatico por arqueo #{arqueo.Id}" };
+                var opAjuste = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = tipoAjuste, MontoTotalOrigen = Math.Abs(diferencia), MontoTotalDestino = Math.Abs(diferencia), CotizacionAplicada = 1, Observaciones = $"Ajuste automatico por arqueo #{arqueo.Id}" };
                 db.Operaciones.Add(opAjuste);
-                db.Movimientos.Add(new Movimiento { Operacion = opAjuste, CuentaId = cuentaId, Moneda = moneda, Monto = diferencia, Fecha = DateTime.Now });
-                db.Movimientos.Add(new Movimiento { Operacion = opAjuste, CuentaId = cuentaAjuste.Id, Moneda = moneda, Monto = -diferencia, Fecha = DateTime.Now });
+                db.Movimientos.Add(new Movimiento { Operacion = opAjuste, CuentaId = cuentaId, Moneda = moneda, Monto = diferencia, Fecha = DateTime.UtcNow });
+                db.Movimientos.Add(new Movimiento { Operacion = opAjuste, CuentaId = cuentaAjuste.Id, Moneda = moneda, Monto = -diferencia, Fecha = DateTime.UtcNow });
                 if (saldoCuenta != null) saldoCuenta.Saldo = montoContado;
                 else db.SaldosCuenta.Add(new SaldoCuenta { CuentaId = cuentaId, Moneda = moneda, Saldo = montoContado });
                 var saldoAjuste = db.SaldosCuenta.FirstOrDefault(s => s.CuentaId == cuentaAjuste.Id && s.Moneda == moneda);
@@ -45,6 +45,11 @@ public class ArqueoService : IArqueoService
             db.SaveChanges(); transaction.Commit();
             return ArqueoResult.Success(arqueo.Id, diferencia);
         }
-        catch (Exception ex) { transaction.Rollback(); return ArqueoResult.Error($"Error al realizar arqueo: {ex.Message}"); }
+        catch (Exception ex)
+        {
+            try { transaction.Rollback(); } catch { /* ignore rollback errors */ }
+            var detail = ex.InnerException?.Message ?? ex.Message;
+            return ArqueoResult.Error($"Error al realizar arqueo: {detail}");
+        }
     }
 }

@@ -29,7 +29,9 @@ public class CuentasController : ControllerBase
     public IActionResult GetCuentas()
     {
         using var db = _contextFactory.CreateDbContext();
-        var cuentas = db.Cuentas.Include(c => c.Saldos).AsNoTracking().ToList();
+        var cuentas = db.Cuentas.Include(c => c.Saldos).AsNoTracking()
+            .Where(c => c.Tipo != "Resultado" && c.Tipo != "Externo")
+            .ToList();
         return Ok(cuentas.Select(c => new CuentaDto
         {
             Id = c.Id, Nombre = c.Nombre, Tipo = c.Tipo, LimiteDeuda = c.LimiteDeuda,

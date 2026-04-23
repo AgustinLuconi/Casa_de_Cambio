@@ -306,6 +306,22 @@ public class CasaCambioApiClient : ICasaCambioApiClient
 
     // Internal helpers
 
+    private async Task ThrowIfNotSuccessAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode) return;
+        var body = await response.Content.ReadAsStringAsync();
+        try
+        {
+            var error = JsonSerializer.Deserialize<ApiErrorResponse>(body, JsonOptions);
+            if (!string.IsNullOrEmpty(error?.Message))
+                throw new Exception(error.Message);
+        }
+        catch (JsonException) { }
+        throw new HttpRequestException(
+            string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body.Trim('"'),
+            null, response.StatusCode);
+    }
+
     private async Task<T> GetAuthenticatedAsync<T>(string url)
     {
         await EnsureAuthenticatedAsync();
@@ -358,7 +374,7 @@ public class CasaCambioApiClient : ICasaCambioApiClient
             }
         }
 
-        response.EnsureSuccessStatusCode();
+        await ThrowIfNotSuccessAsync(response);
         return (await response.Content.ReadFromJsonAsync<T>(JsonOptions))!;
     }
 
@@ -387,7 +403,7 @@ public class CasaCambioApiClient : ICasaCambioApiClient
             }
         }
 
-        response.EnsureSuccessStatusCode();
+        await ThrowIfNotSuccessAsync(response);
         return (await response.Content.ReadFromJsonAsync<T>(JsonOptions))!;
     }
 
