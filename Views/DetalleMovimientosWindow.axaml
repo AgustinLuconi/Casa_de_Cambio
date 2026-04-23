@@ -26,55 +26,55 @@
         <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" 
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
                 CornerRadius="8" Padding="16" Margin="0,0,0,16">
-            <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="100, *, 100, *">
-                
+            <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="Auto, *, 24, Auto, *">
+
                 <!-- Row 1 -->
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Cuenta" VerticalAlignment="Center" 
-                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <ComboBox x:Name="cmbCuenta" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,20,10"/>
-                
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="Cuenta Externa" VerticalAlignment="Center" 
-                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <ComboBox x:Name="cmbCuentaExterna" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Stretch" Margin="0,0,0,10"/>
-                
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Cuenta" VerticalAlignment="Center"
+                           Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
+                <ComboBox x:Name="cmbCuenta" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+
+                <TextBlock Grid.Row="0" Grid.Column="3" Text="Cuenta Externa" VerticalAlignment="Center"
+                           Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
+                <ComboBox x:Name="cmbCuentaExterna" Grid.Row="0" Grid.Column="4" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+
                 <!-- Row 2 -->
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Desde" VerticalAlignment="Center" 
-                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <DatePicker x:Name="dpDesde" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,20,10"/>
-                
-                <TextBlock Grid.Row="1" Grid.Column="2" Text="Hasta" VerticalAlignment="Center" 
-                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <DatePicker x:Name="dpHasta" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Stretch" Margin="0,0,0,10"/>
-                
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Desde" VerticalAlignment="Center"
+                           Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
+                <DatePicker x:Name="dpDesde" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="3" Text="Hasta" VerticalAlignment="Center"
+                           Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
+                <DatePicker x:Name="dpHasta" Grid.Row="1" Grid.Column="4" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+
                 <!-- Row 3 -->
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Moneda" VerticalAlignment="Center" 
-                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <ComboBox x:Name="cmbMoneda" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,20,0">
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Moneda" VerticalAlignment="Center"
+                           Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,0"/>
+                <ComboBox x:Name="cmbMoneda" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch">
                     <ComboBoxItem Content="Todas" Tag=""/>
                 </ComboBox>
-                
-                <CheckBox x:Name="chkHistoricos" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" 
+
+                <CheckBox x:Name="chkHistoricos" Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="2"
                           Content="Buscar movimientos históricos" VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
         <!-- DataGrid -->
-        <DataGrid Grid.Row="2" x:Name="dgMovimientos" AutoGenerateColumns="False" 
+        <DataGrid Grid.Row="2" x:Name="dgMovimientos" AutoGenerateColumns="False"
                   BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
                   GridLinesVisibility="Horizontal"
                   HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
                   HeadersVisibility="Column"
+                  HorizontalScrollBarVisibility="Disabled"
                   IsReadOnly="True">
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
-                <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="140"/>
+                <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="130"/>
                 <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}" Width="120"/>
                 <DataGridTextColumn Header="CUENTA" Binding="{Binding CuentaNombre}" Width="*"/>
-                <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="100"/>
-                <DataGridTextColumn Header="DÉBITO" Binding="{Binding Debito, StringFormat='{}{0:N2}'}" Width="120"/>
-                <DataGridTextColumn Header="CRÉDITO" Binding="{Binding Credito, StringFormat='{}{0:N2}'}" Width="120"/>
-                <DataGridTextColumn Header="OBSERVACIONES" Binding="{Binding Observaciones}" Width="200"/>
+                <DataGridTextColumn Header="MON." Binding="{Binding Moneda}" Width="60"/>
+                <DataGridTextColumn Header="DÉBITO" Binding="{Binding Debito, StringFormat='{}{0:N2}'}" Width="105"/>
+                <DataGridTextColumn Header="CRÉDITO" Binding="{Binding Credito, StringFormat='{}{0:N2}'}" Width="105"/>
+                <DataGridTextColumn Header="OBSERVACIONES" Binding="{Binding Observaciones}" Width="2*"/>
             </DataGrid.Columns>
         </DataGrid>
 

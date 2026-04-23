@@ -4,7 +4,9 @@
         x:Class="SistemaCambio.Views.ArqueoWindow"
         x:CompileBindings="False"
         Title="Arqueo - Caja: TODAS"
-        Width="720" Height="500"
+        Width="720"
+        MinHeight="220" MaxHeight="600"
+        SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">
@@ -25,7 +27,7 @@
 
             <DataGrid.Columns>
 
-                <DataGridTemplateColumn Header="Código" Width="80" IsReadOnly="True">
+                <DataGridTemplateColumn Header="Código" Width="70" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding CodigoMoneda}"
@@ -34,7 +36,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Moneda" Width="220" IsReadOnly="True">
+                <DataGridTemplateColumn Header="Moneda" Width="2*" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding NombreMoneda}"
@@ -43,7 +45,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Saldo" Width="140" IsReadOnly="True">
+                <DataGridTemplateColumn Header="Saldo" Width="*" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding SaldoSistema, StringFormat='{}{0:N2}'}"
@@ -54,7 +56,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Arqueo" Width="140">
+                <DataGridTemplateColumn Header="Arqueo" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding ArqueoFisico, StringFormat='{}{0:N2}'}"
@@ -72,7 +74,7 @@
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Diferencia" Width="140" IsReadOnly="True">
+                <DataGridTemplateColumn Header="Diferencia" Width="*" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Diferencia, StringFormat='{}{0:N2}'}"
