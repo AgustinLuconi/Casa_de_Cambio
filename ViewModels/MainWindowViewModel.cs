@@ -40,7 +40,7 @@ namespace SistemaCambio.ViewModels
         [ObservableProperty] private string filtroTipoSeleccionado = "Todos los Tipos";
         [ObservableProperty] private string filtroMonedaSeleccionada = "Todas las Monedas";
 
-        public List<string> TiposFiltro { get; } = new() { "Todos los Tipos", "Caja", "Banco", "Cliente", "Externo" };
+        public List<string> TiposFiltro { get; } = new() { "Todos los Tipos", "Efectivo", "Banco", "Cliente", "Proveedor" };
         public List<string> MonedasFiltro { get; } = new() { "Todas las Monedas", "USD", "EUR", "ARS" };
 
         [ObservableProperty]
