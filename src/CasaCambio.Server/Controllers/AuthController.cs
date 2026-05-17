@@ -23,14 +23,16 @@ public class AuthController : ControllerBase
     private readonly IEmailService _emailService;
     private readonly JwtSettings _jwtSettings;
     private readonly ILogger<AuthController> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public AuthController(IDbContextFactory<AppDbContext> contextFactory, JwtService jwtService, IEmailService emailService, IOptions<JwtSettings> jwtSettings, ILogger<AuthController> logger)
+    public AuthController(IDbContextFactory<AppDbContext> contextFactory, JwtService jwtService, IEmailService emailService, IOptions<JwtSettings> jwtSettings, ILogger<AuthController> logger, IServiceScopeFactory scopeFactory)
     {
         _contextFactory = contextFactory;
         _jwtService = jwtService;
         _emailService = emailService;
         _jwtSettings = jwtSettings.Value;
         _logger = logger;
+        _scopeFactory = scopeFactory;
     }
 
     [EnableRateLimiting("auth")]
@@ -166,10 +168,14 @@ public class AuthController : ControllerBase
         db.Usuarios.Add(usuario);
         db.SaveChanges();
 
+        var emailCapture = request.Email;
+        var nombreCapture = request.NombreCompleto;
         _ = Task.Run(async () =>
         {
-            try { await _emailService.EnviarConfirmacionAsync(request.Email, request.NombreCompleto, confirmToken); }
-            catch (Exception ex) { _logger.LogWarning(ex, "Error enviando email de confirmación a {Email}", request.Email); }
+            using var scope = _scopeFactory.CreateScope();
+            var emailSvc = scope.ServiceProvider.GetRequiredService<IEmailService>();
+            try { await emailSvc.EnviarConfirmacionAsync(emailCapture, nombreCapture, confirmToken); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Error enviando email de confirmación a {Email}", emailCapture); }
         });
 
         return Ok(new RegisterResponse
@@ -212,10 +218,14 @@ public class AuthController : ControllerBase
             usuario.TokenRecuperacion = recoveryToken;
             usuario.TokenExpiracion = DateTime.UtcNow.AddHours(1);
             db.SaveChanges();
+            var emailCapture = usuario.Email;
+            var nombreCapture = usuario.NombreCompleto;
             _ = Task.Run(async () =>
             {
-                try { await _emailService.EnviarRecuperacionAsync(usuario.Email, usuario.NombreCompleto, recoveryToken); }
-                catch (Exception ex) { _logger.LogWarning(ex, "Error enviando email de recuperación a {Email}", usuario.Email); }
+                using var scope = _scopeFactory.CreateScope();
+                var emailSvc = scope.ServiceProvider.GetRequiredService<IEmailService>();
+                try { await emailSvc.EnviarRecuperacionAsync(emailCapture, nombreCapture, recoveryToken); }
+                catch (Exception ex) { _logger.LogWarning(ex, "Error enviando email de recuperación a {Email}", emailCapture); }
             });
         }
 
@@ -332,10 +342,14 @@ public class AuthController : ControllerBase
             usuario.TokenConfirmacion = confirmToken;
             usuario.TokenConfirmacionExpiry = DateTime.UtcNow.AddHours(24);
             db.SaveChanges();
+            var emailCapture2 = request.Email;
+            var nombreCapture2 = usuario.NombreCompleto;
             _ = Task.Run(async () =>
             {
-                try { await _emailService.EnviarConfirmacionAsync(request.Email, usuario.NombreCompleto, confirmToken); }
-                catch (Exception ex) { _logger.LogWarning(ex, "Error enviando email de confirmación a {Email}", request.Email); }
+                using var scope = _scopeFactory.CreateScope();
+                var emailSvc = scope.ServiceProvider.GetRequiredService<IEmailService>();
+                try { await emailSvc.EnviarConfirmacionAsync(emailCapture2, nombreCapture2, confirmToken); }
+                catch (Exception ex) { _logger.LogWarning(ex, "Error enviando email de confirmación a {Email}", emailCapture2); }
             });
         }
         else
