@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using CasaCambio.Server.Auth;
@@ -32,6 +33,7 @@ public class AuthController : ControllerBase
         _logger = logger;
     }
 
+    [EnableRateLimiting("auth")]
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginRequest request)
     {
@@ -132,6 +134,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [EnableRateLimiting("auth")]
     [HttpPost("register")]
     public IActionResult Register([FromBody] RegisterRequest request)
     {
@@ -157,6 +160,7 @@ public class AuthController : ControllerBase
             Activo = false,
             EmailConfirmado = false,
             TokenConfirmacion = confirmToken,
+            TokenConfirmacionExpiry = DateTime.UtcNow.AddHours(24),
             FechaCreacion = DateTime.UtcNow
         };
         db.Usuarios.Add(usuario);
@@ -180,17 +184,19 @@ public class AuthController : ControllerBase
     {
         using var db = _contextFactory.CreateDbContext();
         var usuario = db.Usuarios.FirstOrDefault(u => u.TokenConfirmacion == token);
-        if (usuario == null)
-            return BadRequest(new ApiErrorResponse { Code = 400, Message = "Token inv\u00e1lido o ya utilizado." });
+        if (usuario == null || (usuario.TokenConfirmacionExpiry.HasValue && usuario.TokenConfirmacionExpiry < DateTime.UtcNow))
+            return BadRequest(new ApiErrorResponse { Code = 400, Message = "Token inv\u00e1lido o expirado." });
 
         usuario.Activo = true;
         usuario.EmailConfirmado = true;
         usuario.TokenConfirmacion = null;
+        usuario.TokenConfirmacionExpiry = null;
         db.SaveChanges();
 
         return Ok(new RegisterResponse { Exitoso = true, Mensaje = "Email confirmado. Ya pod\u00e9s iniciar sesi\u00f3n." });
     }
 
+    [EnableRateLimiting("auth")]
     [HttpPost("recuperar")]
     public IActionResult Recuperar([FromBody] RecuperarPasswordRequest request)
     {
@@ -232,6 +238,8 @@ public class AuthController : ControllerBase
         usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NuevaPassword);
         usuario.TokenRecuperacion = null;
         usuario.TokenExpiracion = null;
+        usuario.RefreshToken = null;
+        usuario.RefreshTokenExpiry = null;
         db.SaveChanges();
 
         return Ok(new RegisterResponse { Exitoso = true, Mensaje = "Contrase\u00f1a actualizada. Ya pod\u00e9s iniciar sesi\u00f3n." });
@@ -275,6 +283,7 @@ public class AuthController : ControllerBase
         var confirmToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
             .Replace("+", "-").Replace("/", "_").TrimEnd('=');
         usuario.TokenConfirmacion = confirmToken;
+        usuario.TokenConfirmacionExpiry = DateTime.UtcNow.AddHours(24);
         db.SaveChanges();
 
         try
@@ -321,6 +330,7 @@ public class AuthController : ControllerBase
             var confirmToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
                 .Replace("+", "-").Replace("/", "_").TrimEnd('=');
             usuario.TokenConfirmacion = confirmToken;
+            usuario.TokenConfirmacionExpiry = DateTime.UtcNow.AddHours(24);
             db.SaveChanges();
             _ = Task.Run(async () =>
             {
@@ -363,6 +373,8 @@ public class AuthController : ControllerBase
             return BadRequest(new ApiErrorResponse { Code = 400, Message = "La contrase\u00f1a actual es incorrecta." });
 
         usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NuevaPassword);
+        usuario.RefreshToken = null;
+        usuario.RefreshTokenExpiry = null;
         db.SaveChanges();
 
         return Ok(new RegisterResponse { Exitoso = true, Mensaje = "Contrase\u00f1a actualizada correctamente." });

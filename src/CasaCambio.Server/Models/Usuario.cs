@@ -19,6 +19,7 @@ public class Usuario
     [Column("token_confirmacion")] [MaxLength(256)] public string? TokenConfirmacion { get; set; }
     [Column("token_recuperacion")] [MaxLength(256)] public string? TokenRecuperacion { get; set; }
     [Column("token_expiracion")] public DateTime? TokenExpiracion { get; set; }
+    [Column("token_confirmacion_expiry")] public DateTime? TokenConfirmacionExpiry { get; set; }
     [Column("refresh_token")] [MaxLength(256)] public string? RefreshToken { get; set; }
     [Column("refresh_token_expiry")] public DateTime? RefreshTokenExpiry { get; set; }
 }
