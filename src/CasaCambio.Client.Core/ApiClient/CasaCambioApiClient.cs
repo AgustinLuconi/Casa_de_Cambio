@@ -59,6 +59,13 @@ public class CasaCambioApiClient : ICasaCambioApiClient
         return auth;
     }
 
+    public async Task LogoutAsync()
+    {
+        try { await PostAuthenticatedAsync<object>("api/auth/logout", new { }); }
+        catch { /* si el server falla, igual limpiamos localmente */ }
+        finally { _tokenStore.Clear(); }
+    }
+
     public async Task<bool> HealthCheckAsync()
     {
         try

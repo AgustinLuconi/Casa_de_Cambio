@@ -21,13 +21,15 @@ public class AuthController : ControllerBase
     private readonly JwtService _jwtService;
     private readonly IEmailService _emailService;
     private readonly JwtSettings _jwtSettings;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(IDbContextFactory<AppDbContext> contextFactory, JwtService jwtService, IEmailService emailService, IOptions<JwtSettings> jwtSettings)
+    public AuthController(IDbContextFactory<AppDbContext> contextFactory, JwtService jwtService, IEmailService emailService, IOptions<JwtSettings> jwtSettings, ILogger<AuthController> logger)
     {
         _contextFactory = contextFactory;
         _jwtService = jwtService;
         _emailService = emailService;
         _jwtSettings = jwtSettings.Value;
+        _logger = logger;
     }
 
     [HttpPost("login")]
@@ -36,11 +38,14 @@ public class AuthController : ControllerBase
         using var db = _contextFactory.CreateDbContext();
         var usuario = db.Usuarios.FirstOrDefault(u => u.Username == request.Username || u.Email == request.Username);
 
-        if (usuario != null && !usuario.Activo && !usuario.EmailConfirmado)
-            return Unauthorized(new ApiErrorResponse { Code = 401, Message = "Deb\u00e9s confirmar tu email antes de iniciar sesi\u00f3n." });
+        if (usuario == null || !BCrypt.Net.BCrypt.Verify(request.Password, usuario.PasswordHash))
+            return Unauthorized(new ApiErrorResponse { Code = 401, Message = "Credenciales inv\u00e1lidas" });
 
-        if (usuario == null || !usuario.Activo || !BCrypt.Net.BCrypt.Verify(request.Password, usuario.PasswordHash))
-            return Unauthorized(new ApiErrorResponse { Code = 401, Message = "Credenciales invalidas" });
+        if (!usuario.Activo)
+            return Unauthorized(new ApiErrorResponse { Code = 401, Message = "Tu cuenta est\u00e1 desactivada." });
+
+        if (!usuario.EmailConfirmado)
+            return Unauthorized(new ApiErrorResponse { Code = 401, Message = "Deb\u00e9s confirmar tu email antes de iniciar sesi\u00f3n." });
 
         var token = _jwtService.GenerarToken(usuario);
         var refreshToken = _jwtService.GenerarRefreshToken();
@@ -86,6 +91,22 @@ public class AuthController : ControllerBase
             Username = usuario.Username,
             Rol = usuario.Rol
         });
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        var userId = ObtenerUserIdDelToken();
+        using var db = _contextFactory.CreateDbContext();
+        var usuario = db.Usuarios.Find(userId);
+        if (usuario != null)
+        {
+            usuario.RefreshToken = null;
+            usuario.RefreshTokenExpiry = null;
+            db.SaveChanges();
+        }
+        return Ok(new { success = true });
     }
 
     [HttpGet("health")]
@@ -144,7 +165,7 @@ public class AuthController : ControllerBase
         _ = Task.Run(async () =>
         {
             try { await _emailService.EnviarConfirmacionAsync(request.Email, request.NombreCompleto, confirmToken); }
-            catch { /* no bloquear el registro si el envio de email falla */ }
+            catch (Exception ex) { _logger.LogWarning(ex, "Error enviando email de confirmación a {Email}", request.Email); }
         });
 
         return Ok(new RegisterResponse
@@ -188,7 +209,7 @@ public class AuthController : ControllerBase
             _ = Task.Run(async () =>
             {
                 try { await _emailService.EnviarRecuperacionAsync(usuario.Email, usuario.NombreCompleto, recoveryToken); }
-                catch { }
+                catch (Exception ex) { _logger.LogWarning(ex, "Error enviando email de recuperación a {Email}", usuario.Email); }
             });
         }
 
@@ -240,7 +261,7 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpPost("reenviar-confirmacion")]
-    public IActionResult ReenviarConfirmacion()
+    public async Task<IActionResult> ReenviarConfirmacion()
     {
         var userId = ObtenerUserIdDelToken();
         using var db = _contextFactory.CreateDbContext();
@@ -256,11 +277,15 @@ public class AuthController : ControllerBase
         usuario.TokenConfirmacion = confirmToken;
         db.SaveChanges();
 
-        _ = Task.Run(async () =>
+        try
         {
-            try { await _emailService.EnviarConfirmacionAsync(usuario.Email, usuario.NombreCompleto, confirmToken); }
-            catch { /* falla silenciosa */ }
-        });
+            await _emailService.EnviarConfirmacionAsync(usuario.Email, usuario.NombreCompleto, confirmToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error enviando email de confirmaci\u00f3n a {Email}", usuario.Email);
+            return StatusCode(500, new ApiErrorResponse { Code = 500, Message = "No se pudo enviar el email. Intent\u00e1 de nuevo en unos minutos." });
+        }
 
         return Ok(new RegisterResponse
         {
@@ -300,7 +325,7 @@ public class AuthController : ControllerBase
             _ = Task.Run(async () =>
             {
                 try { await _emailService.EnviarConfirmacionAsync(request.Email, usuario.NombreCompleto, confirmToken); }
-                catch { }
+                catch (Exception ex) { _logger.LogWarning(ex, "Error enviando email de confirmación a {Email}", request.Email); }
             });
         }
         else

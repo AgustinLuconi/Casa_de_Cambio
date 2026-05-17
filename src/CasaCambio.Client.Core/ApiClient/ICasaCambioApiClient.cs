@@ -12,6 +12,7 @@ public interface ICasaCambioApiClient
     // Auth
     Task<AuthResponse> LoginAsync(LoginRequest request);
     Task<AuthResponse?> RefreshTokenAsync(string refreshToken);
+    Task LogoutAsync();
     Task<bool> HealthCheckAsync();
     Task<RegisterResponse> RegistrarUsuarioAsync(RegisterRequest request);
     Task<bool> RecuperarPasswordAsync(RecuperarPasswordRequest request);
