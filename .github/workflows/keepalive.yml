@@ -1,27 +1,30 @@
-name: Keepalive — Supabase + Fly.io
+name: Keepalive — Supabase
 
 on:
   schedule:
-    - cron: '0 12 */3 * *'  # Cada 3 días al mediodía UTC
+    - cron: '0 12 */2 * *'  # Cada 2 días al mediodía UTC
   workflow_dispatch:          # Permite ejecución manual desde GitHub UI
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping health endpoint
+      - name: Ping Supabase REST API
+        env:
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          echo "Pingeando https://casa-cambio-api.fly.dev/api/auth/health ..."
+          echo "Pingeando Supabase REST API directamente..."
           response=$(curl -s -o response_body.txt -w "%{http_code}" \
-            --max-time 60 \
+            --max-time 30 \
             --retry 3 \
-            --retry-delay 10 \
-            --retry-connrefused \
-            https://casa-cambio-api.fly.dev/api/auth/health)
+            --retry-delay 5 \
+            "https://vtyaunxljytbxbgyhmaz.supabase.co/rest/v1/" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
           echo "HTTP status: $response"
-          echo "Response body: $(cat response_body.txt)"
+          echo "Response body (primeros 300 chars): $(cat response_body.txt | head -c 300)"
           if [ "$response" != "200" ]; then
-            echo "ERROR: Health check falló con status $response"
+            echo "ERROR: Supabase no está respondiendo — status $response"
             exit 1
           fi
-          echo "OK: Supabase y Fly.io activos"
+          echo "OK: Supabase activo"
