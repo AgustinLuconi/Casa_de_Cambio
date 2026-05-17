@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using CasaCambio.Server.Auth;
 using CasaCambio.Server.Data;
 using CasaCambio.Server.Services;
@@ -19,12 +20,14 @@ public class AuthController : ControllerBase
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
     private readonly JwtService _jwtService;
     private readonly IEmailService _emailService;
+    private readonly JwtSettings _jwtSettings;
 
-    public AuthController(IDbContextFactory<AppDbContext> contextFactory, JwtService jwtService, IEmailService emailService)
+    public AuthController(IDbContextFactory<AppDbContext> contextFactory, JwtService jwtService, IEmailService emailService, IOptions<JwtSettings> jwtSettings)
     {
         _contextFactory = contextFactory;
         _jwtService = jwtService;
         _emailService = emailService;
+        _jwtSettings = jwtSettings.Value;
     }
 
     [HttpPost("login")]
@@ -40,13 +43,17 @@ public class AuthController : ControllerBase
             return Unauthorized(new ApiErrorResponse { Code = 401, Message = "Credenciales invalidas" });
 
         var token = _jwtService.GenerarToken(usuario);
-        var refreshToken = _jwtService.GenerarRefreshToken(usuario.Id);
+        var refreshToken = _jwtService.GenerarRefreshToken();
+
+        usuario.RefreshToken = refreshToken;
+        usuario.RefreshTokenExpiry = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
+        db.SaveChanges();
 
         return Ok(new AuthResponse
         {
             Token = token,
             RefreshToken = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
             Username = usuario.Username,
             Rol = usuario.Rol
         });
@@ -55,23 +62,27 @@ public class AuthController : ControllerBase
     [HttpPost("refresh")]
     public IActionResult Refresh([FromBody] RefreshRequest request)
     {
-        var (valid, userId) = _jwtService.ValidarRefreshToken(request.RefreshToken);
-        if (!valid)
-            return Unauthorized(new ApiErrorResponse { Code = 401, Message = "Refresh token invalido o expirado" });
-
         using var db = _contextFactory.CreateDbContext();
-        var usuario = db.Usuarios.Find(userId);
-        if (usuario == null || !usuario.Activo)
-            return Unauthorized(new ApiErrorResponse { Code = 401, Message = "Usuario no encontrado o inactivo" });
+        var usuario = db.Usuarios.FirstOrDefault(u =>
+            u.RefreshToken == request.RefreshToken &&
+            u.RefreshTokenExpiry > DateTime.UtcNow &&
+            u.Activo);
+
+        if (usuario == null)
+            return Unauthorized(new ApiErrorResponse { Code = 401, Message = "Refresh token inválido o expirado" });
 
         var token = _jwtService.GenerarToken(usuario);
-        var newRefreshToken = _jwtService.GenerarRefreshToken(usuario.Id);
+        var newRefreshToken = _jwtService.GenerarRefreshToken();
+
+        usuario.RefreshToken = newRefreshToken;
+        usuario.RefreshTokenExpiry = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
+        db.SaveChanges();
 
         return Ok(new AuthResponse
         {
             Token = token,
             RefreshToken = newRefreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
             Username = usuario.Username,
             Rol = usuario.Rol
         });

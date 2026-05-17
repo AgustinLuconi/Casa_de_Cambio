@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -13,7 +12,6 @@ namespace CasaCambio.Server.Auth;
 public class JwtService
 {
     private readonly JwtSettings _settings;
-    private readonly ConcurrentDictionary<string, (int UserId, DateTime Expiry)> _refreshTokens = new();
 
     public JwtService(IOptions<JwtSettings> settings)
     {
@@ -43,30 +41,11 @@ public class JwtService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public string GenerarRefreshToken(int userId)
+    public string GenerarRefreshToken()
     {
         var randomBytes = new byte[32];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomBytes);
-        var token = Convert.ToBase64String(randomBytes);
-
-        var expiry = DateTime.UtcNow.AddDays(_settings.RefreshTokenExpirationDays);
-        _refreshTokens[token] = (userId, expiry);
-
-        return token;
-    }
-
-    public (bool Valid, int UserId) ValidarRefreshToken(string refreshToken)
-    {
-        if (_refreshTokens.TryGetValue(refreshToken, out var data))
-        {
-            if (data.Expiry > DateTime.UtcNow)
-            {
-                _refreshTokens.TryRemove(refreshToken, out _);
-                return (true, data.UserId);
-            }
-            _refreshTokens.TryRemove(refreshToken, out _);
-        }
-        return (false, 0);
+        return Convert.ToBase64String(randomBytes);
     }
 }

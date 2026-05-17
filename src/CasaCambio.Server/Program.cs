@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Resend;
 using CasaCambio.Server.Auth;
 using CasaCambio.Server.Data;
 using CasaCambio.Server.Middleware;
@@ -47,6 +48,11 @@ builder.Services.AddSingleton<IArqueoService, ArqueoService>();
 builder.Services.AddSingleton<OperacionValidator>();
 builder.Services.AddSingleton<ArqueoValidator>();
 
+builder.Services.AddOptions();
+builder.Services.AddHttpClient<ResendClient>();
+builder.Services.Configure<ResendClientOptions>(o =>
+    o.ApiToken = builder.Configuration["Email:Password"]!);
+builder.Services.AddTransient<IResend, ResendClient>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Controllers + Swagger
