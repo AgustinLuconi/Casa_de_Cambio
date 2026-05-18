@@ -29,6 +29,7 @@ namespace SistemaCambio.Views
         private decimal _cotizacionDia;
         private List<CuentaDto> _todasLasCuentas = new();
         private List<MonedaDto> _monedasApi = new();
+        private Control[] _orden = null!;
 
         public CompraWindow()
         {
@@ -36,6 +37,9 @@ namespace SistemaCambio.Views
             _offlineService = App.Services.GetRequiredService<IOfflineOperacionService>();
 
             InitializeComponent();
+            _orden = [cmbMoneda, txtMonedaExtranjera, cmbCuentaAcredita,
+                      txtIngresa, txtCotizacion, cmbCuentaDebita,
+                      txtObservaciones, cmbTipoOperacion];
             NotificationService.Initialize(notificationPanel);
             Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             CargarDatosAsync();
@@ -279,5 +283,25 @@ namespace SistemaCambio.Views
         }
 
         private void BotonCancelar_Click(object? sender, RoutedEventArgs e) => Close();
+
+        // ── Navegación por teclado ───────────────────────────────────
+
+        private void Window_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) { Close(); e.Handled = true; return; }
+            if (e.Source is not TextBox) return;
+            if (e.Key == Key.Down)       { MoverFoco(1);  e.Handled = true; }
+            else if (e.Key == Key.Up)    { MoverFoco(-1); e.Handled = true; }
+        }
+
+        private void MoverFoco(int delta)
+        {
+            var focused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Control;
+            var idx = Array.IndexOf(_orden, focused);
+            if (idx < 0) return;
+            var next = idx + delta;
+            if (next >= 0 && next < _orden.Length)
+                _orden[next].Focus();
+        }
     }
 }

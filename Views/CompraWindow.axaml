@@ -7,7 +7,8 @@
         Width="740" Height="470"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
-        Background="{DynamicResource AppBackgroundBrush}">
+        Background="{DynamicResource AppBackgroundBrush}"
+        KeyDown="Window_KeyDown">
 
     <Grid RowDefinitions="Auto, *, Auto" Margin="16">
 
@@ -46,7 +47,7 @@
                           HorizontalAlignment="Stretch"
                           SelectionChanged="CmbMoneda_SelectionChanged"/>
                 <TextBox x:Name="txtMonedaNombre" Grid.Column="1" Margin="8,0,0,0"
-                         IsReadOnly="True"
+                         IsReadOnly="True" IsTabStop="False"
                          Background="{DynamicResource SidebarBackgroundBrush}"
                          Foreground="{DynamicResource SecondaryTextBrush}"/>
             </Grid>
@@ -79,7 +80,7 @@
                        Text="Vuelto" VerticalAlignment="Center"
                        Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,9"/>
             <TextBox x:Name="txtVuelto" Grid.Row="3" Grid.Column="1"
-                     Text="0.00" TextAlignment="Right" IsReadOnly="True"
+                     Text="0.00" TextAlignment="Right" IsReadOnly="True" IsTabStop="False"
                      Margin="0,0,0,9"
                      Background="{DynamicResource SidebarBackgroundBrush}"
                      Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -97,7 +98,7 @@
                        Text="Pesos" VerticalAlignment="Center"
                        Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,9"/>
             <TextBox x:Name="txtPesos" Grid.Row="5" Grid.Column="1"
-                     Text="0.00" TextAlignment="Right" IsReadOnly="True"
+                     Text="0.00" TextAlignment="Right" IsReadOnly="True" IsTabStop="False"
                      Margin="0,0,0,9"/>
             <TextBlock Grid.Row="5" Grid.Column="2"
                        Text="Debita de cuenta" VerticalAlignment="Center"
@@ -142,7 +143,7 @@
             </Border>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                <Button Content="Aceptar"
+                <Button Content="Aceptar" IsDefault="True"
                         Background="{DynamicResource AccentBrush}" Foreground="White"
                         Width="110" Height="36" HorizontalContentAlignment="Center"
                         CornerRadius="8" Cursor="Hand" Click="BotonAceptar_Click"/>
