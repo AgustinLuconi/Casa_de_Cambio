@@ -57,20 +57,10 @@ namespace SistemaCambio.Views
 
         private void CargarCombos()
         {
-            // ── cmbMoneda: monedas disponibles (no ARS) ──────────────
-            var monedasEnCuentas = _todasLasCuentas
-                .SelectMany(c => c.Saldos.Where(s => s.Moneda != "ARS").Select(s => s.Moneda))
-                .Distinct()
-                .ToHashSet();
-
+            // ── cmbMoneda: todas las monedas activas del catálogo (no ARS) ──
             cmbMoneda.Items.Clear();
-            foreach (var m in _monedasApi.Where(m => m.Codigo != "ARS" && monedasEnCuentas.Contains(m.Codigo))
-                                          .OrderBy(m => m.Codigo))
-            {
+            foreach (var m in _monedasApi.Where(m => m.Codigo != "ARS").OrderBy(m => m.Codigo))
                 cmbMoneda.Items.Add(new ComboBoxItem { Content = m.Codigo, Tag = m });
-            }
-            foreach (var codigo in monedasEnCuentas.Where(c => c != "ARS" && !_monedasApi.Any(m => m.Codigo == c)).OrderBy(c => c))
-                cmbMoneda.Items.Add(new ComboBoxItem { Content = codigo, Tag = new MonedaDto { Codigo = codigo, Nombre = codigo } });
 
             // ── cmbCuentaAcreditar: cajas Efectivo con saldo ARS ─────
             cmbCuentaAcreditar.Items.Clear();
