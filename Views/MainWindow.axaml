@@ -230,7 +230,7 @@
                 </Grid>
 
                 <!-- DASHBOARD PANEL -->
-                <ScrollViewer x:Name="dashboardPanel" Grid.Row="1" IsVisible="False" Margin="0,0,0,0" Padding="0,0,16,0">
+                <ScrollViewer x:Name="dashboardPanel" Grid.Row="1" Grid.RowSpan="2" IsVisible="False" Margin="0,0,0,0" Padding="0,0,16,0">
                     <StackPanel Spacing="24" Margin="0,0,0,40">
                         <!-- Stat Cards -->
                         <UniformGrid Columns="4" Rows="1" Margin="0,0,0,0">
@@ -424,7 +424,7 @@
                 </StackPanel>
 
                 <!-- Accounts DataGrid -->
-                <DataGrid Grid.Row="2" ItemsSource="{Binding Cuentas}" AutoGenerateColumns="False" 
+                <DataGrid x:Name="dgCuentas" Grid.Row="2" ItemsSource="{Binding Cuentas}" AutoGenerateColumns="False"
                           BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
                           GridLinesVisibility="Horizontal"
                           HorizontalGridLinesBrush="{DynamicResource BorderBrush}"

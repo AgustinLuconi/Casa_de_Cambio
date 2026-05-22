@@ -85,6 +85,7 @@ public partial class MainWindow : Window
     {
         dashboardPanel.IsVisible = true;
         cuentasPanel.IsVisible = false;
+        dgCuentas.IsVisible = false;
         txtMainTitle.Text = "Dashboard";
         btnDashboard.Classes.Set("SidebarButtonActive", true);
         btnDashboard.Classes.Set("SidebarButton", false);
@@ -98,6 +99,7 @@ public partial class MainWindow : Window
     {
         dashboardPanel.IsVisible = false;
         cuentasPanel.IsVisible = true;
+        dgCuentas.IsVisible = true;
         txtMainTitle.Text = "Cuentas Overview";
         btnCuentas.Classes.Set("SidebarButtonActive", true);
         btnCuentas.Classes.Set("SidebarButton", false);
