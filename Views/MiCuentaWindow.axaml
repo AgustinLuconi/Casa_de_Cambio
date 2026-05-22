@@ -58,18 +58,6 @@
                                    FontSize="17" FontWeight="Bold" Foreground="White"/>
                         <TextBlock Text="{Binding Username}"
                                    FontSize="12" Foreground="#64748B"/>
-                        <StackPanel Orientation="Horizontal">
-                            <Border CornerRadius="4" Padding="6,2"
-                                    IsVisible="{Binding EsAdmin}"
-                                    Background="#1e3d55">
-                                <TextBlock Text="Admin" FontSize="11" Foreground="#13a4ec" FontWeight="SemiBold"/>
-                            </Border>
-                            <Border CornerRadius="4" Padding="6,2"
-                                    IsVisible="{Binding !EsAdmin}"
-                                    Background="#1e2e1e">
-                                <TextBlock Text="{Binding Rol}" FontSize="11" Foreground="#4ade80" FontWeight="SemiBold"/>
-                            </Border>
-                        </StackPanel>
                     </StackPanel>
                 </Grid>
 
