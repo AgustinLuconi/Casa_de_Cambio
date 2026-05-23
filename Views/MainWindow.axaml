@@ -213,8 +213,9 @@
                     <TextBlock x:Name="txtMainTitle" Text="Cuentas Overview" FontSize="22" FontWeight="Bold" 
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                        <Button Background="{DynamicResource AccentBrush}" Foreground="White" Padding="14,8" 
-                                CornerRadius="8" Click="BtnNuevaCuenta_Click" Cursor="Hand">
+                        <Button Background="{DynamicResource AccentBrush}" Foreground="White" Padding="14,8"
+                                CornerRadius="8" Click="BtnNuevaCuenta_Click" Cursor="Hand"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <icon:MaterialIcon Kind="Plus" Width="16" Height="16" VerticalAlignment="Center"/>
                                 <TextBlock Text="Nueva Cuenta" FontSize="13" VerticalAlignment="Center"/>
@@ -552,6 +553,7 @@
                     <Button Grid.Column="1" Content="Limpiar"
                             Classes="secondary-btn"
                             FontSize="11" Padding="8,4"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                             Click="BtnLimpiarHistorial_Click"/>
                 </Grid>
 

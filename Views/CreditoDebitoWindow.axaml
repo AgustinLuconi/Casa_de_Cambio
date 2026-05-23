@@ -163,6 +163,7 @@
                     <Button Grid.Row="10" Grid.Column="1"
                             Content="Siguiente &gt;&gt;"
                             HorizontalAlignment="Right"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                             Padding="16,6"
                             Click="BtnSiguiente_Click"/>
 

@@ -201,16 +201,20 @@
             </Border>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
-                <Button x:Name="btnGenerar" Background="{DynamicResource AccentBrush}" Foreground="White" 
-                        Height="38" Padding="15,0" CornerRadius="8" Cursor="Hand" Click="BtnGenerar_Click">
+                <Button x:Name="btnGenerar" Background="{DynamicResource AccentBrush}" Foreground="White"
+                        Height="38" Padding="15,0" CornerRadius="8" Cursor="Hand"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Click="BtnGenerar_Click">
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <icon:MaterialIcon Kind="Calculator" Width="16" Height="16" VerticalAlignment="Center"/>
                         <TextBlock Text="Generar Cierre" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
-                <Button x:Name="btnCerrarDefinitivo" Background="{DynamicResource SuccessBrush}" Foreground="White" 
-                        Height="38" Padding="15,0" CornerRadius="8" Cursor="Hand" IsEnabled="False" Click="BtnCerrarDefinitivo_Click">
+                <Button x:Name="btnCerrarDefinitivo" Background="{DynamicResource SuccessBrush}" Foreground="White"
+                        Height="38" Padding="15,0" CornerRadius="8" Cursor="Hand" IsEnabled="False"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Click="BtnCerrarDefinitivo_Click">
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <icon:MaterialIcon Kind="Lock" Width="16" Height="16" VerticalAlignment="Center"/>
                         <TextBlock Text="Cerrar Definitivo" VerticalAlignment="Center"/>

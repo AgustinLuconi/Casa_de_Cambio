@@ -47,8 +47,10 @@
                             <DatePicker x:Name="dpDesdeOp" Width="150"/>
                             <TextBlock Text="Hasta:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
                             <DatePicker x:Name="dpHastaOp" Width="150"/>
-                            <Button Content="Generar" Background="{DynamicResource AccentBrush}" Foreground="White" 
-                                    CornerRadius="6" Cursor="Hand" Click="BtnGenerarOperaciones_Click"/>
+                            <Button Content="Generar" Background="{DynamicResource AccentBrush}" Foreground="White"
+                                    CornerRadius="6" Cursor="Hand"
+                                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                    Click="BtnGenerarOperaciones_Click"/>
                             <Button Content="Exportar CSV" Classes="Secondary" Click="BtnExportarOperaciones_Click"/>
                         </StackPanel>
                     </Border>
@@ -82,8 +84,10 @@
                                 <ComboBoxItem>Banco</ComboBoxItem>
                                 <ComboBoxItem>Cliente</ComboBoxItem>
                             </ComboBox>
-                            <Button Content="Generar" Background="{DynamicResource AccentBrush}" Foreground="White" 
-                                    CornerRadius="6" Cursor="Hand" Click="BtnGenerarSaldos_Click"/>
+                            <Button Content="Generar" Background="{DynamicResource AccentBrush}" Foreground="White"
+                                    CornerRadius="6" Cursor="Hand"
+                                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                    Click="BtnGenerarSaldos_Click"/>
                             <Button Content="Exportar CSV" Classes="Secondary" Click="BtnExportarSaldos_Click"/>
                         </StackPanel>
                     </Border>
