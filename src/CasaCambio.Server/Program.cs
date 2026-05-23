@@ -98,24 +98,13 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Seed admin user (skip gracefully if DB not reachable)
+// Verificar conexión a la base de datos al iniciar (sin seed de usuarios)
 try
 {
     using var scope = app.Services.CreateScope();
     var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
     using var db = factory.CreateDbContext();
     db.Database.EnsureCreated();
-    if (!db.Usuarios.Any())
-    {
-        db.Usuarios.Add(new CasaCambio.Server.Models.Usuario
-        {
-            Username = "admin",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
-            NombreCompleto = "Administrador",
-            Rol = "Admin"
-        });
-        db.SaveChanges();
-    }
 }
 catch (Exception ex)
 {

@@ -44,5 +44,18 @@ Thumbs.db
 src/CasaCambio.Server/appsettings.local.json
 src/CasaCambio.Server/appsettings.Development.local.json
 
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Archivos de secretos locales
+secrets.json
+**/secrets.json
+**/*.secrets.json
+
+# Archivos de Claude Code (pueden contener permisos con contraseñas)
+.claude/settings.local.json
+
 # Archivos de análisis/debug temporales
 .dialog_analysis.txt
