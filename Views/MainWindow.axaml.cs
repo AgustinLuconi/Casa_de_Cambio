@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Models;
@@ -37,6 +38,12 @@ public partial class MainWindow : Window
         Services.NotificationService.Initialize(notificationPanel);
         Services.NotificationService.HistorialActualizado += ActualizarBadgeHistorial;
         AddHandler(PointerPressedEvent, VentanaPointerPressed, handledEventsToo: false);
+
+        RedirigirScrollAlScrollViewer(pltBalanceEvolution);
+        RedirigirScrollAlScrollViewer(pltCurrencyDistribution);
+        RedirigirScrollAlScrollViewer(pltOperacionesDiarias);
+        RedirigirScrollAlScrollViewer(pltComparativoMensual);
+        RedirigirScrollAlScrollViewer(pltDistribucionMonedas);
 
         DataContextChanged += (s, e) =>
         {
@@ -174,6 +181,18 @@ public partial class MainWindow : Window
         plot.FigureBackground.Color = ScottPlot.Color.FromHex("#14232b");
         plot.DataBackground.Color   = ScottPlot.Color.FromHex("#0c151a");
         plot.Axes.Color(ScottPlot.Color.FromHex("#94a3b8"));
+    }
+
+    private static void RedirigirScrollAlScrollViewer(ScottPlot.Avalonia.AvaPlot plot)
+    {
+        plot.AddHandler(InputElement.PointerWheelChangedEvent, (sender, e) =>
+        {
+            if (sender is not Visual v) return;
+            var sv = v.FindAncestorOfType<ScrollViewer>();
+            if (sv == null) return;
+            sv.Offset = sv.Offset.WithY(sv.Offset.Y - e.Delta.Y * 50);
+            e.Handled = true;
+        }, RoutingStrategies.Tunnel);
     }
 
     private static void MostrarSinDatos(ScottPlot.Plot plot, string mensaje = "Sin datos")
