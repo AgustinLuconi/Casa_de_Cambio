@@ -28,6 +28,7 @@ public class MiCuentaViewModel : ViewModelBase
     private string _confirmarPassword = "";
 
     public event Action? SolicitarCerrar;
+    public event Action? SolicitarCerrarSesion;
 
     public string NombreCompleto { get => _nombreCompleto; set => SetProperty(ref _nombreCompleto, value); }
     public string Email          { get => _email;          set => SetProperty(ref _email, value); }
@@ -60,6 +61,7 @@ public class MiCuentaViewModel : ViewModelBase
     public IAsyncRelayCommand GuardarPerfilCommand         { get; }
     public IAsyncRelayCommand CambiarPasswordCommand       { get; }
     public IAsyncRelayCommand ReenviarConfirmacionCommand  { get; }
+    public IAsyncRelayCommand CerrarSesionCommand          { get; }
     public IRelayCommand      CerrarCommand                { get; }
 
     public MiCuentaViewModel(ICasaCambioApiClient apiClient)
@@ -69,6 +71,7 @@ public class MiCuentaViewModel : ViewModelBase
         GuardarPerfilCommand        = new AsyncRelayCommand(GuardarPerfilAsync);
         CambiarPasswordCommand      = new AsyncRelayCommand(CambiarPasswordAsync);
         ReenviarConfirmacionCommand = new AsyncRelayCommand(ReenviarConfirmacionAsync);
+        CerrarSesionCommand         = new AsyncRelayCommand(CerrarSesionAsync);
         CerrarCommand               = new RelayCommand(() => SolicitarCerrar?.Invoke());
     }
 
@@ -176,5 +179,11 @@ public class MiCuentaViewModel : ViewModelBase
     {
         await Task.Delay(4000);
         ExitoReenvio = "";
+    }
+
+    private async Task CerrarSesionAsync()
+    {
+        await _apiClient.LogoutAsync();
+        SolicitarCerrarSesion?.Invoke();
     }
 }

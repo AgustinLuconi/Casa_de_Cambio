@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -277,7 +279,38 @@ public partial class MainWindow : Window
 
     private async void BtnMiCuenta_Click(object? sender, RoutedEventArgs e)
     {
-        await new MiCuentaWindow().ShowDialog(this);
+        var w = new MiCuentaWindow();
+        await w.ShowDialog(this);
+        if (w.CerroSesion)
+            await RegresarALoginAsync();
+    }
+
+    private Task RegresarALoginAsync()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            var loginWindow = new LoginWindow();
+            loginWindow.Closed += (_, _) =>
+            {
+                if (loginWindow.LoginExitoso)
+                {
+                    var apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
+                    var mainWindow = new MainWindow { DataContext = new MainWindowViewModel(apiClient) };
+                    desktop.MainWindow = mainWindow;
+                    desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
+                    mainWindow.Show();
+                }
+                else
+                {
+                    desktop.Shutdown();
+                }
+            };
+            desktop.MainWindow = loginWindow;
+            loginWindow.Show();
+            Close();
+        }
+        return Task.CompletedTask;
     }
 
     private async void BtnReportes_Click(object? sender, RoutedEventArgs e) => await AbrirReportesWindow();
