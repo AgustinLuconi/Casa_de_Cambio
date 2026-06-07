@@ -204,6 +204,7 @@
                 <Button x:Name="btnGenerar" Background="{DynamicResource AccentBrush}" Foreground="White"
                         Height="38" Padding="15,0" CornerRadius="8" Cursor="Hand"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        IsDefault="True"
                         Click="BtnGenerar_Click">
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <icon:MaterialIcon Kind="Calculator" Width="16" Height="16" VerticalAlignment="Center"/>

@@ -50,6 +50,7 @@
                             <Button Content="Generar" Background="{DynamicResource AccentBrush}" Foreground="White"
                                     CornerRadius="6" Cursor="Hand"
                                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                    IsDefault="True"
                                     Click="BtnGenerarOperaciones_Click"/>
                             <Button Content="Exportar CSV" Classes="Secondary" Click="BtnExportarOperaciones_Click"/>
                         </StackPanel>
@@ -87,6 +88,7 @@
                             <Button Content="Generar" Background="{DynamicResource AccentBrush}" Foreground="White"
                                     CornerRadius="6" Cursor="Hand"
                                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                    IsDefault="True"
                                     Click="BtnGenerarSaldos_Click"/>
                             <Button Content="Exportar CSV" Classes="Secondary" Click="BtnExportarSaldos_Click"/>
                         </StackPanel>

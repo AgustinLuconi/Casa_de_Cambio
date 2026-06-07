@@ -135,7 +135,8 @@
                         FontWeight="SemiBold" FontSize="14"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center"
-                        Margin="0,4,0,0">
+                        Margin="0,4,0,0"
+                        IsDefault="True">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock IsVisible="{Binding !IsLoading}" Text="Crear Cuenta"
                                    VerticalAlignment="Center"/>

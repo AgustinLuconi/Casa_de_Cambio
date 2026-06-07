@@ -95,6 +95,7 @@
                     Width="110" Height="34"
                     HorizontalContentAlignment="Center"
                     CornerRadius="6" Cursor="Hand"
+                    IsDefault="True"
                     Click="BtnAceptar_Click">
                 <AccessText Text="_Aceptar"/>
             </Button>

@@ -128,7 +128,8 @@
                                 Background="#13a4ec" Foreground="White"
                                 FontWeight="SemiBold" FontSize="14"
                                 HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center">
+                                HorizontalContentAlignment="Center"
+                                IsDefault="True">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <TextBlock Text="Guardar cambios" VerticalAlignment="Center"/>
                                 <icon:MaterialIcon Kind="ArrowRight" Width="18" Height="18"

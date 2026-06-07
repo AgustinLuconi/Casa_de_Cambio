@@ -138,6 +138,7 @@
                             <Button Content="Guardar Editados" Background="{DynamicResource AccentBrush}"
                                     Foreground="White" CornerRadius="6" Cursor="Hand"
                                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                    IsDefault="True"
                                     Click="BtnGuardarCambios_Click"/>
                         </StackPanel>
                     </StackPanel>
@@ -210,6 +211,7 @@
                             <Button Grid.Column="4" Content="Guardar" Background="{DynamicResource SuccessBrush}"
                                     Foreground="White" CornerRadius="6" Margin="15,0,0,0" Cursor="Hand"
                                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                    IsDefault="True"
                                     Click="BtnGuardarCotizacion_Click"/>
                         </Grid>
                     </Border>
