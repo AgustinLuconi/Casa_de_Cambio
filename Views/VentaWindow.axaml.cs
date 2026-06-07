@@ -34,6 +34,7 @@ namespace SistemaCambio.Views
             _orden = [cmbMoneda, txtMonedaExtranjera, cmbCuentaDebitar,
                       txtCotizacion, txtIngresa, cmbCuentaAcreditar,
                       txtObservaciones, cmbTipoOperacion];
+            AddHandler(KeyDownEvent, Window_KeyDown, RoutingStrategies.Tunnel);
             NotificationService.Initialize(notificationPanel);
             Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             CargarDatosAsync();
@@ -332,9 +333,11 @@ namespace SistemaCambio.Views
         private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { Close(); e.Handled = true; return; }
-            if (e.Source is not TextBox) return;
-            if (e.Key == Key.Down)       { MoverFoco(1);  e.Handled = true; }
-            else if (e.Key == Key.Up)    { MoverFoco(-1); e.Handled = true; }
+            if (e.Key != Key.Down && e.Key != Key.Up) return;
+            if (e.Source is ComboBox cb && cb.IsDropDownOpen) return;
+            if (e.Source is not (TextBox or ComboBox)) return;
+            MoverFoco(e.Key == Key.Down ? 1 : -1);
+            e.Handled = true;
         }
 
         private void MoverFoco(int delta)

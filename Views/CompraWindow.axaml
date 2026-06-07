@@ -7,8 +7,7 @@
         Width="740" Height="470"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
-        Background="{DynamicResource AppBackgroundBrush}"
-        KeyDown="Window_KeyDown">
+        Background="{DynamicResource AppBackgroundBrush}">
 
     <Grid RowDefinitions="Auto, *, Auto" Margin="16">
 
