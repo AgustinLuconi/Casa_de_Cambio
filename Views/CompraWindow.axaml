@@ -42,7 +42,7 @@
                        Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,9"/>
             <!-- Pequeño ComboBox de código + TextBox de nombre (read-only) -->
             <Grid Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
-                  ColumnDefinitions="72, *" Margin="0,0,0,9">
+                  ColumnDefinitions="95, *" Margin="0,0,0,9">
                 <ComboBox x:Name="cmbMoneda" Grid.Column="0"
                           HorizontalAlignment="Stretch"
                           SelectionChanged="CmbMoneda_SelectionChanged"/>
