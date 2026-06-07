@@ -45,8 +45,9 @@
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="CmbMoneda_SelectionChanged"/>
                         <TextBox x:Name="txtMonedaDescripcion" Grid.Column="1" Margin="8,0,0,0"
-                                 IsReadOnly="True" IsTabStop="False"
-                                 Background="#2F6F6F" Foreground="White" BorderBrush="#1F4F4F"/>
+                                 Foreground="{DynamicResource PrimaryTextBrush}"
+                                 TextChanged="TxtMoneda_TextChanged"
+                                 LostFocus="TxtMoneda_LostFocus"/>
                     </Grid>
 
                     <!-- Separador arriba de Crédito -->

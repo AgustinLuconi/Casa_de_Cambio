@@ -30,6 +30,7 @@ namespace SistemaCambio.Views
         private List<CuentaDto> _todasLasCuentas = new();
         private List<MonedaDto> _monedasApi = new();
         private Control[] _orden = null!;
+        private bool _actualizandoDesdeCombo;
 
         public CompraWindow()
         {
@@ -115,9 +116,42 @@ namespace SistemaCambio.Views
         private void CmbMoneda_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
             if (cmbMoneda.SelectedItem is not ComboBoxItem { Tag: MonedaDto moneda }) return;
+            _actualizandoDesdeCombo = true;
             txtMonedaNombre.Text = moneda.Nombre;
+            _actualizandoDesdeCombo = false;
             FiltrarCuentasAcredita(moneda.Codigo);
             _ = CargarCotizacionDelDiaAsync(moneda.Codigo);
+        }
+
+        private void TxtMoneda_TextChanged(object? sender, TextChangedEventArgs e)
+        {
+            if (_actualizandoDesdeCombo) return;
+            var disponibles = _monedasApi.Where(m => m.Codigo != "ARS");
+            var match = MonedaSearch.BuscarPorNombre(txtMonedaNombre.Text ?? "", disponibles);
+            if (match == null) return;
+
+            foreach (ComboBoxItem item in cmbMoneda.Items)
+            {
+                if (item.Tag is MonedaDto m && m.Codigo == match.Codigo)
+                {
+                    if (cmbMoneda.SelectedItem != item)
+                        cmbMoneda.SelectedItem = item;
+                    break;
+                }
+            }
+        }
+
+        private void TxtMoneda_LostFocus(object? sender, RoutedEventArgs e)
+        {
+            if (cmbMoneda.SelectedItem is not ComboBoxItem { Tag: MonedaDto current }) return;
+            var disponibles = _monedasApi.Where(m => m.Codigo != "ARS");
+            var match = MonedaSearch.BuscarPorNombre(txtMonedaNombre.Text ?? "", disponibles);
+            if (match == null)
+            {
+                _actualizandoDesdeCombo = true;
+                txtMonedaNombre.Text = current.Nombre;
+                _actualizandoDesdeCombo = false;
+            }
         }
 
         private async Task CargarCotizacionDelDiaAsync(string moneda)

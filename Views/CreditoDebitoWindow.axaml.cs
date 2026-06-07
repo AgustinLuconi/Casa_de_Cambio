@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
 using SistemaCambio.Services.Offline;
+using SistemaCambio.Views.Helpers;
 using CasaCambio.Shared.DTOs;
 using CasaCambio.Shared.Requests;
 using System;
@@ -21,6 +22,7 @@ namespace SistemaCambio.Views
         private List<CuentaDto> _todasLasCuentas = new();
         private List<MonedaDto> _monedasApi = new();
         private Control[] _orden = null!;
+        private bool _actualizandoDesdeCombo;
 
         public CreditoDebitoWindow()
         {
@@ -112,8 +114,39 @@ namespace SistemaCambio.Views
         private void CmbMoneda_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
             if (cmbMoneda.SelectedItem is not ComboBoxItem { Tag: MonedaDto moneda }) return;
+            _actualizandoDesdeCombo = true;
             txtMonedaDescripcion.Text = moneda.Nombre;
+            _actualizandoDesdeCombo = false;
             _ = CargarCotizacionesDelDiaAsync(moneda.Codigo);
+        }
+
+        private void TxtMoneda_TextChanged(object? sender, TextChangedEventArgs e)
+        {
+            if (_actualizandoDesdeCombo) return;
+            var match = MonedaSearch.BuscarPorNombre(txtMonedaDescripcion.Text ?? "", _monedasApi);
+            if (match == null) return;
+
+            foreach (ComboBoxItem item in cmbMoneda.Items)
+            {
+                if (item.Tag is MonedaDto m && m.Codigo == match.Codigo)
+                {
+                    if (cmbMoneda.SelectedItem != item)
+                        cmbMoneda.SelectedItem = item;
+                    break;
+                }
+            }
+        }
+
+        private void TxtMoneda_LostFocus(object? sender, RoutedEventArgs e)
+        {
+            if (cmbMoneda.SelectedItem is not ComboBoxItem { Tag: MonedaDto current }) return;
+            var match = MonedaSearch.BuscarPorNombre(txtMonedaDescripcion.Text ?? "", _monedasApi);
+            if (match == null)
+            {
+                _actualizandoDesdeCombo = true;
+                txtMonedaDescripcion.Text = current.Nombre;
+                _actualizandoDesdeCombo = false;
+            }
         }
 
         private async Task CargarCotizacionesDelDiaAsync(string moneda)

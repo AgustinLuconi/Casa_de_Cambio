@@ -47,9 +47,9 @@
                           HorizontalAlignment="Stretch"
                           SelectionChanged="CmbMoneda_SelectionChanged"/>
                 <TextBox x:Name="txtMonedaNombre" Grid.Column="1" Margin="8,0,0,0"
-                         IsReadOnly="True" IsTabStop="False"
-                         Background="{DynamicResource SidebarBackgroundBrush}"
-                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+                         Foreground="{DynamicResource PrimaryTextBrush}"
+                         TextChanged="TxtMoneda_TextChanged"
+                         LostFocus="TxtMoneda_LostFocus"/>
             </Grid>
 
             <!-- ── Fila 1: Mon. Extranjera | Acredita en cuenta (ROJO) ── -->
