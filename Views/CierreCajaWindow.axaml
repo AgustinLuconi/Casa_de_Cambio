@@ -222,8 +222,9 @@
                     </StackPanel>
                 </Button>
 
-                <Button Content="Cancelar" Classes="Secondary" Width="100" Height="38" 
-                        HorizontalContentAlignment="Center" Click="BtnCancelar_Click"/>
+                <Button Content="Cancelar" Classes="Secondary" Width="100" Height="38"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Click="BtnCancelar_Click"/>
             </StackPanel>
         </Grid>
         <controls:NotificationPanel x:Name="notificationPanel"

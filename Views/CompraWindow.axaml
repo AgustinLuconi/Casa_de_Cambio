@@ -148,10 +148,12 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
                 <Button Content="Aceptar" IsDefault="True"
                         Background="{DynamicResource AccentBrush}" Foreground="White"
-                        Width="110" Height="36" HorizontalContentAlignment="Center"
+                        Width="110" Height="36"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                         CornerRadius="8" Cursor="Hand" Click="BotonAceptar_Click"/>
                 <Button Content="Cancelar" Classes="Secondary"
-                        Width="110" Height="36" HorizontalContentAlignment="Center"
+                        Width="110" Height="36"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                         Click="BotonCancelar_Click"/>
             </StackPanel>
 

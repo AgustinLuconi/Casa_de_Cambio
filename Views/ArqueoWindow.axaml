@@ -94,18 +94,18 @@
                     HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button HotKey="Alt+A"
                     Background="{DynamicResource AccentBrush}" Foreground="White"
-                    Width="110" Height="34"
-                    HorizontalContentAlignment="Center"
+                    Width="110" Height="36"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                     CornerRadius="6" Cursor="Hand"
                     IsDefault="True"
                     Click="BtnAceptar_Click">
-                <AccessText Text="_Aceptar"/>
+                <AccessText Text="_Aceptar" VerticalAlignment="Center"/>
             </Button>
             <Button HotKey="Alt+S" Classes="Secondary"
-                    Width="110" Height="34"
-                    HorizontalContentAlignment="Center"
+                    Width="110" Height="36"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                     Click="BtnSalir_Click">
-                <AccessText Text="_Salir"/>
+                <AccessText Text="_Salir" VerticalAlignment="Center"/>
             </Button>
         </StackPanel>
 

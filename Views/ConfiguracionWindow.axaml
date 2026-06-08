@@ -234,8 +234,9 @@
 
         <!-- Footer -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Cerrar" Classes="Secondary" Width="100" Height="36" 
-                    HorizontalContentAlignment="Center" Click="BtnCerrar_Click"/>
+            <Button Content="Cerrar" Classes="Secondary" Width="100" Height="36"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                    Click="BtnCerrar_Click"/>
         </StackPanel>
         <controls:NotificationPanel x:Name="notificationPanel"
                                          Grid.RowSpan="3"
