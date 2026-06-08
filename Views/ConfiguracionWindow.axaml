@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
+        xmlns:helpers="clr-namespace:SistemaCambio.Views.Helpers"
         x:Class="SistemaCambio.Views.ConfiguracionWindow"
         x:CompileBindings="False"
         Title="Configuración"
@@ -91,7 +92,8 @@
                             <TextBlock Text="Se aplica a cuentas de tipo Cliente sin límite específico. 0 = sin límite."
                                        Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                             <Grid ColumnDefinitions="*, Auto" Margin="0,5,0,0">
-                                <TextBox x:Name="txtLimiteDeudaGeneral" Watermark="0 (sin límite)" TextAlignment="Right"/>
+                                <TextBox x:Name="txtLimiteDeudaGeneral" Watermark="0 (sin límite)" TextAlignment="Right"
+                                         helpers:NumericInput.Enabled="True"/>
                                 <Button Grid.Column="1" Content="Guardar" Background="{DynamicResource AccentBrush}"
                                         Foreground="White" CornerRadius="6" Margin="15,0,0,0" Cursor="Hand"
                                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
@@ -207,7 +209,8 @@
                             <TextBlock Grid.Column="0" Text="Moneda:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
                             <ComboBox x:Name="cmbMonedaCotiz" Grid.Column="1" HorizontalAlignment="Stretch"/>
                             <TextBlock Grid.Column="2" Text="Compra:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" Margin="15,0,0,0"/>
-                            <TextBox x:Name="txtCotizCompra" Grid.Column="3" Text="0.00000" TextAlignment="Right"/>
+                            <TextBox x:Name="txtCotizCompra" Grid.Column="3" Text="0.00000" TextAlignment="Right"
+                                     helpers:NumericInput.Enabled="True"/>
                             <Button Grid.Column="4" Content="Guardar" Background="{DynamicResource SuccessBrush}"
                                     Foreground="White" CornerRadius="6" Margin="15,0,0,0" Cursor="Hand"
                                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"

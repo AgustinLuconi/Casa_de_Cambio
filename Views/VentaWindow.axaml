@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
+        xmlns:helpers="clr-namespace:SistemaCambio.Views.Helpers"
         x:Class="SistemaCambio.Views.VentaWindow"
         Title="Venta de Divisa"
         Width="740" Height="470"
@@ -56,6 +57,7 @@
                        Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,9"/>
             <TextBox x:Name="txtMonedaExtranjera" Grid.Row="1" Grid.Column="1"
                      Text="0.00" TextAlignment="Right" Margin="0,0,0,9"
+                     helpers:NumericInput.Enabled="True"
                      KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
             <TextBlock Grid.Row="1" Grid.Column="2"
                        Text="Debitar en cuenta" VerticalAlignment="Center"
@@ -71,6 +73,7 @@
                        Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,9"/>
             <TextBox x:Name="txtCotizacion" Grid.Row="2" Grid.Column="1"
                      Text="0.00000" TextAlignment="Right" Margin="0,0,0,9"
+                     helpers:NumericInput.Enabled="True"
                      KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
 
             <!-- ── Fila 3: Pesos (solo lectura) ── -->
@@ -87,6 +90,7 @@
                        Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,9"/>
             <TextBox x:Name="txtIngresa" Grid.Row="4" Grid.Column="1"
                      Text="0.00" TextAlignment="Right" Margin="0,0,0,9"
+                     helpers:NumericInput.Enabled="True"
                      KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
 
             <!-- ── Fila 5: Vuelto (solo lectura) | Acreditar de cuenta (VERDE) ── -->

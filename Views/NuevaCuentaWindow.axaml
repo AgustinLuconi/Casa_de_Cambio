@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
+        xmlns:helpers="clr-namespace:SistemaCambio.Views.Helpers"
         x:Class="SistemaCambio.Views.NuevaCuentaWindow"
         x:CompileBindings="False"
         Title="Nueva Cuenta"
@@ -46,7 +47,8 @@
             <TextBlock Text="Límite Deuda" VerticalAlignment="Center"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <StackPanel Grid.Column="1" Spacing="4">
-                <TextBox x:Name="txtLimiteDeuda" Watermark="0 = usar límite general"/>
+                <TextBox x:Name="txtLimiteDeuda" Watermark="0 = usar límite general"
+                         helpers:NumericInput.Enabled="True"/>
                 <TextBlock Text="Vacío o 0 = usa el límite general del sistema."
                            Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11"/>
             </StackPanel>
@@ -73,7 +75,8 @@
                                 <DataTemplate>
                                     <TextBox Text="{Binding Saldo, Mode=TwoWay}" Background="Transparent"
                                              BorderThickness="0" Foreground="{DynamicResource PrimaryTextBrush}"
-                                             Padding="5,3" TextAlignment="Right"/>
+                                             Padding="5,3" TextAlignment="Right"
+                                             helpers:NumericInput.Enabled="True"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -92,7 +95,8 @@
                                VerticalAlignment="Center" Margin="0,0,12,8"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBox Grid.Row="1" Grid.Column="1" x:Name="txtSaldoEfectivo"
-                             Text="0.00" TextAlignment="Right" Margin="0,0,0,8"/>
+                             Text="0.00" TextAlignment="Right" Margin="0,0,0,8"
+                             helpers:NumericInput.Enabled="True"/>
                     <TextBlock Grid.Row="2" Grid.ColumnSpan="2"
                                Text="Las cajas Efectivo operan con una única moneda."
                                FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>

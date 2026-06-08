@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
+        xmlns:helpers="clr-namespace:SistemaCambio.Views.Helpers"
         x:Class="SistemaCambio.Views.ArqueoWindow"
         x:CompileBindings="False"
         Title="Arqueo - Caja: TODAS"
@@ -69,7 +70,8 @@
                         <DataTemplate>
                             <TextBox Text="{Binding ArqueoFisico, Mode=TwoWay}"
                                      HorizontalContentAlignment="Right"
-                                     Padding="6,2"/>
+                                     Padding="6,2"
+                                     helpers:NumericInput.Enabled="True"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
