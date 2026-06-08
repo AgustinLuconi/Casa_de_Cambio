@@ -177,18 +177,32 @@ namespace SistemaCambio.Views
 
         private void RecalcularCredito()
         {
-            decimal importe   = ParsearMonto(txtImporteCredito.Text);
-            decimal cotizacion = ParsearMonto(txtCotizacionCredito.Text);
-            decimal pesos      = Math.Round(importe * cotizacion, 2, MidpointRounding.AwayFromZero);
-            txtPesosCredito.Text = pesos.ToString("N2");
+            try
+            {
+                decimal importe   = ParsearMonto(txtImporteCredito.Text);
+                decimal cotizacion = ParsearMonto(txtCotizacionCredito.Text);
+                decimal pesos      = Math.Round(importe * cotizacion, 2, MidpointRounding.AwayFromZero);
+                txtPesosCredito.Text = pesos.ToString("N2");
+            }
+            catch (OverflowException)
+            {
+                txtPesosCredito.Text = "0,00";
+            }
         }
 
         private void RecalcularDebito()
         {
-            decimal importe   = ParsearMonto(txtImporteDebito.Text);
-            decimal cotizacion = ParsearMonto(txtCotizacionDebito.Text);
-            decimal pesos      = Math.Round(importe * cotizacion, 2, MidpointRounding.AwayFromZero);
-            txtPesosDebito.Text = pesos.ToString("N2");
+            try
+            {
+                decimal importe   = ParsearMonto(txtImporteDebito.Text);
+                decimal cotizacion = ParsearMonto(txtCotizacionDebito.Text);
+                decimal pesos      = Math.Round(importe * cotizacion, 2, MidpointRounding.AwayFromZero);
+                txtPesosDebito.Text = pesos.ToString("N2");
+            }
+            catch (OverflowException)
+            {
+                txtPesosDebito.Text = "0,00";
+            }
         }
 
         public void TextBox_GotFocus(object? sender, GotFocusEventArgs e)

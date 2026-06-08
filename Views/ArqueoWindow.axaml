@@ -92,20 +92,16 @@
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10"
                     HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button HotKey="Alt+A"
-                    Background="{DynamicResource AccentBrush}" Foreground="White"
+            <Button HotKey="Alt+A" Classes="Primary"
                     Width="110" Height="36"
-                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                    CornerRadius="6" Cursor="Hand"
                     IsDefault="True"
                     Click="BtnAceptar_Click">
-                <AccessText Text="_Aceptar" VerticalAlignment="Center"/>
+                <AccessText Text="_Aceptar"/>
             </Button>
             <Button HotKey="Alt+S" Classes="Secondary"
                     Width="110" Height="36"
-                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                     Click="BtnSalir_Click">
-                <AccessText Text="_Salir" VerticalAlignment="Center"/>
+                <AccessText Text="_Salir"/>
             </Button>
         </StackPanel>
 

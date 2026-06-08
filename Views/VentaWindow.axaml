@@ -145,14 +145,11 @@
             </Border>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                <Button Content="Aceptar" IsDefault="True"
-                        Background="{DynamicResource AccentBrush}" Foreground="White"
+                <Button Content="Aceptar" Classes="Primary" IsDefault="True"
                         Width="110" Height="36"
-                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                        CornerRadius="8" Cursor="Hand" Click="BtnAceptar_Click"/>
+                        Click="BtnAceptar_Click"/>
                 <Button Content="Cancelar" Classes="Secondary"
                         Width="110" Height="36"
-                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                         Click="BtnCancelar_Click"/>
             </StackPanel>
 

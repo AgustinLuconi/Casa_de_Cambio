@@ -180,13 +180,21 @@ namespace SistemaCambio.Views
 
         private void Recalcular()
         {
-            decimal monedaExtranjera = ParsearMonto(txtMonedaExtranjera.Text);
-            decimal cotizacion       = ParsearMonto(txtCotizacion.Text);
-            decimal pesos            = Math.Round(monedaExtranjera * cotizacion, 2, MidpointRounding.AwayFromZero);
-            txtPesos.Text  = pesos.ToString("N2");
+            try
+            {
+                decimal monedaExtranjera = ParsearMonto(txtMonedaExtranjera.Text);
+                decimal cotizacion       = ParsearMonto(txtCotizacion.Text);
+                decimal pesos            = Math.Round(monedaExtranjera * cotizacion, 2, MidpointRounding.AwayFromZero);
+                txtPesos.Text  = pesos.ToString("N2");
 
-            decimal ingresa = ParsearMonto(txtIngresa.Text);
-            txtVuelto.Text = (ingresa - pesos).ToString("N2");
+                decimal ingresa = ParsearMonto(txtIngresa.Text);
+                txtVuelto.Text = (ingresa - pesos).ToString("N2");
+            }
+            catch (OverflowException)
+            {
+                txtPesos.Text = "0,00";
+                txtVuelto.Text = "0,00";
+            }
         }
 
         public void TextBox_GotFocus(object? sender, GotFocusEventArgs e)

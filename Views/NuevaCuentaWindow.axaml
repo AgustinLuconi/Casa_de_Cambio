@@ -106,14 +106,11 @@
 
         <!-- Buttons -->
         <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-            <Button x:Name="btnGuardar" Content="Guardar" Background="{DynamicResource AccentBrush}" Foreground="White"
+            <Button x:Name="btnGuardar" Content="Guardar" Classes="Primary"
                     Width="110" Height="36"
-                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                    CornerRadius="8"
                     IsDefault="True"
-                    Cursor="Hand" Click="BtnGuardar_Click"/>
+                    Click="BtnGuardar_Click"/>
             <Button Content="Cancelar" Classes="Secondary" Width="110" Height="36"
-                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                     Click="BtnCancelar_Click"/>
         </StackPanel>
         <controls:NotificationPanel x:Name="notificationPanel"
