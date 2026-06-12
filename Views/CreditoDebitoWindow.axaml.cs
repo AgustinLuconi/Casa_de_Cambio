@@ -67,33 +67,26 @@ namespace SistemaCambio.Views
             foreach (var m in _monedasApi.OrderBy(m => m.Codigo))
                 cmbMoneda.Items.Add(new ComboBoxItem { Content = m.Codigo, Tag = m });
 
-            // ── cmbCredito / cmbDebito: cuentas con saldos ───────────
+            // Seleccionar primera moneda (dispara CmbMoneda_SelectionChanged que llama RefrescarCombosCuentas)
+            if (cmbMoneda.Items.Count > 0)
+                cmbMoneda.SelectedIndex = 0;
+        }
+
+        private void RefrescarCombosCuentas(string moneda)
+        {
             cmbCredito.Items.Clear();
             cmbDebito.Items.Clear();
-            foreach (var cuenta in _todasLasCuentas.OrderBy(c => c.Nombre))
+            foreach (var cuenta in _todasLasCuentas
+                         .Where(c => c.Tipo != "Externo")
+                         .Where(c => CuentaFilter.PuedeOperarEnMoneda(c, moneda))
+                         .OrderBy(c => c.Nombre))
             {
-                var saldos = cuenta.Saldos.Any() ? cuenta.Saldos.OrderBy(s => s.Moneda).ToList() : null;
-                if (saldos == null)
-                {
-                    var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = "ARS", NombreCuenta = cuenta.Nombre };
-                    cmbCredito.Items.Add(new ComboBoxItem { Content = $"{cuenta.Nombre} (ARS)", Tag = tag });
-                    cmbDebito.Items.Add(new ComboBoxItem { Content = $"{cuenta.Nombre} (ARS)", Tag = tag });
-                    continue;
-                }
-                foreach (var saldo in saldos)
-                {
-                    var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = saldo.Moneda, NombreCuenta = cuenta.Nombre };
-                    var texto = $"{cuenta.Nombre} ({saldo.Moneda})";
-                    cmbCredito.Items.Add(new ComboBoxItem { Content = texto, Tag = tag });
-                    cmbDebito.Items.Add(new ComboBoxItem { Content = texto, Tag = tag });
-                }
+                var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = moneda, NombreCuenta = cuenta.Nombre };
+                cmbCredito.Items.Add(new ComboBoxItem { Content = cuenta.Nombre, Tag = tag });
+                cmbDebito.Items.Add(new ComboBoxItem { Content = cuenta.Nombre, Tag = tag });
             }
             if (cmbCredito.Items.Count > 0) cmbCredito.SelectedIndex = 0;
             if (cmbDebito.Items.Count > 0)  cmbDebito.SelectedIndex = 0;
-
-            // Seleccionar primera moneda (dispara CmbMoneda_SelectionChanged)
-            if (cmbMoneda.Items.Count > 0)
-                cmbMoneda.SelectedIndex = 0;
         }
 
         private async Task CargarClientesAsync()
@@ -118,6 +111,7 @@ namespace SistemaCambio.Views
             _actualizandoDesdeCombo = true;
             txtMonedaDescripcion.Text = moneda.Nombre;
             _actualizandoDesdeCombo = false;
+            RefrescarCombosCuentas(moneda.Codigo);
             _ = CargarCotizacionesDelDiaAsync(moneda.Codigo);
         }
 

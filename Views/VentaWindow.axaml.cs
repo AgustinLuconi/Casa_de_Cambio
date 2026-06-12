@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
@@ -31,6 +32,8 @@ namespace SistemaCambio.Views
             _offlineService = App.Services.GetRequiredService<IOfflineOperacionService>();
 
             InitializeComponent();
+            CuentaAutoComplete.Configurar(cmbCuentaDebitar);
+            CuentaAutoComplete.Configurar(cmbCuentaAcreditar);
             _orden = [cmbMoneda, txtMonedaExtranjera, cmbCuentaDebitar,
                       txtCotizacion, txtIngresa, cmbCuentaAcreditar,
                       txtObservaciones, cmbTipoOperacion];
@@ -68,17 +71,11 @@ namespace SistemaCambio.Views
             foreach (var m in _monedasApi.Where(m => m.Codigo != "ARS").OrderBy(m => m.Codigo))
                 cmbMoneda.Items.Add(new ComboBoxItem { Content = m.Codigo, Tag = m });
 
-            // ── cmbCuentaAcreditar: cajas Efectivo con saldo ARS ─────
-            cmbCuentaAcreditar.Items.Clear();
-            foreach (var cuenta in _todasLasCuentas.Where(c => c.Tipo == "Efectivo").OrderBy(c => c.Nombre))
-            {
-                if (cuenta.Saldos.Any(s => s.Moneda == "ARS"))
-                {
-                    var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = "ARS", NombreCuenta = cuenta.Nombre };
-                    cmbCuentaAcreditar.Items.Add(new ComboBoxItem { Content = cuenta.Nombre, Tag = tag });
-                }
-            }
-            if (cmbCuentaAcreditar.Items.Count > 0) cmbCuentaAcreditar.SelectedIndex = 0;
+            // ── cmbCuentaAcreditar: todas las cuentas, preseleccionando la caja de pesos ──
+            var tagsArs = CuentaAutoComplete.ConstruirTags(_todasLasCuentas, "ARS");
+            cmbCuentaAcreditar.ItemsSource = tagsArs;
+            CuentaAutoComplete.Seleccionar(cmbCuentaAcreditar,
+                CuentaAutoComplete.PrimeraCajaEfectivo(_todasLasCuentas, "ARS", tagsArs));
 
             // Seleccionar primera moneda (dispara CmbMoneda_SelectionChanged)
             if (cmbMoneda.Items.Count > 0)
@@ -89,20 +86,17 @@ namespace SistemaCambio.Views
 
         private void FiltrarCuentasDebitar(string? monedaFiltro)
         {
-            cmbCuentaDebitar.Items.Clear();
-            foreach (var cuenta in _todasLasCuentas.OrderBy(c => c.Nombre))
+            if (monedaFiltro == null)
             {
-                var saldos = cuenta.Saldos.Where(s => s.Moneda != "ARS");
-                if (monedaFiltro != null)
-                    saldos = saldos.Where(s => s.Moneda == monedaFiltro);
-
-                foreach (var saldo in saldos.OrderBy(s => s.Moneda))
-                {
-                    var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = saldo.Moneda, NombreCuenta = cuenta.Nombre };
-                    cmbCuentaDebitar.Items.Add(new ComboBoxItem { Content = cuenta.Nombre, Tag = tag });
-                }
+                cmbCuentaDebitar.ItemsSource = new List<CuentaMonedaTag>();
+                CuentaAutoComplete.Seleccionar(cmbCuentaDebitar, null);
+                return;
             }
-            if (cmbCuentaDebitar.Items.Count > 0) cmbCuentaDebitar.SelectedIndex = 0;
+            var tags = CuentaAutoComplete.ConstruirTags(_todasLasCuentas, monedaFiltro);
+            cmbCuentaDebitar.ItemsSource = tags;
+            // Auto-selección: primera caja Efectivo con saldo en la moneda (ej. EFECTIVO USD)
+            CuentaAutoComplete.Seleccionar(cmbCuentaDebitar,
+                CuentaAutoComplete.PrimeraCajaEfectivo(_todasLasCuentas, monedaFiltro, tags));
         }
 
         // ── Eventos ─────────────────────────────────────────────────
@@ -200,10 +194,10 @@ namespace SistemaCambio.Views
         private static decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
 
         private CuentaMonedaTag? ObtenerTagDebitar()
-            => (cmbCuentaDebitar.SelectedItem as ComboBoxItem)?.Tag as CuentaMonedaTag;
+            => CuentaAutoComplete.ObtenerSeleccion(cmbCuentaDebitar);
 
         private CuentaMonedaTag? ObtenerTagAcreditar()
-            => (cmbCuentaAcreditar.SelectedItem as ComboBoxItem)?.Tag as CuentaMonedaTag;
+            => CuentaAutoComplete.ObtenerSeleccion(cmbCuentaAcreditar);
 
         // ── Validación ───────────────────────────────────────────────
 
@@ -340,9 +334,17 @@ namespace SistemaCambio.Views
 
         private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape) { Close(); e.Handled = true; return; }
+            if (e.Key == Key.Escape)
+            {
+                if (e.Source is Control esc &&
+                    esc.FindAncestorOfType<AutoCompleteBox>(includeSelf: true) is { IsDropDownOpen: true } acbEsc)
+                { acbEsc.IsDropDownOpen = false; e.Handled = true; return; }
+                Close(); e.Handled = true; return;
+            }
             if (e.Key != Key.Down && e.Key != Key.Up) return;
             if (e.Source is ComboBox cb && cb.IsDropDownOpen) return;
+            if (e.Source is Control c &&
+                c.FindAncestorOfType<AutoCompleteBox>(includeSelf: true) is { IsDropDownOpen: true }) return;
             if (e.Source is not (TextBox or ComboBox)) return;
             MoverFoco(e.Key == Key.Down ? 1 : -1);
             e.Handled = true;
@@ -351,7 +353,11 @@ namespace SistemaCambio.Views
         private void MoverFoco(int delta)
         {
             var focused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Control;
-            var idx = Array.IndexOf(_orden, focused);
+            // El foco real puede estar en el TextBox interno de un AutoCompleteBox
+            Control? actual = focused is not null && Array.IndexOf(_orden, focused) >= 0
+                ? focused
+                : focused?.FindAncestorOfType<AutoCompleteBox>(includeSelf: true);
+            var idx = Array.IndexOf(_orden, actual);
             if (idx < 0) return;
             var next = idx + delta;
             if (next >= 0 && next < _orden.Length)

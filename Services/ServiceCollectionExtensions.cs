@@ -35,8 +35,8 @@ namespace SistemaCambio.Services
             {
                 var httpClientFactory = sp.GetRequiredService<System.Net.Http.IHttpClientFactory>();
                 var tokenStore = sp.GetRequiredService<AuthTokenStore>();
-                // typeof(CasaCambioApiClient).Name es la key que AddHttpClient<> registra internamente
-                var httpClient = httpClientFactory.CreateClient(typeof(CasaCambioApiClient).Name);
+                // AddHttpClient<TClient,TImpl> registra bajo typeof(TClient).Name, no typeof(TImpl).Name
+                var httpClient = httpClientFactory.CreateClient(typeof(ICasaCambioApiClient).Name);
                 var apiClient = new CasaCambioApiClient(httpClient, tokenStore);
                 var localDbFactory = sp.GetRequiredService<IDbContextFactory<LocalDbContext>>();
                 var connectivity = sp.GetRequiredService<IConnectivityChecker>();

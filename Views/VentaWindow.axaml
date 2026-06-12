@@ -63,9 +63,11 @@
                        Text="Debitar en cuenta" VerticalAlignment="Center"
                        Foreground="{DynamicResource PrimaryTextBrush}"
                        Margin="10,0,8,9"/>
-            <ComboBox x:Name="cmbCuentaDebitar" Grid.Row="1" Grid.Column="3"
-                      HorizontalAlignment="Stretch" Margin="0,0,0,9"
-                      Background="#CC0000" Foreground="White" BorderBrush="#990000"/>
+            <AutoCompleteBox x:Name="cmbCuentaDebitar" Grid.Row="1" Grid.Column="3"
+                             Classes="cuentaRoja"
+                             HorizontalAlignment="Stretch" Margin="0,0,0,9"
+                             Watermark="Buscar cuenta..."
+                             MaxDropDownHeight="240"/>
 
             <!-- ── Fila 2: Cotización ── -->
             <TextBlock Grid.Row="2" Grid.Column="0"
@@ -106,9 +108,11 @@
                        Text="Acreditar de cuenta" VerticalAlignment="Center"
                        Foreground="{DynamicResource PrimaryTextBrush}"
                        Margin="10,0,8,9"/>
-            <ComboBox x:Name="cmbCuentaAcreditar" Grid.Row="5" Grid.Column="3"
-                      HorizontalAlignment="Stretch" Margin="0,0,0,9"
-                      Background="#005500" Foreground="White" BorderBrush="#003300"/>
+            <AutoCompleteBox x:Name="cmbCuentaAcreditar" Grid.Row="5" Grid.Column="3"
+                             Classes="cuentaVerde"
+                             HorizontalAlignment="Stretch" Margin="0,0,0,9"
+                             Watermark="Buscar cuenta..."
+                             MaxDropDownHeight="240"/>
 
             <!-- ── Fila 6: Observaciones (span columnas de input) ── -->
             <TextBlock Grid.Row="6" Grid.Column="0"
@@ -122,9 +126,8 @@
                        Text="Tipo operación" VerticalAlignment="Center"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <ComboBox x:Name="cmbTipoOperacion" Grid.Row="7" Grid.Column="1"
-                      HorizontalAlignment="Stretch" SelectedIndex="0">
+                      HorizontalAlignment="Stretch">
                 <ComboBoxItem>Normal</ComboBoxItem>
-                <ComboBoxItem>Interbancaria</ComboBoxItem>
             </ComboBox>
 
         </Grid>

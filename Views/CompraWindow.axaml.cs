@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
@@ -20,6 +21,7 @@ namespace SistemaCambio.Views
         public int CuentaId { get; set; }
         public string Moneda { get; set; } = "";
         public string NombreCuenta { get; set; } = "";
+        public override string ToString() => NombreCuenta;
     }
 
     public partial class CompraWindow : Window
@@ -38,6 +40,8 @@ namespace SistemaCambio.Views
             _offlineService = App.Services.GetRequiredService<IOfflineOperacionService>();
 
             InitializeComponent();
+            CuentaAutoComplete.Configurar(cmbCuentaAcredita);
+            CuentaAutoComplete.Configurar(cmbCuentaDebita);
             _orden = [cmbMoneda, txtMonedaExtranjera, cmbCuentaAcredita,
                       txtIngresa, txtCotizacion, cmbCuentaDebita,
                       txtObservaciones, cmbTipoOperacion];
@@ -75,17 +79,11 @@ namespace SistemaCambio.Views
             foreach (var m in _monedasApi.Where(m => m.Codigo != "ARS").OrderBy(m => m.Codigo))
                 cmbMoneda.Items.Add(new ComboBoxItem { Content = m.Codigo, Tag = m });
 
-            // ── cmbCuentaDebita: cajas Efectivo con saldo ARS ────────
-            cmbCuentaDebita.Items.Clear();
-            foreach (var cuenta in _todasLasCuentas.Where(c => c.Tipo == "Efectivo").OrderBy(c => c.Nombre))
-            {
-                if (cuenta.Saldos.Any(s => s.Moneda == "ARS"))
-                {
-                    var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = "ARS", NombreCuenta = cuenta.Nombre };
-                    cmbCuentaDebita.Items.Add(new ComboBoxItem { Content = cuenta.Nombre, Tag = tag });
-                }
-            }
-            if (cmbCuentaDebita.Items.Count > 0) cmbCuentaDebita.SelectedIndex = 0;
+            // ── cmbCuentaDebita: todas las cuentas, preseleccionando la caja de pesos ──
+            var tagsArs = CuentaAutoComplete.ConstruirTags(_todasLasCuentas, "ARS");
+            cmbCuentaDebita.ItemsSource = tagsArs;
+            CuentaAutoComplete.Seleccionar(cmbCuentaDebita,
+                CuentaAutoComplete.PrimeraCajaEfectivo(_todasLasCuentas, "ARS", tagsArs));
 
             // Seleccionar primera moneda (dispara CmbMoneda_SelectionChanged)
             if (cmbMoneda.Items.Count > 0)
@@ -96,20 +94,17 @@ namespace SistemaCambio.Views
 
         private void FiltrarCuentasAcredita(string? monedaFiltro)
         {
-            cmbCuentaAcredita.Items.Clear();
-            foreach (var cuenta in _todasLasCuentas.OrderBy(c => c.Nombre))
+            if (monedaFiltro == null)
             {
-                var saldos = cuenta.Saldos.Where(s => s.Moneda != "ARS");
-                if (monedaFiltro != null)
-                    saldos = saldos.Where(s => s.Moneda == monedaFiltro);
-
-                foreach (var saldo in saldos.OrderBy(s => s.Moneda))
-                {
-                    var tag = new CuentaMonedaTag { CuentaId = cuenta.Id, Moneda = saldo.Moneda, NombreCuenta = cuenta.Nombre };
-                    cmbCuentaAcredita.Items.Add(new ComboBoxItem { Content = cuenta.Nombre, Tag = tag });
-                }
+                cmbCuentaAcredita.ItemsSource = new List<CuentaMonedaTag>();
+                CuentaAutoComplete.Seleccionar(cmbCuentaAcredita, null);
+                return;
             }
-            if (cmbCuentaAcredita.Items.Count > 0) cmbCuentaAcredita.SelectedIndex = 0;
+            var tags = CuentaAutoComplete.ConstruirTags(_todasLasCuentas, monedaFiltro);
+            cmbCuentaAcredita.ItemsSource = tags;
+            // Auto-selección: primera caja Efectivo con saldo en la moneda (ej. EFECTIVO USD)
+            CuentaAutoComplete.Seleccionar(cmbCuentaAcredita,
+                CuentaAutoComplete.PrimeraCajaEfectivo(_todasLasCuentas, monedaFiltro, tags));
         }
 
         // ── Eventos ─────────────────────────────────────────────────
@@ -207,10 +202,10 @@ namespace SistemaCambio.Views
         private static decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
 
         private CuentaMonedaTag? ObtenerTagAcredita()
-            => (cmbCuentaAcredita.SelectedItem as ComboBoxItem)?.Tag as CuentaMonedaTag;
+            => CuentaAutoComplete.ObtenerSeleccion(cmbCuentaAcredita);
 
         private CuentaMonedaTag? ObtenerTagDebita()
-            => (cmbCuentaDebita.SelectedItem as ComboBoxItem)?.Tag as CuentaMonedaTag;
+            => CuentaAutoComplete.ObtenerSeleccion(cmbCuentaDebita);
 
         // ── Validación ───────────────────────────────────────────────
 
@@ -331,9 +326,17 @@ namespace SistemaCambio.Views
 
         private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape) { Close(); e.Handled = true; return; }
+            if (e.Key == Key.Escape)
+            {
+                if (e.Source is Control esc &&
+                    esc.FindAncestorOfType<AutoCompleteBox>(includeSelf: true) is { IsDropDownOpen: true } acbEsc)
+                { acbEsc.IsDropDownOpen = false; e.Handled = true; return; }
+                Close(); e.Handled = true; return;
+            }
             if (e.Key != Key.Down && e.Key != Key.Up) return;
             if (e.Source is ComboBox cb && cb.IsDropDownOpen) return;
+            if (e.Source is Control c &&
+                c.FindAncestorOfType<AutoCompleteBox>(includeSelf: true) is { IsDropDownOpen: true }) return;
             if (e.Source is not (TextBox or ComboBox)) return;
             MoverFoco(e.Key == Key.Down ? 1 : -1);
             e.Handled = true;
@@ -342,7 +345,11 @@ namespace SistemaCambio.Views
         private void MoverFoco(int delta)
         {
             var focused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Control;
-            var idx = Array.IndexOf(_orden, focused);
+            // El foco real puede estar en el TextBox interno de un AutoCompleteBox
+            Control? actual = focused is not null && Array.IndexOf(_orden, focused) >= 0
+                ? focused
+                : focused?.FindAncestorOfType<AutoCompleteBox>(includeSelf: true);
+            var idx = Array.IndexOf(_orden, actual);
             if (idx < 0) return;
             var next = idx + delta;
             if (next >= 0 && next < _orden.Length)

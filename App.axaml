@@ -144,6 +144,50 @@
             <Setter Property="Padding" Value="10,8"/>
         </Style>
 
+        <!-- AutoCompleteBox de cuentas (Compra/Venta): rojo = lado divisa, verde = caja ARS.
+             Los colores van sobre el TextBox interno del template porque Background
+             directo sobre el AutoCompleteBox no llega; Fluent repinta el fondo en
+             hover/focus vía Border#PART_BorderElement, de ahí los selectores anidados. -->
+        <Style Selector="AutoCompleteBox.cuentaRoja /template/ TextBox#PART_TextBox">
+            <Setter Property="Background" Value="#CC0000"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#990000"/>
+            <Setter Property="CaretBrush" Value="White"/>
+        </Style>
+        <Style Selector="AutoCompleteBox.cuentaRoja /template/ TextBox#PART_TextBox:pointerover">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="AutoCompleteBox.cuentaRoja /template/ TextBox#PART_TextBox:focus">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="AutoCompleteBox.cuentaRoja /template/ TextBox#PART_TextBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#CC0000"/>
+        </Style>
+        <Style Selector="AutoCompleteBox.cuentaRoja /template/ TextBox#PART_TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#CC0000"/>
+            <Setter Property="BorderBrush" Value="#990000"/>
+        </Style>
+
+        <Style Selector="AutoCompleteBox.cuentaVerde /template/ TextBox#PART_TextBox">
+            <Setter Property="Background" Value="#005500"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#003300"/>
+            <Setter Property="CaretBrush" Value="White"/>
+        </Style>
+        <Style Selector="AutoCompleteBox.cuentaVerde /template/ TextBox#PART_TextBox:pointerover">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="AutoCompleteBox.cuentaVerde /template/ TextBox#PART_TextBox:focus">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="AutoCompleteBox.cuentaVerde /template/ TextBox#PART_TextBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#005500"/>
+        </Style>
+        <Style Selector="AutoCompleteBox.cuentaVerde /template/ TextBox#PART_TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#005500"/>
+            <Setter Property="BorderBrush" Value="#003300"/>
+        </Style>
+
         <Style Selector="DatePicker">
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
