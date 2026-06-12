@@ -21,5 +21,7 @@ public class SaldoCuenta
     [Column("cuenta_id")] public int CuentaId { get; set; }
     [Column("moneda")] public string Moneda { get; set; } = "USD";
     [Column("saldo")] public decimal Saldo { get; set; }
+    /// <summary>Límite de deuda específico para esta cuenta+divisa. 0 = hereda el límite general de la divisa.</summary>
+    [Column("limite_deuda")] public decimal LimiteDeuda { get; set; }
     public Cuenta Cuenta { get; set; } = null!;
 }

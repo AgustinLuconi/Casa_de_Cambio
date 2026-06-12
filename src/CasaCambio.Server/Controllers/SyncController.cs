@@ -36,7 +36,7 @@ public class SyncController : ControllerBase
                 OperacionResult result;
                 if (op.TipoOperacion == "Compra" || op.TipoOperacion == "Venta")
                 {
-                    result = _operacionService.GuardarOperacion(op.TipoOperacion, op.CuentaOrigenId, op.CuentaDestinoId, op.MonedaOrigen, op.MonedaDestino, op.MontoOrigen, op.MontoDestino, op.CotizacionAplicada, op.ClienteId, op.Observaciones);
+                    result = _operacionService.GuardarOperacion(op.TipoOperacion, op.CuentaOrigenId, op.CuentaDestinoId, op.MonedaOrigen, op.MonedaDestino, op.MontoOrigen, op.MontoDestino, op.CotizacionAplicada, op.ClienteId, op.Observaciones, op.LocalId);
                     if (result.Exitoso)
                     {
                         if (op.TipoOperacion == "Compra") _pppService.RegistrarCompra(op.MonedaDestino, op.MontoDestino, op.MontoOrigen);
@@ -45,7 +45,7 @@ public class SyncController : ControllerBase
                 }
                 else
                 {
-                    result = _operacionService.GuardarCreditoDebito(op.CuentaDestinoId, op.CuentaOrigenId, op.MonedaDestino, op.MonedaOrigen, op.MontoDestino, op.MontoOrigen, op.CotizacionAplicada, op.ClienteId, op.Observaciones);
+                    result = _operacionService.GuardarCreditoDebito(op.CuentaDestinoId, op.CuentaOrigenId, op.MonedaDestino, op.MonedaOrigen, op.MontoDestino, op.MontoOrigen, op.CotizacionAplicada, op.ClienteId, op.Observaciones, op.LocalId);
                 }
                 resultados.Add(new SyncResultItem { LocalId = op.LocalId, ServerOperacionId = result.OperacionId, Exitoso = result.Exitoso, Mensaje = result.Exitoso ? null : result.Mensaje });
             }

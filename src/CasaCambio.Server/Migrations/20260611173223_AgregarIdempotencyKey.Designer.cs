@@ -3,6 +3,7 @@ using System;
 using CasaCambio.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CasaCambio.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260611173223_AgregarIdempotencyKey")]
+    partial class AgregarIdempotencyKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -516,10 +519,6 @@ namespace CasaCambio.Server.Migrations
                     b.Property<int>("CuentaId")
                         .HasColumnType("integer")
                         .HasColumnName("cuenta_id");
-
-                    b.Property<decimal>("LimiteDeuda")
-                        .HasColumnType("numeric")
-                        .HasColumnName("limite_deuda");
 
                     b.Property<string>("Moneda")
                         .IsRequired()

@@ -35,33 +35,12 @@ public class OfflineOperacionService : IOfflineOperacionService
 
     public async Task<OfflineOperacionResult> GuardarCreditoDebitoAsync(CrearCreditoDebitoRequest request)
     {
-        if (await _connectivity.CheckAsync())
-        {
-            try
-            {
-                var response = await _apiClient.CrearCreditoDebitoAsync(request);
-                return new OfflineOperacionResult { Exitoso = response.Exitoso, Mensaje = response.Mensaje, OperacionId = response.OperacionId, IsOffline = false };
-            }
-            catch (Exception ex)
-            {
-                return await GuardarLocalAsync(new LocalOperacion
-                {
-                    TipoOperacion = "CreditoDebito",
-                    CuentaOrigenId = request.CuentaDebitoId,
-                    CuentaDestinoId = request.CuentaCreditoId,
-                    MonedaOrigen = request.MonedaDebito,
-                    MonedaDestino = request.MonedaCredito,
-                    MontoOrigen = request.MontoDebito,
-                    MontoDestino = request.MontoCredito,
-                    CotizacionAplicada = request.Cotizacion,
-                    ClienteId = request.ClienteId,
-                    Observaciones = request.Observaciones
-                }, ex.Message);
-            }
-        }
+        var key = Guid.NewGuid().ToString();
+        request.IdempotencyKey = key;
 
-        return await GuardarLocalAsync(new LocalOperacion
+        var local = new LocalOperacion
         {
+            Id = key,
             TipoOperacion = "CreditoDebito",
             CuentaOrigenId = request.CuentaDebitoId,
             CuentaDestinoId = request.CuentaCreditoId,
@@ -72,11 +51,32 @@ public class OfflineOperacionService : IOfflineOperacionService
             CotizacionAplicada = request.Cotizacion,
             ClienteId = request.ClienteId,
             Observaciones = request.Observaciones
-        });
+        };
+
+        if (await _connectivity.CheckAsync())
+        {
+            try
+            {
+                var response = await _apiClient.CrearCreditoDebitoAsync(request);
+                return new OfflineOperacionResult { Exitoso = response.Exitoso, Mensaje = response.Mensaje, OperacionId = response.OperacionId, IsOffline = false };
+            }
+            catch (Exception ex)
+            {
+                return await GuardarLocalAsync(local, ex.Message);
+            }
+        }
+
+        return await GuardarLocalAsync(local);
     }
 
     private async Task<OfflineOperacionResult> GuardarOperacionAsync(string tipo, CrearOperacionRequest request)
     {
+        var key = Guid.NewGuid().ToString();
+        request.IdempotencyKey = key;
+
+        var local = CrearLocalOperacion(tipo, request);
+        local.Id = key;
+
         if (await _connectivity.CheckAsync())
         {
             try
@@ -88,11 +88,11 @@ public class OfflineOperacionService : IOfflineOperacionService
             }
             catch (Exception ex)
             {
-                return await GuardarLocalAsync(CrearLocalOperacion(tipo, request), ex.Message);
+                return await GuardarLocalAsync(local, ex.Message);
             }
         }
 
-        return await GuardarLocalAsync(CrearLocalOperacion(tipo, request));
+        return await GuardarLocalAsync(local);
     }
 
     private static LocalOperacion CrearLocalOperacion(string tipo, CrearOperacionRequest request) => new()

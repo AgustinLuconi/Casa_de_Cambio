@@ -58,6 +58,10 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Operacion>().HasIndex(o => o.Fecha);
         modelBuilder.Entity<Operacion>().HasIndex(o => new { o.TipoOperacion, o.Fecha });
+        modelBuilder.Entity<Operacion>()
+            .HasIndex(o => o.IdempotencyKey)
+            .IsUnique()
+            .HasFilter("idempotency_key IS NOT NULL");
         modelBuilder.Entity<Movimiento>().HasIndex(m => new { m.CuentaId, m.Fecha });
         modelBuilder.Entity<Movimiento>().HasIndex(m => m.Fecha);
         modelBuilder.Entity<CierreCaja>().HasIndex(c => c.Fecha);

@@ -17,5 +17,6 @@ public class Operacion
     [Column("monto_total_destino")] public decimal MontoTotalDestino { get; set; }
     [Column("cotizacion_aplicada")] public decimal CotizacionAplicada { get; set; }
     [Column("observaciones")] public string Observaciones { get; set; } = "";
+    [Column("idempotency_key")] public string? IdempotencyKey { get; set; }
     public List<Movimiento> Movimientos { get; set; } = new();
 }

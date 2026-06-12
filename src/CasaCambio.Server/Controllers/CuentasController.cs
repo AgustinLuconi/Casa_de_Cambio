@@ -35,7 +35,10 @@ public class CuentasController : ControllerBase
         return Ok(cuentas.Select(c => new CuentaDto
         {
             Id = c.Id, Nombre = c.Nombre, Tipo = c.Tipo, LimiteDeuda = c.LimiteDeuda,
-            Saldos = c.Saldos.Select(s => new SaldoCuentaDto { Moneda = s.Moneda, Saldo = s.Saldo }).ToList()
+            Saldos = c.Saldos.Select(s => new SaldoCuentaDto
+            {
+                Moneda = s.Moneda, Saldo = s.Saldo, LimiteDeudaPersonalizado = s.LimiteDeuda
+            }).ToList()
         }));
     }
 
@@ -59,6 +62,10 @@ public class CuentasController : ControllerBase
             var r = _arqueoService.RealizarArqueoCiego(cuenta.Id, s.Moneda, s.Saldo, "Saldo inicial al crear cuenta");
             if (!r.Exitoso) return BadRequest(new { message = r.Mensaje });
         }
+
+        // Límites por divisa: después de los arqueos (que crean las filas de saldo
+        // en su propio contexto), upsert del límite específico de cada moneda.
+        ActualizarLimitesPorDivisa(db, cuenta.Id, req.Saldos);
 
         return CreatedAtAction(nameof(GetCuentas), new { id = cuenta.Id },
             new CuentaDto { Id = cuenta.Id, Nombre = cuenta.Nombre, Tipo = cuenta.Tipo, LimiteDeuda = cuenta.LimiteDeuda });
@@ -92,7 +99,10 @@ public class CuentasController : ControllerBase
     {
         using var db = _contextFactory.CreateDbContext();
         var saldos = db.SaldosCuenta.Where(s => s.CuentaId == id).AsNoTracking().ToList();
-        return Ok(saldos.Select(s => new SaldoCuentaDto { Moneda = s.Moneda, Saldo = s.Saldo }));
+        return Ok(saldos.Select(s => new SaldoCuentaDto
+        {
+            Moneda = s.Moneda, Saldo = s.Saldo, LimiteDeudaPersonalizado = s.LimiteDeuda
+        }));
     }
 
     [HttpPut("{id}")]
@@ -106,7 +116,10 @@ public class CuentasController : ControllerBase
         if (cuenta == null) return NotFound();
         cuenta.Nombre = req.Nombre.Trim().ToUpperInvariant();
         cuenta.Tipo = req.Tipo;
-        cuenta.LimiteDeuda = req.LimiteDeuda;
+        // El límite escalar es legacy: los clientes nuevos envían null y los límites
+        // van por divisa (Saldos[].LimiteDeudaPersonalizado). Solo se pisa si viene valor.
+        if (req.LimiteDeuda.HasValue)
+            cuenta.LimiteDeuda = req.LimiteDeuda;
         db.SaveChanges();
 
         var saldosActuales = db.SaldosCuenta.Where(s => s.CuentaId == id).AsNoTracking()
@@ -121,7 +134,36 @@ public class CuentasController : ControllerBase
             }
         }
 
+        ActualizarLimitesPorDivisa(db, id, req.Saldos);
+
         return Ok(new CuentaDto { Id = cuenta.Id, Nombre = cuenta.Nombre, Tipo = cuenta.Tipo, LimiteDeuda = cuenta.LimiteDeuda });
+    }
+
+    /// <summary>
+    /// Upsert del límite de deuda específico por divisa sobre saldos_cuenta.
+    /// Si la fila de saldo no existe y hay límite > 0, se crea con saldo 0
+    /// (el límite es independiente de que la cuenta tenga saldo en esa moneda).
+    /// </summary>
+    private static void ActualizarLimitesPorDivisa(AppDbContext db, int cuentaId, IEnumerable<SaldoCuentaDto> saldos)
+    {
+        foreach (var s in saldos)
+        {
+            var fila = db.SaldosCuenta.FirstOrDefault(x => x.CuentaId == cuentaId && x.Moneda == s.Moneda);
+            if (fila != null)
+            {
+                if (fila.LimiteDeuda != s.LimiteDeudaPersonalizado)
+                    fila.LimiteDeuda = s.LimiteDeudaPersonalizado;
+            }
+            else if (s.LimiteDeudaPersonalizado > 0)
+            {
+                db.SaldosCuenta.Add(new Models.SaldoCuenta
+                {
+                    CuentaId = cuentaId, Moneda = s.Moneda, Saldo = 0,
+                    LimiteDeuda = s.LimiteDeudaPersonalizado
+                });
+            }
+        }
+        db.SaveChanges();
     }
 
     [HttpDelete("{id}")]

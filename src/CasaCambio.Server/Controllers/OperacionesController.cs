@@ -56,7 +56,7 @@ public class OperacionesController : ControllerBase
     [HttpPost("compra")]
     public IActionResult Compra([FromBody] CrearOperacionRequest req)
     {
-        var result = _operacionService.GuardarOperacion("Compra", req.CuentaOrigenId, req.CuentaDestinoId, req.MonedaOrigen, req.MonedaDestino, req.MontoOrigen, req.MontoDestino, req.Cotizacion, req.ClienteId, req.Observaciones);
+        var result = _operacionService.GuardarOperacion("Compra", req.CuentaOrigenId, req.CuentaDestinoId, req.MonedaOrigen, req.MonedaDestino, req.MontoOrigen, req.MontoDestino, req.Cotizacion, req.ClienteId, req.Observaciones, req.IdempotencyKey);
         if (result.Exitoso) _pppService.RegistrarCompra(req.MonedaDestino, req.MontoDestino, req.MontoOrigen);
         return result.Exitoso ? Ok(OperacionResponse.Success(result.OperacionId!.Value)) : BadRequest(OperacionResponse.Error(result.Mensaje));
     }
@@ -64,7 +64,7 @@ public class OperacionesController : ControllerBase
     [HttpPost("venta")]
     public IActionResult Venta([FromBody] CrearOperacionRequest req)
     {
-        var result = _operacionService.GuardarOperacion("Venta", req.CuentaOrigenId, req.CuentaDestinoId, req.MonedaOrigen, req.MonedaDestino, req.MontoOrigen, req.MontoDestino, req.Cotizacion, req.ClienteId, req.Observaciones);
+        var result = _operacionService.GuardarOperacion("Venta", req.CuentaOrigenId, req.CuentaDestinoId, req.MonedaOrigen, req.MonedaDestino, req.MontoOrigen, req.MontoDestino, req.Cotizacion, req.ClienteId, req.Observaciones, req.IdempotencyKey);
         if (result.Exitoso) _pppService.RegistrarVenta(req.MonedaOrigen, req.MontoOrigen);
         return result.Exitoso ? Ok(OperacionResponse.Success(result.OperacionId!.Value)) : BadRequest(OperacionResponse.Error(result.Mensaje));
     }
@@ -72,7 +72,7 @@ public class OperacionesController : ControllerBase
     [HttpPost("credito-debito")]
     public IActionResult CreditoDebito([FromBody] CrearCreditoDebitoRequest req)
     {
-        var result = _operacionService.GuardarCreditoDebito(req.CuentaCreditoId, req.CuentaDebitoId, req.MonedaCredito, req.MonedaDebito, req.MontoCredito, req.MontoDebito, req.Cotizacion, req.ClienteId, req.Observaciones);
+        var result = _operacionService.GuardarCreditoDebito(req.CuentaCreditoId, req.CuentaDebitoId, req.MonedaCredito, req.MonedaDebito, req.MontoCredito, req.MontoDebito, req.Cotizacion, req.ClienteId, req.Observaciones, req.IdempotencyKey);
         return result.Exitoso ? Ok(OperacionResponse.Success(result.OperacionId!.Value)) : BadRequest(OperacionResponse.Error(result.Mensaje));
     }
 

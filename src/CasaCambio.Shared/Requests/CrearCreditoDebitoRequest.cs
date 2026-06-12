@@ -13,4 +13,5 @@ public class CrearCreditoDebitoRequest
     [Range(0.00001, double.MaxValue)] public decimal Cotizacion { get; set; }
     public int? ClienteId { get; set; }
     public string Observaciones { get; set; } = "";
+    public string? IdempotencyKey { get; set; }
 }

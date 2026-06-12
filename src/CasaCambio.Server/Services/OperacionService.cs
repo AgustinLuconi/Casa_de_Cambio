@@ -15,7 +15,7 @@ public class OperacionService : IOperacionService
     public OperacionService(IDbContextFactory<AppDbContext> contextFactory, IAuditService auditService, ICierreCajaService cierreCajaService, OperacionValidator validator)
     { _contextFactory = contextFactory; _auditService = auditService; _cierreCajaService = cierreCajaService; _validator = validator; }
 
-    public OperacionResult GuardarOperacion(string tipo, int cuentaOrigenId, int cuentaDestinoId, string monedaOrigen, string monedaDestino, decimal montoOrigen, decimal montoDestino, decimal cotizacion, int? clienteId = null, string observaciones = "")
+    public OperacionResult GuardarOperacion(string tipo, int cuentaOrigenId, int cuentaDestinoId, string monedaOrigen, string monedaDestino, decimal montoOrigen, decimal montoDestino, decimal cotizacion, int? clienteId = null, string observaciones = "", string? idempotencyKey = null)
     {
         montoOrigen = Math.Round(montoOrigen, 2, MidpointRounding.AwayFromZero);
         montoDestino = Math.Round(montoDestino, 2, MidpointRounding.AwayFromZero);
@@ -24,6 +24,11 @@ public class OperacionService : IOperacionService
         using var transaction = db.Database.BeginTransaction();
         try
         {
+            if (idempotencyKey != null)
+            {
+                var existente = db.Operaciones.AsNoTracking().FirstOrDefault(o => o.IdempotencyKey == idempotencyKey);
+                if (existente != null) return OperacionResult.Success(existente.Id);
+            }
             var validacion = _validator.ValidarOperacion(tipo, cuentaOrigenId, cuentaDestinoId, monedaOrigen, monedaDestino, montoOrigen, montoDestino, cotizacion);
             if (validacion.HasErrors) return OperacionResult.Error(string.Join("\n", validacion.Errors.Select(e => $"• {e.Message}")));
             if (_cierreCajaService.HayDiaCerrado()) return OperacionResult.Error("El dia de hoy ya esta cerrado. No se pueden realizar mas operaciones hasta mañana.");
@@ -39,19 +44,19 @@ public class OperacionService : IOperacionService
             var saldoDestino = ObtenerOCrearSaldo(db, cuentaDestinoId, monedaDestino);
             if (saldoOrigen.Saldo < montoOrigen)
             {
-                decimal limiteDeuda = ObtenerLimiteDeuda(db, cuentaOrigen);
+                decimal limiteDeuda = ObtenerLimiteDeuda(db, cuentaOrigen, saldoOrigen);
                 if (limiteDeuda > 0)
                 {
                     decimal saldoProyectado = saldoOrigen.Saldo - montoOrigen;
                     if (saldoProyectado < -limiteDeuda)
-                        return OperacionResult.Error($"La cuenta '{cuentaOrigen.Nombre}' superaría su límite de deuda ({limiteDeuda:N2}).\nSaldo actual: {saldoOrigen.Saldo:N2}, Requerido: {montoOrigen:N2}");
+                        return OperacionResult.Error($"La cuenta '{cuentaOrigen.Nombre}' superaría su límite de deuda en {monedaOrigen} ({limiteDeuda:N2}).\nSaldo actual: {saldoOrigen.Saldo:N2}, Requerido: {montoOrigen:N2}");
                 }
                 else
                 {
                     return OperacionResult.Error($"Saldo insuficiente en '{cuentaOrigen.Nombre}' ({monedaOrigen}). Disponible: {saldoOrigen.Saldo:N2}, Requerido: {montoOrigen:N2}");
                 }
             }
-            var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = tipo, ClienteId = clienteId, MontoTotalOrigen = montoOrigen, MontoTotalDestino = montoDestino, CotizacionAplicada = cotizacion, Observaciones = observaciones };
+            var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = tipo, ClienteId = clienteId, MontoTotalOrigen = montoOrigen, MontoTotalDestino = montoDestino, CotizacionAplicada = cotizacion, Observaciones = observaciones, IdempotencyKey = idempotencyKey };
             db.Operaciones.Add(operacion);
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaOrigenId, Moneda = monedaOrigen, Monto = -montoOrigen, Fecha = DateTime.UtcNow });
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaDestinoId, Moneda = monedaDestino, Monto = montoDestino, Fecha = DateTime.UtcNow });
@@ -63,7 +68,7 @@ public class OperacionService : IOperacionService
         catch (Exception ex) { transaction.Rollback(); return OperacionResult.Error($"Error al guardar operacion: {ex.InnerException?.Message ?? ex.Message}"); }
     }
 
-    public OperacionResult GuardarCreditoDebito(int cuentaCreditoId, int cuentaDebitoId, string monedaCredito, string monedaDebito, decimal montoCredito, decimal montoDebito, decimal cotizacion, int? clienteId = null, string observaciones = "")
+    public OperacionResult GuardarCreditoDebito(int cuentaCreditoId, int cuentaDebitoId, string monedaCredito, string monedaDebito, decimal montoCredito, decimal montoDebito, decimal cotizacion, int? clienteId = null, string observaciones = "", string? idempotencyKey = null)
     {
         montoCredito = Math.Round(montoCredito, 2, MidpointRounding.AwayFromZero);
         montoDebito = Math.Round(montoDebito, 2, MidpointRounding.AwayFromZero);
@@ -72,9 +77,14 @@ public class OperacionService : IOperacionService
         using var transaction = db.Database.BeginTransaction();
         try
         {
+            if (idempotencyKey != null)
+            {
+                var existente = db.Operaciones.AsNoTracking().FirstOrDefault(o => o.IdempotencyKey == idempotencyKey);
+                if (existente != null) return OperacionResult.Success(existente.Id);
+            }
             var validacion = _validator.ValidarCreditoDebito(cuentaCreditoId, cuentaDebitoId, monedaCredito, monedaDebito, montoCredito, montoDebito);
             if (validacion.HasErrors) return OperacionResult.Error(string.Join("\n", validacion.Errors.Select(e => $"• {e.Message}")));
-            if (monedaCredito != monedaDebito) return GuardarOperacionInterbancaria("Credito/Debito", cuentaOrigenId: cuentaDebitoId, cuentaDestinoId: cuentaCreditoId, monedaOrigen: monedaDebito, monedaDestino: monedaCredito, montoOrigen: montoDebito, montoDestino: montoCredito, cotizacion, observaciones);
+            if (monedaCredito != monedaDebito) return GuardarOperacionInterbancaria("Credito/Debito", cuentaOrigenId: cuentaDebitoId, cuentaDestinoId: cuentaCreditoId, monedaOrigen: monedaDebito, monedaDestino: monedaCredito, montoOrigen: montoDebito, montoDestino: montoCredito, cotizacion, observaciones, idempotencyKey);
             if (_cierreCajaService.HayDiaCerrado()) return OperacionResult.Error("El dia de hoy ya esta cerrado.");
             var cuentaCredito = db.Cuentas.Find(cuentaCreditoId);
             var cuentaDebito2 = db.Cuentas.Find(cuentaDebitoId);
@@ -83,19 +93,19 @@ public class OperacionService : IOperacionService
             var saldoDebito = ObtenerOCrearSaldo(db, cuentaDebitoId, monedaDebito);
             if (saldoDebito.Saldo < montoDebito)
             {
-                decimal limiteDeuda = ObtenerLimiteDeuda(db, cuentaDebito2);
+                decimal limiteDeuda = ObtenerLimiteDeuda(db, cuentaDebito2, saldoDebito);
                 if (limiteDeuda > 0)
                 {
                     decimal saldoProyectado = saldoDebito.Saldo - montoDebito;
                     if (saldoProyectado < -limiteDeuda)
-                        return OperacionResult.Error($"La cuenta '{cuentaDebito2.Nombre}' superaría su límite de deuda ({limiteDeuda:N2}).\nSaldo actual: {saldoDebito.Saldo:N2}, Requerido: {montoDebito:N2}");
+                        return OperacionResult.Error($"La cuenta '{cuentaDebito2.Nombre}' superaría su límite de deuda en {monedaDebito} ({limiteDeuda:N2}).\nSaldo actual: {saldoDebito.Saldo:N2}, Requerido: {montoDebito:N2}");
                 }
                 else
                 {
                     return OperacionResult.Error($"Saldo insuficiente en '{cuentaDebito2.Nombre}' ({monedaDebito}). Disponible: {saldoDebito.Saldo:N2}");
                 }
             }
-            var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Credito/Debito", ClienteId = clienteId, MontoTotalOrigen = montoDebito, MontoTotalDestino = montoCredito, CotizacionAplicada = cotizacion, Observaciones = observaciones };
+            var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Credito/Debito", ClienteId = clienteId, MontoTotalOrigen = montoDebito, MontoTotalDestino = montoCredito, CotizacionAplicada = cotizacion, Observaciones = observaciones, IdempotencyKey = idempotencyKey };
             db.Operaciones.Add(operacion);
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaCreditoId, Moneda = monedaCredito, Monto = montoCredito, Fecha = DateTime.UtcNow });
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaDebitoId, Moneda = monedaDebito, Monto = -montoDebito, Fecha = DateTime.UtcNow });
@@ -107,7 +117,7 @@ public class OperacionService : IOperacionService
         catch (Exception ex) { transaction.Rollback(); return OperacionResult.Error($"Error: {ex.Message}"); }
     }
 
-    public OperacionResult GuardarOperacionInterbancaria(string tipo, int cuentaOrigenId, int cuentaDestinoId, string monedaOrigen, string monedaDestino, decimal montoOrigen, decimal montoDestino, decimal cotizacion, string observaciones = "")
+    public OperacionResult GuardarOperacionInterbancaria(string tipo, int cuentaOrigenId, int cuentaDestinoId, string monedaOrigen, string monedaDestino, decimal montoOrigen, decimal montoDestino, decimal cotizacion, string observaciones = "", string? idempotencyKey = null)
     {
         montoOrigen = Math.Round(montoOrigen, 2, MidpointRounding.AwayFromZero);
         montoDestino = Math.Round(montoDestino, 2, MidpointRounding.AwayFromZero);
@@ -116,6 +126,11 @@ public class OperacionService : IOperacionService
         using var transaction = db.Database.BeginTransaction();
         try
         {
+            if (idempotencyKey != null)
+            {
+                var existente = db.Operaciones.AsNoTracking().FirstOrDefault(o => o.IdempotencyKey == idempotencyKey);
+                if (existente != null) return OperacionResult.Success(existente.Id);
+            }
             var validacion = _validator.ValidarOperacionInterbancaria(cuentaOrigenId, cuentaDestinoId, monedaOrigen, monedaDestino, montoOrigen, montoDestino);
             if (validacion.HasErrors) return OperacionResult.Error(string.Join("\n", validacion.Errors.Select(e => $"• {e.Message}")));
             if (_cierreCajaService.HayDiaCerrado()) return OperacionResult.Error("El dia de hoy ya esta cerrado.");
@@ -124,7 +139,7 @@ public class OperacionService : IOperacionService
             var dbSaldoOrigenB = ObtenerOCrearSaldo(db, cuentaOrigenId, monedaDestino);
             var dbSaldoDestinoB = ObtenerOCrearSaldo(db, cuentaDestinoId, monedaDestino);
             var dbSaldoDestinoA = ObtenerOCrearSaldo(db, cuentaDestinoId, monedaOrigen);
-            var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Interbancaria", MontoTotalOrigen = montoOrigen, MontoTotalDestino = montoDestino, CotizacionAplicada = cotizacion, Observaciones = observaciones };
+            var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Interbancaria", MontoTotalOrigen = montoOrigen, MontoTotalDestino = montoDestino, CotizacionAplicada = cotizacion, Observaciones = observaciones, IdempotencyKey = idempotencyKey };
             db.Operaciones.Add(operacion);
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaOrigenId, Moneda = monedaOrigen, Monto = -montoOrigen, Fecha = DateTime.UtcNow });
             dbSaldoOrigenA.Saldo -= montoOrigen;
@@ -141,18 +156,47 @@ public class OperacionService : IOperacionService
         catch (Exception ex) { transaction.Rollback(); return OperacionResult.Error($"Error: {ex.Message}"); }
     }
 
-    private decimal ObtenerLimiteDeuda(AppDbContext db, Cuenta cuenta)
+    /// <summary>
+    /// Resuelve el límite de deuda aplicable a una cuenta Cliente para UNA divisa concreta.
+    /// Cadena de herencia:
+    ///   1. Límite específico de la cuenta para esa divisa (saldos_cuenta.limite_deuda)
+    ///   2. Límite global por divisa (configuracion: limite_deuda_general_{MONEDA})
+    ///   3. Legacy — límite escalar de la cuenta (cuentas.limite_deuda, pre-refactor)
+    ///   4. Legacy — límite global único (configuracion: limite_deuda_general)
+    ///   5. 0 = sin límite (la operación a descubierto se rechaza)
+    /// </summary>
+    private decimal ObtenerLimiteDeuda(AppDbContext db, Cuenta cuenta, SaldoCuenta saldo)
     {
         if (cuenta.Tipo != "Cliente") return 0;
+
+        // 1. Límite específico cuenta+divisa
+        if (saldo.LimiteDeuda > 0)
+            return saldo.LimiteDeuda;
+
+        // 2. Límite global de la divisa
+        if (LeerLimiteConfig(db, $"limite_deuda_general_{saldo.Moneda}") is decimal porDivisa)
+            return porDivisa;
+
+        // 3. Legacy: escalar de la cuenta (compatibilidad con datos pre-refactor)
         if (cuenta.LimiteDeuda.HasValue && cuenta.LimiteDeuda.Value > 0)
             return cuenta.LimiteDeuda.Value;
-        var config = db.ConfiguracionSistema.Find("limite_deuda_general");
+
+        // 4. Legacy: escalar global único
+        if (LeerLimiteConfig(db, "limite_deuda_general") is decimal global)
+            return global;
+
+        return 0;
+    }
+
+    private static decimal? LeerLimiteConfig(AppDbContext db, string clave)
+    {
+        var config = db.ConfiguracionSistema.Find(clave);
         if (config != null && decimal.TryParse(config.Valor,
                 System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out var limGeneral)
-            && limGeneral > 0)
-            return limGeneral;
-        return 0;
+                System.Globalization.CultureInfo.InvariantCulture, out var limite)
+            && limite > 0)
+            return limite;
+        return null;
     }
 
     private OperacionResult? ValidarMonoMonedaEfectivo(AppDbContext db, int cuentaId, string moneda)
@@ -174,5 +218,4 @@ public class OperacionService : IOperacionService
         if (saldo == null) { saldo = new SaldoCuenta { CuentaId = cuentaId, Moneda = moneda, Saldo = 0 }; db.SaldosCuenta.Add(saldo); db.SaveChanges(); }
         return saldo;
     }
-
 }
