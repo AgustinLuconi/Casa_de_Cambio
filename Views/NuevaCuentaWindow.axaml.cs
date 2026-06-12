@@ -8,6 +8,7 @@ using CasaCambio.Shared.Requests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SistemaCambio.Views
 {
@@ -25,9 +26,14 @@ namespace SistemaCambio.Views
         private readonly ICasaCambioApiClient _apiClient;
         private List<SaldoInicialItem> _saldosIniciales = new();
         private int? _cuentaIdAEditar;
+        // La carga de monedas reasigna _saldosIniciales: el modo edición debe esperarla
+        // antes de mergear los saldos de la cuenta, o el merge podría ser pisado.
+        private Task _cargaMonedas = Task.CompletedTask;
 
-        // Columna "LÍMITE ESPECÍFICO" (índice 3): solo visible para cuentas Cliente
-        private Avalonia.Controls.DataGridColumn ColumnaLimite => dgSaldosIniciales.Columns[3];
+        // Columna "LÍMITE ESPECÍFICO": solo visible para cuentas Cliente.
+        // Se busca por header (no por índice) para sobrevivir reordenamientos del XAML.
+        private Avalonia.Controls.DataGridColumn ColumnaLimite =>
+            dgSaldosIniciales.Columns.First(c => c.Header?.ToString() == "LÍMITE ESPECÍFICO");
 
         public NuevaCuentaWindow()
         {
@@ -47,7 +53,7 @@ namespace SistemaCambio.Views
                 gridMonedaEfectivo.IsVisible = esEfectivo;
                 dgSaldosIniciales.IsVisible  = !esEfectivo;
             };
-            CargarMonedasAsync();
+            _cargaMonedas = CargarMonedasAsync();
             VerificarDiaCerradoAsync();
         }
 
@@ -71,7 +77,7 @@ namespace SistemaCambio.Views
             catch (Exception ex) { AppLogger.Warn("VerificarDiaCerradoAsync", ex); }
         }
 
-        private async void CargarMonedasAsync()
+        private async Task CargarMonedasAsync()
         {
             try
             {
@@ -110,6 +116,7 @@ namespace SistemaCambio.Views
 
             try
             {
+                await _cargaMonedas;   // esperar el catálogo antes de mergear (evita carrera)
                 var cuentas = await _apiClient.ObtenerCuentasAsync();
                 var cuenta = cuentas.FirstOrDefault(c => c.Id == _cuentaIdAEditar);
                 if (cuenta != null)
