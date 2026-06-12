@@ -27,7 +27,11 @@ public class OperacionValidator
         if (cuentaOrigenId == cuentaDestinoId && monedaOrigen == monedaDestino) result.AddError("No se puede operar la misma moneda en la misma cuenta");
         var saldoOrigen = db.SaldosCuenta.FirstOrDefault(s => s.CuentaId == cuentaOrigenId && s.Moneda == monedaOrigen);
         decimal saldoDisponible = saldoOrigen?.Saldo ?? 0;
-        if (saldoDisponible < montoOrigen) result.AddError($"Saldo insuficiente en '{cuentaOrigen.Nombre}' ({monedaOrigen})", $"Disponible: {saldoDisponible:N2} | Requerido: {montoOrigen:N2}");
+        // Las cuentas Cliente pueden operar a descubierto: su tope lo decide
+        // OperacionService.ObtenerLimiteDeuda (específico divisa → global divisa → legacy).
+        // Bloquearlas acá dejaba inalcanzable la lógica de límite de deuda.
+        if (cuentaOrigen.Tipo != "Cliente" && saldoDisponible < montoOrigen)
+            result.AddError($"Saldo insuficiente en '{cuentaOrigen.Nombre}' ({monedaOrigen})", $"Disponible: {saldoDisponible:N2} | Requerido: {montoOrigen:N2}");
         return result;
     }
 
@@ -45,7 +49,9 @@ public class OperacionValidator
         if (monedaCredito != monedaDebito && monedaCredito != "ARS" && monedaDebito != "ARS")
             result.AddError("Toda operación cambiaria debe tener ARS como una de las monedas.", $"Recibido: {monedaDebito} → {monedaCredito}");
         var saldoDebito = db.SaldosCuenta.FirstOrDefault(s => s.CuentaId == cuentaDebitoId && s.Moneda == monedaDebito);
-        if ((saldoDebito?.Saldo ?? 0) < montoDebito) result.AddError($"Saldo insuficiente en '{cuentaDebito.Nombre}' ({monedaDebito})");
+        // Cliente a descubierto: el límite por divisa se valida en OperacionService
+        if (cuentaDebito.Tipo != "Cliente" && (saldoDebito?.Saldo ?? 0) < montoDebito)
+            result.AddError($"Saldo insuficiente en '{cuentaDebito.Nombre}' ({monedaDebito})");
         return result;
     }
 
