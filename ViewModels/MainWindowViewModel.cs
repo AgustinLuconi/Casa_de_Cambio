@@ -26,6 +26,8 @@ namespace SistemaCambio.ViewModels
         public string SaldosResumen { get; set; } = "";
         public int CantidadMonedas { get; set; }
         public List<SaldoInfo> Saldos { get; set; } = new();
+        public bool TieneSaldos => Saldos.Count > 0;
+        public bool NoTieneSaldos => Saldos.Count == 0;
     }
 
     public partial class MainWindowViewModel : ViewModelBase

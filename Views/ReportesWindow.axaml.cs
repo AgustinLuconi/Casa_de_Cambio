@@ -29,8 +29,12 @@ namespace SistemaCambio.Views
         {
             try
             {
-                var fechaDesde = dpDesdeOp.SelectedDate?.Date ?? DateTime.Today.AddDays(-30);
-                var fechaHasta = (dpHastaOp.SelectedDate?.Date ?? DateTime.Today).AddDays(1);
+                // El servidor compara contra una columna timestamptz: las fechas DEBEN
+                // viajar como UTC, o Npgsql rechaza el Kind=Unspecified y no llega nada.
+                var fechaDesde = DateTime.SpecifyKind(
+                    dpDesdeOp.SelectedDate?.Date ?? DateTime.Today.AddDays(-30), DateTimeKind.Utc);
+                var fechaHasta = DateTime.SpecifyKind(
+                    (dpHastaOp.SelectedDate?.Date ?? DateTime.Today).AddDays(1), DateTimeKind.Utc);
                 var response = await _apiClient.ObtenerOperacionesAsync(fechaDesde, fechaHasta, pageSize: 500);
                 dgOperaciones.ItemsSource = response.Items;
             }
@@ -45,7 +49,32 @@ namespace SistemaCambio.Views
                 string tipo = itemTipo?.Content?.ToString() ?? "Todos";
                 var cuentas = await _apiClient.ObtenerCuentasAsync();
                 if (tipo != "Todos") cuentas = cuentas.Where(c => c.Tipo == tipo).ToList();
-                dgSaldos.ItemsSource = cuentas.OrderBy(c => c.Nombre).ToList();
+
+                // Aplanar: una fila por (cuenta, saldo). CuentaDto no expone Moneda/Saldo
+                // directamente — viven en la lista Saldos (multi-moneda por cuenta).
+                var filas = new List<SaldoReporteRow>();
+                foreach (var c in cuentas.OrderBy(c => c.Nombre))
+                {
+                    if (c.Saldos.Count > 0)
+                    {
+                        foreach (var s in c.Saldos.OrderBy(s => s.Moneda))
+                            filas.Add(new SaldoReporteRow
+                            {
+                                Id = c.Id, Nombre = c.Nombre, Tipo = c.Tipo,
+                                Moneda = s.Moneda, Saldo = s.Saldo
+                            });
+                    }
+                    else
+                    {
+                        // Cuenta sin saldos: una fila placeholder para que siga visible
+                        filas.Add(new SaldoReporteRow
+                        {
+                            Id = c.Id, Nombre = c.Nombre, Tipo = c.Tipo,
+                            Moneda = "—", Saldo = 0
+                        });
+                    }
+                }
+                dgSaldos.ItemsSource = filas;
             }
             catch (Exception ex) { AppLogger.Warn("BtnGenerarSaldos_Click", ex); }
         }
@@ -68,18 +97,15 @@ namespace SistemaCambio.Views
 
         private async void BtnExportarSaldos_Click(object? sender, RoutedEventArgs e)
         {
-            var cuentas = dgSaldos.ItemsSource as IEnumerable<CuentaDto>;
-            if (cuentas == null || !cuentas.Any()) return;
+            var filas = dgSaldos.ItemsSource as IEnumerable<SaldoReporteRow>;
+            if (filas == null || !filas.Any()) return;
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions { Title = "Guardar Reporte de Saldos", SuggestedFileName = $"saldos_{DateTime.Now:yyyyMMdd}.csv", FileTypeChoices = new[] { new FilePickerFileType("CSV") { Patterns = new[] { "*.csv" } } } });
             if (file != null)
             {
                 var sb = new StringBuilder();
                 sb.AppendLine("ID,Cuenta,Tipo,Moneda,Saldo");
-                foreach (var c in cuentas)
-                {
-                    if (c.Saldos.Any()) { foreach (var s in c.Saldos) sb.AppendLine($"{c.Id},\"{c.Nombre}\",{c.Tipo},{s.Moneda},{s.Saldo}"); }
-                    else sb.AppendLine($"{c.Id},\"{c.Nombre}\",{c.Tipo},,0");
-                }
+                foreach (var f in filas)
+                    sb.AppendLine($"{f.Id},\"{f.Nombre}\",{f.Tipo},{f.Moneda},{f.Saldo}");
                 await using var stream = await file.OpenWriteAsync();
                 await using var writer = new StreamWriter(stream);
                 await writer.WriteAsync(sb.ToString());
@@ -87,5 +113,16 @@ namespace SistemaCambio.Views
         }
 
         private void BtnCerrar_Click(object? sender, RoutedEventArgs e) => Close();
+    }
+
+    // Fila aplanada para la grilla de "Saldos por Cuenta": expone Moneda y Saldo
+    // como propiedades de primer nivel que el DataGrid puede bindear directamente.
+    public class SaldoReporteRow
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Tipo { get; set; } = "";
+        public string Moneda { get; set; } = "";
+        public decimal Saldo { get; set; }
     }
 }

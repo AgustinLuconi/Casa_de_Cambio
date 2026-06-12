@@ -4,49 +4,55 @@
         x:Class="SistemaCambio.Views.DetalleMovimientosWindow"
         x:CompileBindings="False"
         Title="Detalle Movimientos de una Cuenta"
-        Width="900" Height="650"
+        Width="1050" MinWidth="860" Height="650"
         WindowStartupLocation="CenterOwner"
         CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">
 
     <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="16">
-        
+
         <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" 
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
+        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="8" Padding="14,10" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <icon:MaterialIcon Kind="History" Foreground="{DynamicResource AccentBrush}" Width="22" Height="22"/>
-                <TextBlock Text="Detalle Movimientos de una Cuenta" FontWeight="SemiBold" FontSize="14" 
+                <TextBlock Text="Detalle Movimientos de una Cuenta" FontWeight="SemiBold" FontSize="14"
                            Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
             </StackPanel>
         </Border>
 
         <!-- Filters -->
-        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" 
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="8" Padding="16" Margin="0,0,0,16">
             <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="Auto, *, 24, Auto, *">
 
-                <!-- Row 1 -->
+                <!-- Row 1: Cuenta / Cuenta Externa -->
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Cuenta" VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
-                <ComboBox x:Name="cmbCuenta" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+                <ComboBox x:Name="cmbCuenta" Grid.Row="0" Grid.Column="1"
+                          HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
 
                 <TextBlock Grid.Row="0" Grid.Column="3" Text="Cuenta Externa" VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
-                <ComboBox x:Name="cmbCuentaExterna" Grid.Row="0" Grid.Column="4" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+                <ComboBox x:Name="cmbCuentaExterna" Grid.Row="0" Grid.Column="4"
+                          HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
 
-                <!-- Row 2 -->
+                <!-- Row 2: Rango de fechas (habilitado solo con históricos) -->
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Desde" VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
-                <DatePicker x:Name="dpDesde" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+                <DatePicker x:Name="dpDesde" Grid.Row="1" Grid.Column="1"
+                            HorizontalAlignment="Stretch" Margin="0,0,0,8"
+                            IsEnabled="{Binding #chkHistoricos.IsChecked}"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="3" Text="Hasta" VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
-                <DatePicker x:Name="dpHasta" Grid.Row="1" Grid.Column="4" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+                <DatePicker x:Name="dpHasta" Grid.Row="1" Grid.Column="4"
+                            HorizontalAlignment="Stretch" Margin="0,0,0,8"
+                            IsEnabled="{Binding #chkHistoricos.IsChecked}"/>
 
-                <!-- Row 3 -->
+                <!-- Row 3: Moneda / CheckBox históricos -->
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Moneda" VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,0"/>
                 <ComboBox x:Name="cmbMoneda" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch">
@@ -68,19 +74,45 @@
                   IsReadOnly="True">
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="130"/>
-                <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}" Width="120"/>
-                <DataGridTextColumn Header="CUENTA" Binding="{Binding CuentaNombre}" Width="*"/>
-                <DataGridTextColumn Header="MON." Binding="{Binding Moneda}" Width="60"/>
-                <DataGridTextColumn Header="DÉBITO" Binding="{Binding Debito, StringFormat='{}{0:N2}'}" Width="105"/>
-                <DataGridTextColumn Header="CRÉDITO" Binding="{Binding Credito, StringFormat='{}{0:N2}'}" Width="105"/>
-                <DataGridTextColumn Header="OBSERVACIONES" Binding="{Binding Observaciones}" Width="2*"/>
+                <!-- Auto: ocupa exactamente lo que necesita el contenido más ancho -->
+                <DataGridTextColumn Header="FECHA"
+                                    Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                    Width="Auto" MinWidth="120"/>
+
+                <!-- * : se reparten el espacio disponible en partes iguales -->
+                <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}"
+                                    Width="*" MinWidth="80"/>
+                <DataGridTextColumn Header="CUENTA" Binding="{Binding CuentaNombre}"
+                                    Width="*" MinWidth="100"/>
+
+                <!-- Auto: columnas cortas que solo necesitan espacio mínimo -->
+                <DataGridTextColumn Header="MON." Binding="{Binding Moneda}"
+                                    Width="Auto" MinWidth="48"/>
+                <DataGridTextColumn Header="DÉBITO"
+                                    Binding="{Binding Debito, StringFormat='{}{0:N2}'}"
+                                    Width="Auto" MinWidth="90"/>
+                <DataGridTextColumn Header="CRÉDITO"
+                                    Binding="{Binding Credito, StringFormat='{}{0:N2}'}"
+                                    Width="Auto" MinWidth="90"/>
+
+                <!-- Template con wrap: la fila crece con el texto; ToolTip muestra el texto completo -->
+                <DataGridTemplateColumn Header="OBSERVACIONES" Width="2*" MinWidth="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:CompileBindings="False">
+                            <TextBlock Text="{Binding Observaciones}"
+                                       TextWrapping="Wrap"
+                                       Padding="8,4"
+                                       VerticalAlignment="Center"
+                                       ToolTip.Tip="{Binding Observaciones}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
 
         <!-- Footer -->
         <Grid Grid.Row="3" ColumnDefinitions="*, Auto, Auto" Margin="0,16,0,0">
-            <TextBlock Grid.Column="0" x:Name="txtResultados" Text="0 movimientos encontrados" 
+            <TextBlock Grid.Column="0" x:Name="txtResultados" Text="0 movimientos encontrados"
                        Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
             <Button Grid.Column="1" Classes="Primary"
                     Width="110" Height="36"
@@ -91,7 +123,7 @@
                     <TextBlock Text="Buscar" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
-            <Button Grid.Column="2" Content="Cancelar" Classes="Secondary" Width="100" Height="36"
+            <Button Grid.Column="2" Content="Cerrar" Classes="Secondary" Width="100" Height="36"
                     Margin="10,0,0,0" Click="BtnCancelar_Click"/>
         </Grid>
     </Grid>

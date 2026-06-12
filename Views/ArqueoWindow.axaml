@@ -28,7 +28,8 @@
 
             <DataGrid.Columns>
 
-                <DataGridTemplateColumn Header="Código" Width="70" IsReadOnly="True">
+                <!-- Auto: se adapta al ancho de la cabecera "Código" -->
+                <DataGridTemplateColumn Header="Código" Width="Auto" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding CodigoMoneda}"
@@ -37,7 +38,8 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Moneda" Width="2*" IsReadOnly="True">
+                <!-- * : la descripción de la moneda absorbe el espacio sobrante -->
+                <DataGridTemplateColumn Header="Moneda" Width="*" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding NombreMoneda}"
@@ -46,7 +48,8 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Saldo" Width="*" IsReadOnly="True">
+                <!-- Auto + MinWidth: los valores numéricos ocupan lo justo, legibles -->
+                <DataGridTemplateColumn Header="Saldo" Width="Auto" MinWidth="100" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding SaldoSistema, StringFormat='{}{0:N2}'}"
@@ -57,7 +60,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Arqueo" Width="*">
+                <DataGridTemplateColumn Header="Arqueo" Width="Auto" MinWidth="110">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding ArqueoFisico, StringFormat='{}{0:N2}'}"
@@ -76,7 +79,7 @@
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Diferencia" Width="*" IsReadOnly="True">
+                <DataGridTemplateColumn Header="Diferencia" Width="Auto" MinWidth="110" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Diferencia, StringFormat='{}{0:N2}'}"

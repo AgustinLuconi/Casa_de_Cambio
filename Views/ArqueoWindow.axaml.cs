@@ -54,23 +54,32 @@ namespace SistemaCambio.Views
                 await System.Threading.Tasks.Task.WhenAll(cuentasTask, monedasTask);
 
                 var cajas = cuentasTask.Result.Where(c => c.Tipo == "Efectivo").ToList();
-                var catalogoMonedas = monedasTask.Result;
+                var catalogoMonedas = monedasTask.Result;   // ya filtradas por Activa en el server
 
-                var agregados = cajas
-                    .SelectMany(c => c.Saldos.Select(s => new { Cuenta = c, Saldo = s }))
-                    .GroupBy(x => x.Saldo.Moneda)
-                    .OrderBy(g => g.Key)
-                    .Select(g => new ArqueoItemViewModel
+                // Indexar los saldos de caja por moneda una sola vez (lado opcional del left join)
+                var saldosPorMoneda = cajas
+                    .SelectMany(c => c.Saldos.Select(s => new { Cuenta = c, s.Moneda, s.Saldo }))
+                    .GroupBy(x => x.Moneda)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                // Recorrer TODAS las monedas activas del catálogo, no solo las que tienen saldo.
+                // Una moneda sin saldo en caja igual aparece con Saldo/Arqueo/Diferencia en 0,00.
+                foreach (var moneda in catalogoMonedas.OrderBy(m => m.Codigo))
+                {
+                    saldosPorMoneda.TryGetValue(moneda.Codigo, out var entradas);
+                    decimal saldoSistema = entradas?.Sum(x => x.Saldo) ?? 0m;
+                    var cajasMoneda = entradas?.Select(x => (x.Cuenta.Id, x.Saldo)).ToList()
+                                      ?? new List<(int, decimal)>();
+
+                    _items.Add(new ArqueoItemViewModel
                     {
-                        CodigoMoneda = g.Key,
-                        NombreMoneda = catalogoMonedas.FirstOrDefault(m => m.Codigo == g.Key)?.Nombre ?? g.Key,
-                        SaldoSistema = g.Sum(x => x.Saldo.Saldo),
-                        ArqueoFisico = g.Sum(x => x.Saldo.Saldo),
-                        Cajas = g.Select(x => (x.Cuenta.Id, x.Saldo.Saldo)).ToList()
+                        CodigoMoneda = moneda.Codigo,
+                        NombreMoneda = moneda.Nombre,
+                        SaldoSistema = saldoSistema,
+                        ArqueoFisico = saldoSistema,
+                        Cajas = cajasMoneda
                     });
-
-                foreach (var item in agregados)
-                    _items.Add(item);
+                }
             }
             catch (Exception ex) { NotificationService.Error("Error al cargar datos", ex.Message); }
         }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -12,8 +13,8 @@ namespace SistemaCambio.Views
     public partial class DetalleMovimientosWindow : Window
     {
         private readonly ICasaCambioApiClient _apiClient;
-        private ObservableCollection<MovimientoDetalle> _movimientos = new();
-        private System.Collections.Generic.List<CasaCambio.Shared.DTOs.CuentaDto> _cuentasCache = new();
+        private readonly ObservableCollection<MovimientoDetalle> _movimientos = new();
+        private List<CasaCambio.Shared.DTOs.CuentaDto> _cuentasCache = new();
 
         public DetalleMovimientosWindow()
         {
@@ -40,7 +41,12 @@ namespace SistemaCambio.Views
                 cmbCuenta.SelectedIndex = 0;
                 cmbCuentaExterna.SelectedIndex = 0;
 
-                var monedas = _cuentasCache.SelectMany(c => c.Saldos).Select(s => s.Moneda).Distinct().OrderBy(m => m).ToList();
+                var monedas = _cuentasCache
+                    .SelectMany(c => c.Saldos)
+                    .Select(s => s.Moneda)
+                    .Distinct()
+                    .OrderBy(m => m)
+                    .ToList();
                 foreach (var moneda in monedas)
                     cmbMoneda.Items.Add(new ComboBoxItem { Content = moneda, Tag = moneda });
                 if (cmbMoneda.Items.Count > 0) cmbMoneda.SelectedIndex = 0;
@@ -57,45 +63,80 @@ namespace SistemaCambio.Views
             var itemCuenta = cmbCuenta.SelectedItem as ComboBoxItem;
             int cuentaId = itemCuenta?.Tag is int id ? id : 0;
 
-            DateTime fechaDesde = DateTime.SpecifyKind(dpDesde.SelectedDate?.DateTime ?? DateTime.Today, DateTimeKind.Utc);
-            DateTime fechaHasta = DateTime.SpecifyKind((dpHasta.SelectedDate?.DateTime ?? DateTime.Today).AddDays(1), DateTimeKind.Utc);
+            // Cuando no se buscan históricos, el rango es solo hoy
+            bool usarRango = chkHistoricos.IsChecked ?? false;
+            DateTime fechaDesde = DateTime.SpecifyKind(
+                usarRango ? dpDesde.SelectedDate?.DateTime ?? DateTime.Today : DateTime.Today,
+                DateTimeKind.Utc);
+            DateTime fechaHasta = DateTime.SpecifyKind(
+                (usarRango ? dpHasta.SelectedDate?.DateTime ?? DateTime.Today : DateTime.Today).AddDays(1),
+                DateTimeKind.Utc);
 
+            // ── Fetch ────────────────────────────────────────────────────
+            var todos = new List<MovimientoDetalle>();
             try
             {
                 if (cuentaId > 0)
                 {
-                    var movimientosPage = await _apiClient.ObtenerMovimientosCuentaAsync(cuentaId, fechaDesde, fechaHasta);
-                    foreach (var mov in movimientosPage.Items)
-                    {
-                        _movimientos.Add(new MovimientoDetalle
+                    var pagina = await _apiClient.ObtenerMovimientosCuentaAsync(cuentaId, fechaDesde, fechaHasta);
+                    foreach (var mov in pagina.Items)
+                        todos.Add(new MovimientoDetalle
                         {
-                            Id = mov.Id, Fecha = mov.Fecha, TipoOperacion = "",
-                            CuentaNombre = mov.NombreCuenta, Moneda = mov.Moneda,
-                            Debito = mov.Monto < 0 ? Math.Abs(mov.Monto) : 0,
-                            Credito = mov.Monto > 0 ? mov.Monto : 0, Observaciones = ""
+                            Id            = mov.Id,
+                            Fecha         = mov.Fecha,
+                            TipoOperacion = "",
+                            CuentaNombre  = mov.NombreCuenta,
+                            Moneda        = mov.Moneda,
+                            Debito        = mov.Monto < 0 ? Math.Abs(mov.Monto) : 0,
+                            Credito       = mov.Monto > 0 ? mov.Monto : 0,
+                            Observaciones = ""
                         });
-                    }
                 }
                 else
                 {
-                    // All accounts: get operations instead
                     var ops = await _apiClient.ObtenerOperacionesAsync(fechaDesde, fechaHasta, pageSize: 200);
                     foreach (var op in ops.Items)
-                    {
                         foreach (var mov in op.Movimientos)
-                        {
-                            _movimientos.Add(new MovimientoDetalle
+                            todos.Add(new MovimientoDetalle
                             {
-                                Id = mov.Id, Fecha = mov.Fecha, TipoOperacion = op.TipoOperacion,
-                                CuentaNombre = mov.NombreCuenta, Moneda = mov.Moneda,
-                                Debito = mov.Monto < 0 ? Math.Abs(mov.Monto) : 0,
-                                Credito = mov.Monto > 0 ? mov.Monto : 0, Observaciones = op.Observaciones ?? ""
+                                Id            = mov.Id,
+                                Fecha         = mov.Fecha,
+                                TipoOperacion = op.TipoOperacion,
+                                CuentaNombre  = mov.NombreCuenta,
+                                Moneda        = mov.Moneda,
+                                Debito        = mov.Monto < 0 ? Math.Abs(mov.Monto) : 0,
+                                Credito       = mov.Monto > 0 ? mov.Monto : 0,
+                                Observaciones = op.Observaciones ?? ""
                             });
-                        }
-                    }
                 }
             }
             catch (Exception ex) { AppLogger.Warn("BtnBuscar_Click", ex); }
+
+            // ── Filtros cliente (lazy LINQ) ───────────────────────────────
+            IEnumerable<MovimientoDetalle> resultado = todos;
+
+            // Filtro por Moneda
+            if (cmbMoneda.SelectedItem is ComboBoxItem monedaItem
+                && monedaItem.Tag is string monedaTag
+                && !string.IsNullOrEmpty(monedaTag)
+                && monedaItem.Content?.ToString() != "Todas")
+            {
+                resultado = resultado.Where(m => m.Moneda == monedaTag);
+            }
+
+            // Filtro por Cuenta Externa: muestra solo movimientos cuyo NombreCuenta
+            // coincide con la cuenta externa seleccionada
+            if (cmbCuentaExterna.SelectedItem is ComboBoxItem extItem
+                && extItem.Tag is int extId && extId > 0)
+            {
+                var nombreExt = extItem.Content?.ToString() ?? "";
+                if (!string.IsNullOrEmpty(nombreExt) && nombreExt != "Todas")
+                    resultado = resultado.Where(m => m.CuentaNombre == nombreExt);
+            }
+
+            // Materializar el resultado en la colección observable
+            foreach (var m in resultado)
+                _movimientos.Add(m);
 
             txtResultados.Text = $"{_movimientos.Count} movimiento(s) encontrado(s)";
         }

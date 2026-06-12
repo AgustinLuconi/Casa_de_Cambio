@@ -433,17 +433,64 @@
                           IsReadOnly="True">
                     
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
-                        <DataGridTextColumn Header="CUENTA" Binding="{Binding Nombre}" Width="*" FontWeight="SemiBold"/>
-                        <DataGridTextColumn Header="TIPO" Binding="{Binding Tipo}" Width="110"/>
-                        <DataGridTextColumn Header="SALDOS" Binding="{Binding SaldosResumen}" Width="320"/>
-                        <DataGridTemplateColumn Header="" Width="150">
+                        <!-- ID: ancho fijo compacto -->
+                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="55"/>
+
+                        <!-- CUENTA: ancho reducido, solo lo necesario para nombres típicos -->
+                        <DataGridTextColumn Header="CUENTA" Binding="{Binding Nombre}" Width="165" MinWidth="100" FontWeight="SemiBold"/>
+
+                        <!-- TIPO: reducido al mínimo legible -->
+                        <DataGridTextColumn Header="TIPO" Binding="{Binding Tipo}" Width="85" MinWidth="70"/>
+
+                        <!-- SALDOS: toma todo el espacio central disponible -->
+                        <DataGridTemplateColumn Header="SALDOS" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:CompileBindings="False">
+                                    <Panel VerticalAlignment="Center" Margin="10,0">
+                                        <!-- Lista horizontal de saldos cuando existen -->
+                                        <ItemsControl ItemsSource="{Binding Saldos}"
+                                                      IsVisible="{Binding TieneSaldos}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" Spacing="24"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:CompileBindings="False">
+                                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                                        <TextBlock Text="{Binding Moneda, StringFormat='[{0}]'}"
+                                                                   Foreground="#94a3b8"
+                                                                   FontSize="11" FontWeight="SemiBold"
+                                                                   VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding Saldo, StringFormat='{}{0:N2}'}"
+                                                                   Foreground="White"
+                                                                   FontSize="11"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <!-- Texto sutil cuando no hay saldos -->
+                                        <TextBlock Text="Sin saldos"
+                                                   IsVisible="{Binding NoTieneSaldos}"
+                                                   Foreground="#4B5563"
+                                                   FontSize="11" FontStyle="Italic"
+                                                   VerticalAlignment="Center"/>
+                                    </Panel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- ACCIONES: botones con espaciado cómodo -->
+                        <DataGridTemplateColumn Header="" Width="185">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel x:CompileBindings="False" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <!-- Ver Detalles: con etiqueta visible -->
+                                    <StackPanel x:CompileBindings="False" Orientation="Horizontal" Spacing="10"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                Margin="6,0">
+                                        <!-- Ver Detalles -->
                                         <Button Background="#1A16A34A" BorderBrush="#3316A34A" BorderThickness="1"
-                                                CornerRadius="6" Padding="8,4" Margin="0"
+                                                CornerRadius="6" Padding="8,5"
                                                 Cursor="Hand" ToolTip.Tip="Ver todos los saldos de esta cuenta"
                                                 Command="{Binding #cuentasPanel.DataContext.VerDetalleCuentaCommand}"
                                                 CommandParameter="{Binding}">
@@ -453,14 +500,14 @@
                                             </StackPanel>
                                         </Button>
                                         <!-- Editar -->
-                                        <Button Classes="Secondary" Background="Transparent" Padding="4" Margin="0"
+                                        <Button Classes="Secondary" Background="Transparent" Padding="6,5"
                                                 Cursor="Hand" ToolTip.Tip="Editar Cuenta"
                                                 Command="{Binding #cuentasPanel.DataContext.EditarCuentaCommand}"
                                                 CommandParameter="{Binding}">
                                             <icon:MaterialIcon Kind="Pencil" Width="15" Height="15" Foreground="{DynamicResource AccentBrush}"/>
                                         </Button>
                                         <!-- Eliminar -->
-                                        <Button Classes="Danger" Background="Transparent" Padding="4" Margin="0"
+                                        <Button Classes="Danger" Background="Transparent" Padding="6,5"
                                                 Cursor="Hand" ToolTip.Tip="Eliminar Cuenta"
                                                 Command="{Binding #cuentasPanel.DataContext.EliminarCuentaCommand}"
                                                 CommandParameter="{Binding}">

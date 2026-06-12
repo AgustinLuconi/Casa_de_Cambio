@@ -83,22 +83,39 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Límite de Deuda General -->
+                    <!-- Límites de Deuda Generales por Divisa -->
                     <Border Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="1" CornerRadius="8" Padding="20">
                         <StackPanel Spacing="10">
-                            <TextBlock Text="Límite de Deuda General" FontWeight="SemiBold"
+                            <TextBlock Text="Límites de Deuda Generales por Divisa" FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14"/>
-                            <TextBlock Text="Se aplica a cuentas de tipo Cliente sin límite específico. 0 = sin límite."
+                            <TextBlock Text="Se aplican a cuentas de tipo Cliente sin límite específico para esa divisa. 0 = sin límite."
                                        Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                            <Grid ColumnDefinitions="*, Auto" Margin="0,5,0,0">
-                                <TextBox x:Name="txtLimiteDeudaGeneral" Watermark="0 (sin límite)" TextAlignment="Right"
-                                         helpers:NumericInput.Enabled="True"/>
-                                <Button Grid.Column="1" Content="Guardar" Background="{DynamicResource AccentBrush}"
-                                        Foreground="White" CornerRadius="6" Margin="15,0,0,0" Cursor="Hand"
-                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                        Click="BtnGuardarLimiteDeuda_Click"/>
-                            </Grid>
+
+                            <!-- Una fila por moneda activa: código + nombre + límite editable -->
+                            <ItemsControl x:Name="icLimitesDivisa" Margin="0,5,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="70, *, 180" Margin="0,3">
+                                            <TextBlock Text="{Binding Codigo}" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Nombre}"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       VerticalAlignment="Center" Margin="8,0"/>
+                                            <TextBox Grid.Column="2" Text="{Binding LimiteTexto, Mode=TwoWay}"
+                                                     Watermark="0 (sin límite)" TextAlignment="Right"
+                                                     helpers:NumericInput.Enabled="True"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Button Content="Guardar Límites" Background="{DynamicResource AccentBrush}"
+                                    Foreground="White" CornerRadius="6" Cursor="Hand"
+                                    HorizontalAlignment="Right" Padding="14,8"
+                                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                    Click="BtnGuardarLimitesDivisa_Click"/>
                         </StackPanel>
                     </Border>
 

@@ -6,12 +6,12 @@
         x:Class="SistemaCambio.Views.NuevaCuentaWindow"
         x:CompileBindings="False"
         Title="Nueva Cuenta"
-        Width="550" Height="500"
+        Width="640" Height="500"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
         Background="{DynamicResource AppBackgroundBrush}">
 
-    <Grid RowDefinitions="Auto, Auto, Auto, Auto, *, Auto" Margin="20">
+    <Grid RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="20">
         
         <!-- Header -->
         <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" 
@@ -30,10 +30,12 @@
             <TextBox x:Name="txtNombre" Grid.Column="1" Watermark="Nombre de la cuenta"/>
         </Grid>
 
-        <!-- Type -->
+        <!-- Type: sin selección inicial — el usuario debe elegir explícitamente -->
         <Grid Grid.Row="2" ColumnDefinitions="120, *" Margin="0,0,0,16">
             <TextBlock Text="Tipo" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <ComboBox x:Name="cmbTipo" Grid.Column="1" HorizontalAlignment="Stretch" SelectedIndex="0">
+            <ComboBox x:Name="cmbTipo" Grid.Column="1" HorizontalAlignment="Stretch"
+                      PlaceholderText="Seleccione un tipo..."
+                      PlaceholderForeground="{DynamicResource SecondaryTextBrush}">
                 <ComboBoxItem>Efectivo</ComboBoxItem>
                 <ComboBoxItem>Banco</ComboBoxItem>
                 <ComboBoxItem>Cliente</ComboBoxItem>
@@ -41,21 +43,9 @@
             </ComboBox>
         </Grid>
 
-        <!-- Límite Deuda (solo para tipo Cliente) -->
-        <Grid x:Name="gridLimiteDeuda" Grid.Row="3" ColumnDefinitions="120, *"
-              Margin="0,0,0,10" IsVisible="False">
-            <TextBlock Text="Límite Deuda" VerticalAlignment="Center"
-                       Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <StackPanel Grid.Column="1" Spacing="4">
-                <TextBox x:Name="txtLimiteDeuda" Watermark="0 = usar límite general"
-                         helpers:NumericInput.Enabled="True"/>
-                <TextBlock Text="Vacío o 0 = usa el límite general del sistema."
-                           Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11"/>
-            </StackPanel>
-        </Grid>
-
-        <!-- Initial Balances -->
-        <Border Grid.Row="4" Background="{DynamicResource CardBackgroundBrush}"
+        <!-- Initial Balances: oculto hasta que el usuario elija un tipo -->
+        <Border x:Name="borderSaldos" Grid.Row="3" IsVisible="False"
+                Background="{DynamicResource CardBackgroundBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="8" Padding="16" Margin="0,0,0,16">
             <Grid RowDefinitions="Auto, *">
@@ -68,14 +58,27 @@
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                           HorizontalGridLinesBrush="{DynamicResource BorderBrush}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="100"/>
+                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="80"/>
                         <DataGridTextColumn Header="NOMBRE" Binding="{Binding Nombre}" Width="*"/>
-                        <DataGridTemplateColumn Header="SALDO INICIAL" Width="150">
+                        <DataGridTemplateColumn Header="SALDO INICIAL" Width="130">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBox Text="{Binding Saldo, Mode=TwoWay}" Background="Transparent"
                                              BorderThickness="0" Foreground="{DynamicResource PrimaryTextBrush}"
                                              Padding="5,3" TextAlignment="Right"
+                                             helpers:NumericInput.Enabled="True"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- Solo visible para cuentas tipo Cliente (índice 3, ver code-behind) -->
+                        <DataGridTemplateColumn Header="LÍMITE ESPECÍFICO" Width="140">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding LimiteDeudaPersonalizado, Mode=TwoWay}" Background="Transparent"
+                                             BorderThickness="0" Foreground="{DynamicResource PrimaryTextBrush}"
+                                             Padding="5,3" TextAlignment="Right"
+                                             Watermark="0 = Límite general"
+                                             ToolTip.Tip="0 = hereda el límite general configurado para esta divisa"
                                              helpers:NumericInput.Enabled="True"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -105,7 +108,7 @@
         </Border>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
             <Button x:Name="btnGuardar" Content="Guardar" Classes="Primary"
                     Width="110" Height="36"
                     IsDefault="True"
@@ -114,7 +117,7 @@
                     Click="BtnCancelar_Click"/>
         </StackPanel>
         <controls:NotificationPanel x:Name="notificationPanel"
-                                         Grid.RowSpan="6"
+                                         Grid.RowSpan="5"
                                          VerticalAlignment="Top"
                                          HorizontalAlignment="Right"
                                          ZIndex="100"/>

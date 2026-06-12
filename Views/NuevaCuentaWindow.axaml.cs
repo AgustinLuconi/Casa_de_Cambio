@@ -16,6 +16,8 @@ namespace SistemaCambio.Views
         public string Moneda { get; set; } = "";
         public string Nombre { get; set; } = "";
         public decimal Saldo { get; set; }
+        /// <summary>Límite de deuda específico para esta divisa. 0 = hereda el límite general.</summary>
+        public decimal LimiteDeudaPersonalizado { get; set; }
     }
 
     public partial class NuevaCuentaWindow : Window
@@ -24,16 +26,23 @@ namespace SistemaCambio.Views
         private List<SaldoInicialItem> _saldosIniciales = new();
         private int? _cuentaIdAEditar;
 
+        // Columna "LÍMITE ESPECÍFICO" (índice 3): solo visible para cuentas Cliente
+        private Avalonia.Controls.DataGridColumn ColumnaLimite => dgSaldosIniciales.Columns[3];
+
         public NuevaCuentaWindow()
         {
             _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
             InitializeComponent();
             NotificationService.Initialize(notificationPanel);
             Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
+            // El combo arranca SIN selección: la sección de saldos permanece oculta
+            // hasta que el usuario elija un tipo. Como el handler se suscribe antes de
+            // cualquier selección posible, el primer cambio ya renderiza consistente.
             cmbTipo.SelectionChanged += (s, e) =>
             {
                 var tipo = (cmbTipo.SelectedItem as ComboBoxItem)?.Content?.ToString();
-                gridLimiteDeuda.IsVisible    = tipo == "Cliente";
+                borderSaldos.IsVisible       = tipo != null;
+                ColumnaLimite.IsVisible      = tipo == "Cliente";
                 bool esEfectivo              = tipo == "Efectivo";
                 gridMonedaEfectivo.IsVisible = esEfectivo;
                 dgSaldosIniciales.IsVisible  = !esEfectivo;
@@ -114,15 +123,21 @@ namespace SistemaCambio.Views
                     foreach (var saldoDB in cuenta.Saldos)
                     {
                         var saldoLocal = _saldosIniciales.FirstOrDefault(s => s.Moneda == saldoDB.Moneda);
-                        if (saldoLocal != null) saldoLocal.Saldo = saldoDB.Saldo;
-                        else _saldosIniciales.Add(new SaldoInicialItem { Moneda = saldoDB.Moneda, Nombre = saldoDB.Moneda, Saldo = saldoDB.Saldo });
+                        if (saldoLocal != null)
+                        {
+                            saldoLocal.Saldo = saldoDB.Saldo;
+                            saldoLocal.LimiteDeudaPersonalizado = saldoDB.LimiteDeudaPersonalizado;
+                        }
+                        else _saldosIniciales.Add(new SaldoInicialItem
+                        {
+                            Moneda = saldoDB.Moneda, Nombre = saldoDB.Moneda, Saldo = saldoDB.Saldo,
+                            LimiteDeudaPersonalizado = saldoDB.LimiteDeudaPersonalizado
+                        });
                     }
                     dgSaldosIniciales.ItemsSource = null;
                     dgSaldosIniciales.ItemsSource = _saldosIniciales;
 
-                    gridLimiteDeuda.IsVisible = cuenta.Tipo == "Cliente";
-                    if (cuenta.Tipo == "Cliente" && cuenta.LimiteDeuda.HasValue && cuenta.LimiteDeuda.Value > 0)
-                        txtLimiteDeuda.Text = cuenta.LimiteDeuda.Value.ToString("N2");
+                    ColumnaLimite.IsVisible = cuenta.Tipo == "Cliente";
 
                     bool esEfectivo              = cuenta.Tipo == "Efectivo";
                     gridMonedaEfectivo.IsVisible = esEfectivo;
@@ -149,11 +164,12 @@ namespace SistemaCambio.Views
             if (string.IsNullOrEmpty(nombre)) return;
 
             var itemTipo = cmbTipo.SelectedItem as ComboBoxItem;
-            string tipo = itemTipo?.Content?.ToString() ?? "Efectivo";
-
-            decimal? limiteDeuda = null;
-            if (gridLimiteDeuda.IsVisible && decimal.TryParse(txtLimiteDeuda.Text, out var ld) && ld > 0)
-                limiteDeuda = ld;
+            string? tipo = itemTipo?.Content?.ToString();
+            if (tipo == null)
+            {
+                NotificationService.Warning("Tipo requerido", "Seleccione el tipo de cuenta antes de guardar.");
+                return;
+            }
 
             var saldos = new List<SaldoCuentaDto>();
             if (tipo == "Efectivo")
@@ -165,10 +181,17 @@ namespace SistemaCambio.Views
             else
             {
                 foreach (var s in _saldosIniciales)
-                    saldos.Add(new SaldoCuentaDto { Moneda = s.Moneda, Saldo = s.Saldo });
+                    saldos.Add(new SaldoCuentaDto
+                    {
+                        Moneda = s.Moneda,
+                        Saldo = s.Saldo,
+                        // Solo cuentas Cliente llevan límite específico por divisa
+                        LimiteDeudaPersonalizado = tipo == "Cliente" ? s.LimiteDeudaPersonalizado : 0
+                    });
             }
 
-            var request = new CrearCuentaRequest { Nombre = nombre, Tipo = tipo, LimiteDeuda = limiteDeuda, Saldos = saldos };
+            // LimiteDeuda escalar (legacy) ya no se envía: el modelo nuevo es por divisa
+            var request = new CrearCuentaRequest { Nombre = nombre, Tipo = tipo, LimiteDeuda = null, Saldos = saldos };
 
             try
             {

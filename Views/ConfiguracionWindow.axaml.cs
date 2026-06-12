@@ -27,7 +27,6 @@ namespace SistemaCambio.Views
             Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             dpFechaCotizacion.SelectedDate = new DateTimeOffset(DateTime.Today);
             CargarMonedasAsync();
-            CargarLimiteDeudaAsync();
         }
 
         private void ToggleTema_Changed(object? sender, RoutedEventArgs e)
@@ -43,6 +42,7 @@ namespace SistemaCambio.Views
                 var monedas = await _apiClient.ObtenerMonedasAsync();
                 dgMonedas.ItemsSource = monedas;
                 CargarMonedaCombo(monedas);
+                await CargarLimitesDivisaAsync(monedas);
             }
             catch (Exception ex) { await DialogHelper.MensajeAsync(this,"Error", ex.Message); }
         }
@@ -152,29 +152,60 @@ namespace SistemaCambio.Views
             catch (Exception ex) { await DialogHelper.MensajeAsync(this,"Error", ex.Message); }
         }
 
-        private async void CargarLimiteDeudaAsync()
+        // ── Límites de deuda generales por divisa ────────────────────
+        // Clave de configuración por moneda: limite_deuda_general_{CODIGO}
+
+        private readonly System.Collections.ObjectModel.ObservableCollection<LimiteDivisaModel> _limitesDivisa = new();
+
+        private async System.Threading.Tasks.Task CargarLimitesDivisaAsync(List<MonedaDto> monedas)
         {
             try
             {
-                var valor = await _apiClient.ObtenerConfiguracionAsync("limite_deuda_general");
-                if (valor != null) txtLimiteDeudaGeneral.Text = valor;
+                _limitesDivisa.Clear();
+                // Una consulta por divisa, lanzadas en paralelo
+                var tareas = monedas.OrderBy(m => m.Codigo).Select(async m =>
+                {
+                    var valor = await _apiClient.ObtenerConfiguracionAsync($"limite_deuda_general_{m.Codigo}");
+                    return new LimiteDivisaModel
+                    {
+                        Codigo = m.Codigo,
+                        Nombre = m.Nombre,
+                        LimiteTexto = valor ?? "0"
+                    };
+                }).ToList();
+
+                foreach (var item in await System.Threading.Tasks.Task.WhenAll(tareas))
+                    _limitesDivisa.Add(item);
+
+                icLimitesDivisa.ItemsSource = _limitesDivisa;
             }
-            catch (Exception ex) { AppLogger.Warn("CargarLimiteDeudaAsync", ex); }
+            catch (Exception ex) { AppLogger.Warn("CargarLimitesDivisaAsync", ex); }
         }
 
-        private async void BtnGuardarLimiteDeuda_Click(object? sender, RoutedEventArgs e)
+        private async void BtnGuardarLimitesDivisa_Click(object? sender, RoutedEventArgs e)
         {
-            var texto = txtLimiteDeudaGeneral.Text?.Trim() ?? "0";
-            if (!decimal.TryParse(texto, out var limite) || limite < 0)
+            var errores = new List<string>();
+            int guardados = 0;
+
+            foreach (var item in _limitesDivisa)
             {
-                await DialogHelper.MensajeAsync(this,"Error", "Ingrese un valor numérico válido (0 o mayor).");
-                return;
+                decimal limite = MontoHelper.Parsear(item.LimiteTexto);
+                if (limite < 0)
+                {
+                    errores.Add($"{item.Codigo}: el límite no puede ser negativo.");
+                    continue;
+                }
+                var ok = await _apiClient.ActualizarConfiguracionAsync(
+                    $"limite_deuda_general_{item.Codigo}",
+                    limite.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                if (ok) guardados++;
+                else errores.Add($"{item.Codigo}: no se pudo guardar.");
             }
-            var ok = await _apiClient.ActualizarConfiguracionAsync("limite_deuda_general", limite.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            if (ok)
-                await DialogHelper.MensajeAsync(this,"Éxito", $"Límite de deuda general actualizado a {limite:N2}.");
+
+            if (errores.Any())
+                await DialogHelper.MensajeAsync(this, "Error", string.Join("\n", errores));
             else
-                await DialogHelper.MensajeAsync(this,"Error", "No se pudo guardar la configuración.");
+                await DialogHelper.MensajeAsync(this, "Éxito", $"Límites de deuda actualizados para {guardados} divisa(s).");
         }
 
         private void BtnCerrar_Click(object? sender, RoutedEventArgs e) => Close();
@@ -187,5 +218,13 @@ namespace SistemaCambio.Views
         public DateTime Fecha { get; set; }
         public decimal CotizacionCompra { get; set; }
         public decimal CotizacionVenta { get; set; }
+    }
+
+    /// <summary>Fila editable del límite de deuda global para una divisa.</summary>
+    public class LimiteDivisaModel
+    {
+        public string Codigo { get; set; } = "";
+        public string Nombre { get; set; } = "";
+        public string LimiteTexto { get; set; } = "0";
     }
 }
