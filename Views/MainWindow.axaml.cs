@@ -30,6 +30,17 @@ public partial class MainWindow : Window
     private bool _historialVisible;
     private int _notificacionesNoVistas;
 
+    // Color fijo por moneda: la misma divisa siempre se ve del mismo color en la torta
+    private static readonly Dictionary<string, string> _coloresMoneda = new()
+    {
+        ["ARS"] = "#13a4ec", ["USD"] = "#22c55e", ["EUR"] = "#eab308",
+        ["BRL"] = "#f97316", ["CLP"] = "#a855f7", ["CAN"] = "#ef4444",
+        ["GBP"] = "#ec4899", ["UYU"] = "#14b8a6",
+    };
+    // Paleta de respaldo para monedas sin color asignado arriba
+    private static readonly string[] _paletaRespaldo =
+        { "#13a4ec", "#22c55e", "#eab308", "#f97316", "#a855f7", "#94a3b8" };
+
     public MainWindow()
     {
         _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
@@ -58,10 +69,8 @@ public partial class MainWindow : Window
                 _viewModel.DashboardCargado += dashboard =>
                     Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        txtTotalCuentas.Text   = dashboard.TotalOperacionesHoy.ToString();
-                        txtOperacionesHoy.Text = (dashboard.TotalComprasHoy + dashboard.TotalVentasHoy).ToString();
-                        txtSaldoUSD.Text = $"${dashboard.SaldosCaja.Where(s => s.Moneda == "USD").Sum(s => s.Saldo):N2}";
-                        txtSaldoARS.Text = $"${dashboard.SaldosCaja.Where(s => s.Moneda == "ARS").Sum(s => s.Saldo):N2}";
+                        txtTotalCuentas.Text   = dashboard.TotalCuentas.ToString();
+                        txtOperacionesHoy.Text = dashboard.TotalOperacionesHoy.ToString();
                         PoblarGraficoSaldos(dashboard);
                         PoblarGraficoPie(dashboard);
                         PoblarGraficoOperacionesDiarias(dashboard);
@@ -136,15 +145,14 @@ public partial class MainWindow : Window
             .Take(8).ToList();
         if (!monedas.Any()) { MostrarSinDatos(pltBalanceEvolution.Plot); pltBalanceEvolution.Refresh(); return; }
 
-        var values = monedas.Select(s => (double)Math.Abs(s.Saldo)).ToArray();
-        var bar = pltBalanceEvolution.Plot.Add.Bars(values);
-        var barList = bar.Bars.ToList();
-        for (int i = 0; i < monedas.Count; i++)
-        {
-            barList[i].FillColor = monedas[i].Saldo >= 0
-                ? ScottPlot.Color.FromHex("#13a4ec")
-                : ScottPlot.Color.FromHex("#ef4444");
-        }
+        // Gráfico de línea: un punto por moneda unidos por la línea
+        var xs = Enumerable.Range(1, monedas.Count).Select(i => (double)i).ToArray();
+        var ys = monedas.Select(s => (double)s.Saldo).ToArray();
+        var linea = pltBalanceEvolution.Plot.Add.Scatter(xs, ys);
+        linea.Color      = ScottPlot.Color.FromHex("#13a4ec");
+        linea.LineWidth  = 2.5f;
+        linea.MarkerSize = 9;
+
         var tickGen = new ScottPlot.TickGenerators.NumericManual();
         for (int i = 0; i < monedas.Count; i++)
             tickGen.AddMajor(i + 1, monedas[i].Moneda);
@@ -163,13 +171,20 @@ public partial class MainWindow : Window
             .Take(6).ToList();
         if (!positivos.Any()) { MostrarSinDatos(pltCurrencyDistribution.Plot); pltCurrencyDistribution.Refresh(); return; }
 
+        double total = positivos.Sum(s => (double)s.Saldo);
         var pie = pltCurrencyDistribution.Plot.Add.Pie(
             positivos.Select(s => (double)s.Saldo).ToArray());
-        var colores = new[] { "#13a4ec", "#0d79b3", "#1e3441", "#22c55e", "#eab308", "#94a3b8" };
+        pie.SliceLabelDistance = 1.3;   // empuja el % apenas afuera de cada porción
+
         for (int i = 0; i < pie.Slices.Count; i++)
         {
-            pie.Slices[i].Label     = positivos[i].Moneda;
-            pie.Slices[i].FillColor = ScottPlot.Color.FromHex(colores[i % colores.Length]);
+            double pct = total > 0 ? (double)positivos[i].Saldo / total * 100 : 0;
+            var hex = _coloresMoneda.TryGetValue(positivos[i].Moneda, out var c)
+                ? c : _paletaRespaldo[i % _paletaRespaldo.Length];
+            pie.Slices[i].FillColor = ScottPlot.Color.FromHex(hex);
+            // La leyenda muestra moneda + % (siempre visible); el % también va sobre la porción
+            pie.Slices[i].Label     = $"{positivos[i].Moneda}  {pct:N1}%";
+            pie.Slices[i].LabelText = $"{pct:N1}%";
         }
         pltCurrencyDistribution.Plot.ShowLegend();
         ConfigurarTemaOscuro(pltCurrencyDistribution.Plot);

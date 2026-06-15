@@ -4,7 +4,7 @@
         x:Class="SistemaCambio.Views.DetalleMovimientosWindow"
         x:CompileBindings="False"
         Title="Detalle Movimientos de una Cuenta"
-        Width="1050" MinWidth="860" Height="650"
+        Width="1240" MinWidth="1000" Height="760" MinHeight="560"
         WindowStartupLocation="CenterOwner"
         CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">

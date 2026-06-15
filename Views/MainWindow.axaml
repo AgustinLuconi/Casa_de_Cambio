@@ -96,7 +96,7 @@
                             Click="BtnHistorial_Click" ToolTip.Tip="Historial de notificaciones">
                         <Panel>
                             <icon:MaterialIcon Kind="Bell" Width="16" Height="16"
-                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
                             <Border x:Name="badgeHistorial"
                                     Background="{DynamicResource DangerBrush}"
                                     CornerRadius="6" Width="14" Height="14"
@@ -234,52 +234,28 @@
                 <ScrollViewer x:Name="dashboardPanel" Grid.Row="1" Grid.RowSpan="2" IsVisible="False" Margin="0,0,0,0" Padding="0,0,16,0">
                     <StackPanel Spacing="24" Margin="0,0,0,40">
                         <!-- Stat Cards -->
-                        <UniformGrid Columns="4" Rows="1" Margin="0,0,0,0">
+                        <UniformGrid Columns="2" Rows="1" Margin="0,0,0,0">
                             <!-- Card 1 -->
-                            <Border Background="#1AFFFFFF" BorderBrush="#33FFFFFF" 
+                            <Border Background="#1AFFFFFF" BorderBrush="#33FFFFFF"
                                     BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,0,16,0">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <icon:MaterialIcon Kind="Bank" Width="20" Height="20" Foreground="{DynamicResource AccentBrush}"/>
                                         <TextBlock Text="Total Cuentas" FontSize="14" Foreground="#B0B5C9"/>
                                     </StackPanel>
-                                    <TextBlock x:Name="txtTotalCuentas" Text="0" FontSize="36" FontWeight="Bold" 
+                                    <TextBlock x:Name="txtTotalCuentas" Text="0" FontSize="36" FontWeight="Bold"
                                                Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,12,0,0"/>
                                 </StackPanel>
                             </Border>
                             <!-- Card 2 -->
-                            <Border Background="#1AFFFFFF" BorderBrush="#33FFFFFF" 
-                                    BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,0,16,0">
+                            <Border Background="#1AFFFFFF" BorderBrush="#33FFFFFF"
+                                    BorderThickness="1" CornerRadius="16" Padding="24" Margin="0">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <icon:MaterialIcon Kind="SwapHorizontal" Width="20" Height="20" Foreground="{DynamicResource WarningBrush}"/>
                                         <TextBlock Text="Operaciones Hoy" FontSize="14" Foreground="#B0B5C9"/>
                                     </StackPanel>
-                                    <TextBlock x:Name="txtOperacionesHoy" Text="0" FontSize="36" FontWeight="Bold" 
-                                               Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,12,0,0"/>
-                                </StackPanel>
-                            </Border>
-                            <!-- Card 3 -->
-                            <Border Background="#13a4ec33" BorderBrush="#13a4ec80" 
-                                    BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,0,16,0">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <icon:MaterialIcon Kind="CurrencyUsd" Width="20" Height="20" Foreground="#13a4ec"/>
-                                        <TextBlock Text="Saldo Total (USD)" FontSize="14" Foreground="#B0B5C9"/>
-                                    </StackPanel>
-                                    <TextBlock x:Name="txtSaldoUSD" Text="$0.00" FontSize="32" FontWeight="Bold" 
-                                               Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,12,0,0"/>
-                                </StackPanel>
-                            </Border>
-                            <!-- Card 4 -->
-                            <Border Background="#4ade8033" BorderBrush="#4ade8080" 
-                                    BorderThickness="1" CornerRadius="16" Padding="24" Margin="0">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <icon:MaterialIcon Kind="CurrencyEur" Width="20" Height="20" Foreground="#4ade80"/>
-                                        <TextBlock Text="Saldo Total (EUR/ARS)" FontSize="14" Foreground="#B0B5C9"/>
-                                    </StackPanel>
-                                    <TextBlock x:Name="txtSaldoARS" Text="$0.00" FontSize="32" FontWeight="Bold" 
+                                    <TextBlock x:Name="txtOperacionesHoy" Text="0" FontSize="36" FontWeight="Bold"
                                                Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,12,0,0"/>
                                 </StackPanel>
                             </Border>
@@ -457,14 +433,14 @@
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate x:CompileBindings="False">
-                                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
                                                         <TextBlock Text="{Binding Moneda, StringFormat='[{0}]'}"
                                                                    Foreground="#94a3b8"
-                                                                   FontSize="11" FontWeight="SemiBold"
+                                                                   FontSize="15" FontWeight="SemiBold"
                                                                    VerticalAlignment="Center"/>
                                                         <TextBlock Text="{Binding Saldo, StringFormat='{}{0:N2}'}"
                                                                    Foreground="White"
-                                                                   FontSize="11"
+                                                                   FontSize="15" FontWeight="SemiBold"
                                                                    VerticalAlignment="Center"/>
                                                     </StackPanel>
                                                 </DataTemplate>
@@ -474,7 +450,7 @@
                                         <TextBlock Text="Sin saldos"
                                                    IsVisible="{Binding NoTieneSaldos}"
                                                    Foreground="#4B5563"
-                                                   FontSize="11" FontStyle="Italic"
+                                                   FontSize="14" FontStyle="Italic"
                                                    VerticalAlignment="Center"/>
                                     </Panel>
                                 </DataTemplate>
@@ -543,30 +519,10 @@
                     </Border>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
                     <TextBlock Text="Cuentas:" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding CuentasCount}" FontSize="11" FontWeight="Bold" 
+                    <TextBlock Text="{Binding CuentasCount}" FontSize="11" FontWeight="Bold"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="24">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="TOTAL DÉBITO" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalDebito, StringFormat='{}{0:N2}'}" FontSize="14" FontWeight="Bold" 
-                                   Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="TOTAL CRÉDITO" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalCredito, StringFormat='{}{0:N2}'}" FontSize="14" FontWeight="Bold" 
-                                   Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <Border Background="{DynamicResource HoverBackgroundBrush}" CornerRadius="6" Padding="12,6">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="POSICIÓN NETA" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding PosicionNeta, StringFormat='{}{0:N2}'}" FontSize="16" FontWeight="Bold" 
-                                       Foreground="{DynamicResource AccentBrush}"/>
-                        </StackPanel>
-                    </Border>
                 </StackPanel>
             </Grid>
         </Border>

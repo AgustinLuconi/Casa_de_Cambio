@@ -4,7 +4,7 @@
         x:Class="SistemaCambio.Views.ReportesWindow"
         x:CompileBindings="False"
         Title="Reportes"
-        Width="950" Height="700"
+        Width="1240" MinWidth="1000" Height="780" MinHeight="560"
         WindowStartupLocation="CenterOwner"
         CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">

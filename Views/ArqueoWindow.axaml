@@ -5,14 +5,14 @@
         x:Class="SistemaCambio.Views.ArqueoWindow"
         x:CompileBindings="False"
         Title="Arqueo - Caja: TODAS"
-        Width="720"
-        MinHeight="220" MaxHeight="600"
+        Width="920"
+        MinHeight="380" MaxHeight="780"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">
 
-    <Grid RowDefinitions="*, Auto" Margin="10">
+    <Grid RowDefinitions="*, Auto" Margin="16">
 
         <DataGrid Grid.Row="0" x:Name="dgArqueo"
                   AutoGenerateColumns="False"
@@ -21,7 +21,8 @@
                   HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
                   VerticalGridLinesBrush="{DynamicResource BorderBrush}"
                   BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
-                  RowHeight="26"
+                  RowHeight="36"
+                  FontSize="14"
                   CanUserReorderColumns="False"
                   CanUserSortColumns="False"
                   SelectionMode="Single">

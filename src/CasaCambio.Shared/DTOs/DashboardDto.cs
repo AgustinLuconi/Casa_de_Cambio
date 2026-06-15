@@ -2,6 +2,7 @@ namespace CasaCambio.Shared.DTOs;
 
 public class DashboardDto
 {
+    public int TotalCuentas { get; set; }
     public int TotalOperacionesHoy { get; set; }
     public int TotalComprasHoy { get; set; }
     public int TotalVentasHoy { get; set; }
