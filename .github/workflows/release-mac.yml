@@ -1,0 +1,91 @@
+name: Release Mac (Velopack)
+
+# Compila la app Avalonia para macOS Apple Silicon (arm64), la empaqueta con
+# Velopack y publica el release en GitHub Releases. La app instalada lo detecta
+# y se auto-actualiza. App SIN firmar: la primera instalación requiere abrir con
+# click derecho → Abrir (Gatekeeper). Las actualizaciones posteriores son automáticas.
+#
+# Disparo: push de un tag vX.Y.Z  (ej. git tag v1.1.0 && git push origin v1.1.0)
+#          o manualmente desde la pestaña Actions indicando la versión.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión sin la v (ej. 1.1.0)'
+        required: true
+
+permissions:
+  contents: write   # necesario para que vpk cree el GitHub Release
+
+jobs:
+  release:
+    runs-on: macos-latest   # macos-latest es Apple Silicon (arm64)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # La versión llega de input/tag (entrada no confiable): se valida con regex
+      # y se expone como output para usarla vía env var en los pasos siguientes.
+      - name: Derivar y validar versión
+        id: ver
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if [ "$EVENT_NAME" = "push" ]; then
+            V="${REF_NAME#v}"
+          else
+            V="$INPUT_VERSION"
+          fi
+          if ! printf '%s' "$V" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z]+)*$'; then
+            echo "Versión inválida: '$V' (esperado X.Y.Z)"
+            exit 1
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Instalar Velopack CLI (vpk)
+        run: dotnet tool install -g vpk --version 1.2.0
+
+      - name: Publicar (osx-arm64, self-contained)
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          dotnet publish SistemaCambio.csproj \
+            -c Release -r osx-arm64 --self-contained \
+            -p:Version="$VERSION" \
+            -o publish
+
+      - name: Empaquetar con Velopack
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          vpk pack \
+            --packId CasaCambio \
+            --packVersion "$VERSION" \
+            --packDir publish \
+            --mainExe SistemaCambio \
+            --packTitle "Casa de Cambio" \
+            --packAuthors "Agustin Luconi" \
+            --runtime osx-arm64
+
+      - name: Publicar release en GitHub
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          vpk upload github \
+            --repoUrl https://github.com/AgustinLuconi/Casa_de_Cambio \
+            --token "$GH_TOKEN" \
+            --publish \
+            --releaseName "Casa de Cambio v$VERSION" \
+            --tag "v$VERSION" \
+            --merge

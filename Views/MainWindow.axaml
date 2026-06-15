@@ -503,7 +503,7 @@
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="20,10">
             <Grid ColumnDefinitions="Auto, *, Auto">
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
-                    <TextBlock Text="Sistema v1.0.0" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock x:Name="txtVersion" Text="Sistema v1.0.0" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="Server: Local" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <Border x:Name="borderDiaCerrado"
                             IsVisible="False"

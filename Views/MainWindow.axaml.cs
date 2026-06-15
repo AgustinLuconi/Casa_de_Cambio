@@ -13,6 +13,8 @@ using SistemaCambio.ViewModels;
 using SistemaCambio.Views.Controls;
 using SistemaCambio.Views.Helpers;
 using CasaCambio.Shared.DTOs;
+using Velopack;
+using Velopack.Sources;
 using System;
 using System.IO;
 using System.Linq;
@@ -49,6 +51,10 @@ public partial class MainWindow : Window
         Services.NotificationService.Initialize(notificationPanel);
         Services.NotificationService.HistorialActualizado += ActualizarBadgeHistorial;
         AddHandler(PointerPressedEvent, VentanaPointerPressed, handledEventsToo: false);
+
+        MostrarVersionEnFooter();
+        // Chequeo de actualizaciones una vez que la ventana está visible
+        Opened += async (_, _) => await ChequearActualizacionesAsync();
 
         RedirigirScrollAlScrollViewer(pltBalanceEvolution);
         RedirigirScrollAlScrollViewer(pltCurrencyDistribution);
@@ -134,6 +140,44 @@ public partial class MainWindow : Window
             dgUltimasOperaciones.ItemsSource = opsResponse.Items;
         }
         catch (Exception ex) { AppLogger.Warn("CargarUltimasOperaciones", ex); }
+    }
+
+    // ── Auto-update (Velopack) ───────────────────────────────────
+
+    private const string RepoUpdates = "https://github.com/AgustinLuconi/Casa_de_Cambio";
+
+    private void MostrarVersionEnFooter()
+    {
+        var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        if (v != null)
+            txtVersion.Text = $"Sistema v{v.Major}.{v.Minor}.{v.Build}";
+    }
+
+    private async Task ChequearActualizacionesAsync()
+    {
+        try
+        {
+            var mgr = new UpdateManager(new GithubSource(RepoUpdates, null, false));
+            // En desarrollo (corriendo desde bin/, no instalado por Velopack) no hay nada que hacer
+            if (!mgr.IsInstalled) return;
+
+            var info = await mgr.CheckForUpdatesAsync();
+            if (info is null) return;   // ya está en la última versión
+
+            // Descarga en segundo plano (silenciosa)
+            await mgr.DownloadUpdatesAsync(info);
+
+            var aplicar = await DialogHelper.ConfirmarAsync(this,
+                "Actualización disponible",
+                $"Hay una nueva versión ({info.TargetFullRelease.Version}) lista para instalar.\n\n" +
+                "¿Querés reiniciar la aplicación ahora para actualizar?",
+                "Reiniciar y actualizar");
+
+            if (aplicar)
+                mgr.ApplyUpdatesAndRestart(info.TargetFullRelease);
+            // Si dice que no, la descarga queda cacheada y se vuelve a ofrecer al próximo arranque
+        }
+        catch (Exception ex) { AppLogger.Warn("ChequearActualizacionesAsync", ex); }
     }
 
     private void PoblarGraficoSaldos(CasaCambio.Shared.DTOs.DashboardDto dashboard)
