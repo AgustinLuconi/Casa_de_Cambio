@@ -1,30 +1,46 @@
 name: Keepalive — Supabase
 
+# Mantiene vivo el proyecto Supabase (free tier se pausa tras 7 días de
+# INACTIVIDAD DE BASE DE DATOS). Pingear la raíz /rest/v1/ NO alcanza: ese
+# endpoint devuelve el esquema OpenAPI sin ejecutar SQL, así que no cuenta
+# como actividad. Hay que correr un SELECT real contra una tabla.
 on:
   schedule:
-    - cron: '0 12 */2 * *'  # Cada 2 días al mediodía UTC
-  workflow_dispatch:          # Permite ejecución manual desde GitHub UI
+    - cron: '0 12 * * *'   # Diario al mediodía UTC (margen amplio vs. los 7 días)
+  workflow_dispatch:         # Ejecución manual desde la UI de GitHub
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase REST API
+      - name: Query real a una tabla (genera actividad en Postgres)
         env:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          echo "Pingeando Supabase REST API directamente..."
-          response=$(curl -s -o response_body.txt -w "%{http_code}" \
-            --max-time 30 \
-            --retry 3 \
-            --retry-delay 5 \
-            "https://vtyaunxljytbxbgyhmaz.supabase.co/rest/v1/" \
-            -H "apikey: $SUPABASE_SERVICE_KEY" \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY")
-          echo "HTTP status: $response"
-          echo "Response body (primeros 300 chars): $(cat response_body.txt | head -c 300)"
-          if [ "$response" != "200" ]; then
-            echo "ERROR: Supabase no está respondiendo — status $response"
+          if [ -z "$SUPABASE_SERVICE_KEY" ]; then
+            echo "ERROR: el secret SUPABASE_SERVICE_KEY no está configurado en el repo."
+            echo "Settings → Secrets and variables → Actions → New repository secret"
             exit 1
           fi
-          echo "OK: Supabase activo"
+
+          # SELECT id FROM monedas LIMIT 1  → ejecuta una query real en la base
+          URL="https://vtyaunxljytbxbgyhmaz.supabase.co/rest/v1/monedas?select=id&limit=1"
+          echo "Ejecutando query real contra: $URL"
+
+          response=$(curl -s -o response_body.txt -w "%{http_code}" \
+            --max-time 30 --retry 3 --retry-delay 10 \
+            "$URL" \
+            -H "apikey: $SUPABASE_SERVICE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -H "Accept: application/json")
+
+          echo "HTTP status: $response"
+          echo "Respuesta (primeros 300 chars): $(head -c 300 response_body.txt)"
+
+          # 200 = OK con filas. Una tabla vacía igual devuelve 200 con [].
+          if [ "$response" != "200" ]; then
+            echo "ERROR: la query no devolvió 200 — status $response."
+            echo "Si es 000/6 el proyecto está pausado (reactivar desde el dashboard)."
+            exit 1
+          fi
+          echo "OK: query ejecutada, base activa."
