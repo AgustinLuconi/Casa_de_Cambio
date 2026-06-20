@@ -83,12 +83,19 @@ public class OperacionesController : ControllerBase
         return result.Exitoso ? Ok(OperacionResponse.Success(result.OperacionId!.Value)) : BadRequest(OperacionResponse.Error(result.Mensaje));
     }
 
+    [HttpPost("{id}/anular")]
+    public IActionResult Anular(int id)
+    {
+        var result = _operacionService.AnularOperacion(id);
+        return result.Exitoso ? Ok(OperacionResponse.Success(result.OperacionId!.Value)) : BadRequest(OperacionResponse.Error(result.Mensaje));
+    }
+
     private static OperacionDto MapOperacion(Models.Operacion o) => new()
     {
         Id = o.Id, Fecha = o.Fecha, TipoOperacion = o.TipoOperacion, ClienteId = o.ClienteId,
         NombreCliente = o.Cliente?.Nombre, MontoTotalOrigen = o.MontoTotalOrigen,
         MontoTotalDestino = o.MontoTotalDestino, CotizacionAplicada = o.CotizacionAplicada,
-        Observaciones = o.Observaciones,
+        Observaciones = o.Observaciones, Anulada = o.Anulada, OperacionOriginalId = o.OperacionOriginalId,
         Movimientos = o.Movimientos.Select(m => new MovimientoDto
         {
             Id = m.Id, OperacionId = m.OperacionId, CuentaId = m.CuentaId,

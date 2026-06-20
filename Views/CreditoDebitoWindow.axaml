@@ -73,7 +73,7 @@
                                  Text="0.00" TextAlignment="Right"
                                  FontSize="20" FontWeight="Bold"
                                  helpers:NumericInput.Enabled="True"
-                                 KeyUp="RecalcularCredito_KeyUp" GotFocus="TextBox_GotFocus"/>
+                                 KeyUp="RecalcularCredito_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
                         <StackPanel Grid.Column="1" Spacing="4" Margin="12,0,0,0">
                             <Grid ColumnDefinitions="80, *">
                                 <TextBlock Text="Cotización" VerticalAlignment="Center"
@@ -83,7 +83,7 @@
                                          Background="{DynamicResource SidebarBackgroundBrush}"
                                          Foreground="{DynamicResource SecondaryTextBrush}"
                                          helpers:NumericInput.Enabled="True"
-                                         KeyUp="RecalcularCredito_KeyUp" GotFocus="TextBox_GotFocus"/>
+                                         KeyUp="RecalcularCredito_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
                             </Grid>
                             <Grid ColumnDefinitions="80, *">
                                 <TextBlock Text="Pesos" VerticalAlignment="Center"
@@ -119,7 +119,7 @@
                                  Text="0.00" TextAlignment="Right"
                                  FontSize="20" FontWeight="Bold"
                                  helpers:NumericInput.Enabled="True"
-                                 KeyUp="RecalcularDebito_KeyUp" GotFocus="TextBox_GotFocus"/>
+                                 KeyUp="RecalcularDebito_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
                         <StackPanel Grid.Column="1" Spacing="4" Margin="12,0,0,0">
                             <Grid ColumnDefinitions="80, *">
                                 <TextBlock Text="Cotización" VerticalAlignment="Center"
@@ -129,7 +129,7 @@
                                          Background="{DynamicResource SidebarBackgroundBrush}"
                                          Foreground="{DynamicResource SecondaryTextBrush}"
                                          helpers:NumericInput.Enabled="True"
-                                         KeyUp="RecalcularDebito_KeyUp" GotFocus="TextBox_GotFocus"/>
+                                         KeyUp="RecalcularDebito_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
                             </Grid>
                             <Grid ColumnDefinitions="80, *">
                                 <TextBlock Text="Pesos" VerticalAlignment="Center"

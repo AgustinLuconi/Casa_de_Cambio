@@ -178,8 +178,30 @@ namespace SistemaCambio.Views
                     _limitesDivisa.Add(item);
 
                 icLimitesDivisa.ItemsSource = _limitesDivisa;
+
+                // Auto-marcar el toggle si TODAS las divisas tienen límite 0
+                var todasEnCero = _limitesDivisa.All(m => MontoHelper.Parsear(m.LimiteTexto) == 0);
+                toggleSinLimite.IsChecked = todasEnCero;
+                icLimitesDivisa.IsEnabled = !todasEnCero;
             }
             catch (Exception ex) { AppLogger.Warn("CargarLimitesDivisaAsync", ex); }
+        }
+
+        private void ToggleSinLimite_Changed(object? sender, RoutedEventArgs e)
+        {
+            var sinLimite = toggleSinLimite.IsChecked == true;
+            icLimitesDivisa.IsEnabled = !sinLimite;
+
+            if (sinLimite)
+            {
+                // Mostrar 0 en todos los campos visualmente, sin guardar aún
+                foreach (var item in _limitesDivisa)
+                    item.LimiteTexto = "0";
+
+                // Refrescar el ItemsControl para que los TextBox muestren el nuevo valor
+                icLimitesDivisa.ItemsSource = null;
+                icLimitesDivisa.ItemsSource = _limitesDivisa;
+            }
         }
 
         private async void BtnGuardarLimitesDivisa_Click(object? sender, RoutedEventArgs e)
@@ -187,10 +209,13 @@ namespace SistemaCambio.Views
             var errores = new List<string>();
             int guardados = 0;
 
+            // Si el toggle está activo, forzar 0 en todos
+            var sinLimite = toggleSinLimite.IsChecked == true;
+
             foreach (var item in _limitesDivisa)
             {
-                decimal limite = MontoHelper.Parsear(item.LimiteTexto);
-                if (limite < 0)
+                decimal limite = sinLimite ? 0 : MontoHelper.Parsear(item.LimiteTexto);
+                if (!sinLimite && limite < 0)
                 {
                     errores.Add($"{item.Codigo}: el límite no puede ser negativo.");
                     continue;
@@ -205,7 +230,12 @@ namespace SistemaCambio.Views
             if (errores.Any())
                 await DialogHelper.MensajeAsync(this, "Error", string.Join("\n", errores));
             else
-                await DialogHelper.MensajeAsync(this, "Éxito", $"Límites de deuda actualizados para {guardados} divisa(s).");
+            {
+                var msg = sinLimite
+                    ? $"Límites desactivados para todas las divisas ({guardados} divisa(s))."
+                    : $"Límites de deuda actualizados para {guardados} divisa(s).";
+                await DialogHelper.MensajeAsync(this, "Éxito", msg);
+            }
         }
 
         private void BtnCerrar_Click(object? sender, RoutedEventArgs e) => Close();

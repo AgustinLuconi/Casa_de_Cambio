@@ -59,3 +59,6 @@ secrets.json
 
 # Archivos de análisis/debug temporales
 .dialog_analysis.txt
+
+# Documentación solo para el desarrollador (no sube al repo)
+INSTALL_MAC_DEV.md

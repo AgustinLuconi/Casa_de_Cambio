@@ -9,6 +9,7 @@ public static class CuentaFilter
     {
         if (cuenta.Saldos.Any(s => s.Moneda == moneda)) return true;
         if (cuenta.Tipo == "Cliente") return true;
+        if (cuenta.Tipo == "Proveedor") return true;
         return false;
     }
 

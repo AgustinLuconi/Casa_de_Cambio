@@ -184,6 +184,9 @@ public class CasaCambioApiClient : ICasaCambioApiClient
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound) { return null; }
     }
 
+    public async Task<OperacionResponse> AnularOperacionAsync(int id)
+        => await PostAuthenticatedAsync<OperacionResponse>($"api/operaciones/{id}/anular", new { });
+
     // Cuentas
 
     public async Task<List<CuentaDto>> ObtenerCuentasAsync()

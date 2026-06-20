@@ -212,6 +212,54 @@ public class OperacionService : IOperacionService
         return null;
     }
 
+    public OperacionResult AnularOperacion(int id)
+    {
+        using var db = _contextFactory.CreateDbContext();
+        using var transaction = db.Database.BeginTransaction();
+        try
+        {
+            var original = db.Operaciones.Include(o => o.Movimientos).FirstOrDefault(o => o.Id == id);
+            if (original == null) return OperacionResult.Error("Operación no encontrada.");
+            if (original.Anulada) return OperacionResult.Error("La operación ya fue anulada.");
+            if (original.OperacionOriginalId.HasValue) return OperacionResult.Error("No se puede anular una anulación.");
+            if (_cierreCajaService.HayDiaCerrado()) return OperacionResult.Error("El día de hoy ya está cerrado.");
+
+            var anulacion = new Operacion
+            {
+                Fecha = DateTime.UtcNow,
+                TipoOperacion = "Anulacion",
+                ClienteId = original.ClienteId,
+                MontoTotalOrigen = original.MontoTotalOrigen,
+                MontoTotalDestino = original.MontoTotalDestino,
+                CotizacionAplicada = original.CotizacionAplicada,
+                Observaciones = $"ANULACIÓN DE OP-{id:D5}",
+                OperacionOriginalId = id
+            };
+            db.Operaciones.Add(anulacion);
+
+            foreach (var mov in original.Movimientos)
+            {
+                db.Movimientos.Add(new Movimiento
+                {
+                    Operacion = anulacion,
+                    CuentaId = mov.CuentaId,
+                    Moneda = mov.Moneda,
+                    Monto = -mov.Monto,
+                    Fecha = DateTime.UtcNow
+                });
+                var saldo = ObtenerOCrearSaldo(db, mov.CuentaId, mov.Moneda);
+                saldo.Saldo -= mov.Monto;
+            }
+
+            original.Anulada = true;
+            db.SaveChanges();
+            transaction.Commit();
+            try { _auditService.Registrar("ANULAR", "Operacion", id, datosNuevos: new { anulacion_id = anulacion.Id }); } catch { }
+            return OperacionResult.Success(anulacion.Id);
+        }
+        catch (Exception ex) { transaction.Rollback(); return OperacionResult.Error($"Error al anular: {ex.InnerException?.Message ?? ex.Message}"); }
+    }
+
     private SaldoCuenta ObtenerOCrearSaldo(AppDbContext db, int cuentaId, string moneda)
     {
         var saldo = db.SaldosCuenta.FirstOrDefault(s => s.CuentaId == cuentaId && s.Moneda == moneda);

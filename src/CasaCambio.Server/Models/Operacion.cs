@@ -18,5 +18,8 @@ public class Operacion
     [Column("cotizacion_aplicada")] public decimal CotizacionAplicada { get; set; }
     [Column("observaciones")] public string Observaciones { get; set; } = "";
     [Column("idempotency_key")] public string? IdempotencyKey { get; set; }
+    [Column("anulada")] public bool Anulada { get; set; } = false;
+    [Column("operacion_original_id")] public int? OperacionOriginalId { get; set; }
+    [ForeignKey("OperacionOriginalId")] public Operacion? OperacionOriginal { get; set; }
     public List<Movimiento> Movimientos { get; set; } = new();
 }

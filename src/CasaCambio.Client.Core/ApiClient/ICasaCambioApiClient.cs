@@ -29,6 +29,7 @@ public interface ICasaCambioApiClient
     Task<OperacionResponse> CrearInterbancarioAsync(CrearInterbancarioRequest request);
     Task<PaginatedResponse<OperacionDto>> ObtenerOperacionesAsync(DateTime? desde = null, DateTime? hasta = null, string? tipo = null, int page = 1, int pageSize = 50);
     Task<OperacionDto?> ObtenerOperacionAsync(int id);
+    Task<OperacionResponse> AnularOperacionAsync(int id);
 
     // Cuentas
     Task<List<CuentaDto>> ObtenerCuentasAsync();

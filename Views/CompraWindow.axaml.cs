@@ -194,7 +194,20 @@ namespace SistemaCambio.Views
 
         public void TextBox_GotFocus(object? sender, GotFocusEventArgs e)
         {
-            if (sender is TextBox tb) tb.SelectAll();
+            if (sender is not TextBox tb) return;
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (MontoHelper.Parsear(tb.Text) == 0)
+                    tb.Clear();
+                else
+                    tb.SelectAll();
+            });
+        }
+
+        public void TextBox_LostFocus(object? sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox tb && string.IsNullOrWhiteSpace(tb.Text))
+                tb.Text = "0";
         }
 
         // ── Helpers de selección ────────────────────────────────────

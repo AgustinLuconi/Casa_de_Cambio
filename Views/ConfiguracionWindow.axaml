@@ -89,8 +89,27 @@
                         <StackPanel Spacing="10">
                             <TextBlock Text="Límites de Deuda Generales por Divisa" FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14"/>
-                            <TextBlock Text="Se aplican a cuentas de tipo Cliente sin límite específico para esa divisa. 0 = sin límite."
+                            <TextBlock Text="Se aplican a cuentas de tipo Cliente sin límite específico para esa divisa. Dejá un campo en 0 para quitar el límite de esa divisa."
                                        Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+
+                            <!-- Opción global: sin límite para todas las divisas -->
+                            <Border Background="{DynamicResource AppBackgroundBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                    CornerRadius="6" Padding="12,10" Margin="0,4,0,8">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Text="Sin límite general" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
+                                        <TextBlock Text="Los clientes pueden tomar deuda sin restricción en todas las divisas. Los límites individuales son ignorados mientras esta opción esté activa."
+                                                   Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="toggleSinLimite" Grid.Column="1"
+                                                  OnContent="" OffContent=""
+                                                  VerticalAlignment="Center" Margin="16,0,0,0"
+                                                  IsCheckedChanged="ToggleSinLimite_Changed"/>
+                                </Grid>
+                            </Border>
 
                             <!-- Una fila por moneda activa: código + nombre + límite editable -->
                             <ItemsControl x:Name="icLimitesDivisa" Margin="0,5,0,0">

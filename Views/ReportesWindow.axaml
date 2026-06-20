@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
         x:Class="SistemaCambio.Views.ReportesWindow"
         x:CompileBindings="False"
         Title="Reportes"
@@ -10,6 +11,11 @@
         Background="{DynamicResource AppBackgroundBrush}">
 
     <Grid RowDefinitions="Auto, *, Auto" Margin="16">
+        <controls:NotificationPanel x:Name="notificationPanel"
+                                    Grid.RowSpan="3"
+                                    VerticalAlignment="Top"
+                                    HorizontalAlignment="Right"
+                                    ZIndex="100"/>
         
         <!-- Header -->
         <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" 
@@ -59,13 +65,29 @@
                     <DataGrid Grid.Row="1" x:Name="dgOperaciones" AutoGenerateColumns="False"
                               BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" IsReadOnly="True">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
-                            <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="150"/>
-                            <DataGridTextColumn Header="TIPO" Binding="{Binding TipoOperacion}" Width="120"/>
-                            <DataGridTextColumn Header="MONTO ORIGEN" Binding="{Binding MontoTotalOrigen, StringFormat='{}{0:N2}'}" Width="130"/>
-                            <DataGridTextColumn Header="MONTO DESTINO" Binding="{Binding MontoTotalDestino, StringFormat='{}{0:N2}'}" Width="130"/>
-                            <DataGridTextColumn Header="COTIZACIÓN" Binding="{Binding CotizacionAplicada, StringFormat='{}{0:N5}'}" Width="120"/>
+                            <DataGridTextColumn Header="CÓDIGO" Binding="{Binding CodigoOperacion}" Width="90"/>
+                            <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="140"/>
+                            <DataGridTextColumn Header="TIPO" Binding="{Binding TipoOperacion}" Width="110"/>
+                            <DataGridTextColumn Header="MONTO ORIGEN" Binding="{Binding MontoTotalOrigen, StringFormat='{}{0:N2}'}" Width="120"/>
+                            <DataGridTextColumn Header="MONTO DESTINO" Binding="{Binding MontoTotalDestino, StringFormat='{}{0:N2}'}" Width="120"/>
                             <DataGridTextColumn Header="OBSERVACIONES" Binding="{Binding Observaciones}" Width="*"/>
+                            <DataGridTextColumn Header="ESTADO" Binding="{Binding EstadoDisplay}" Width="90"/>
+                            <DataGridTemplateColumn Header="" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Anular"
+                                                Tag="{Binding}"
+                                                IsEnabled="{Binding PuedeAnular}"
+                                                IsVisible="{Binding PuedeAnular}"
+                                                FontSize="11"
+                                                Padding="6,3"
+                                                Background="{DynamicResource DangerBrush}"
+                                                Foreground="White"
+                                                CornerRadius="4"
+                                                Click="BtnAnular_Click"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

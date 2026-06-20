@@ -4,6 +4,7 @@ using Avalonia.Platform.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
+using SistemaCambio.Views.Helpers;
 using CasaCambio.Shared.DTOs;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,8 @@ namespace SistemaCambio.Views
         {
             _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
             InitializeComponent();
+            NotificationService.Initialize(notificationPanel);
+            Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
             dpDesdeOp.SelectedDate = new DateTimeOffset(DateTime.Today.AddDays(-30));
             dpHastaOp.SelectedDate = new DateTimeOffset(DateTime.Today);
         }
@@ -110,6 +113,40 @@ namespace SistemaCambio.Views
                 await using var writer = new StreamWriter(stream);
                 await writer.WriteAsync(sb.ToString());
             }
+        }
+
+        private async void BtnAnular_Click(object? sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { Tag: OperacionDto op }) return;
+            var confirmar = await DialogHelper.ConfirmarAsync(this,
+                "Confirmar anulación",
+                $"¿Anular la operación {op.CodigoOperacion}?\n\nSe generará una contrapartida que revierte todos los movimientos. Esta acción no se puede deshacer.",
+                "Anular operación");
+            if (!confirmar) return;
+            try
+            {
+                var resultado = await _apiClient.AnularOperacionAsync(op.Id);
+                if (resultado.Exitoso)
+                {
+                    NotificationService.Success("Anulación registrada", $"{op.CodigoOperacion} anulada. Se generó la contrapartida OP-{resultado.OperacionId:D5}.");
+                    await BtnGenerarOperaciones_Click_Internal();
+                }
+                else
+                    NotificationService.Error("Error al anular", resultado.Mensaje ?? "Error desconocido.");
+            }
+            catch (Exception ex) { NotificationService.Error("Error", ex.Message); }
+        }
+
+        private async System.Threading.Tasks.Task BtnGenerarOperaciones_Click_Internal()
+        {
+            try
+            {
+                var fechaDesde = DateTime.SpecifyKind(dpDesdeOp.SelectedDate?.Date ?? DateTime.Today.AddDays(-30), DateTimeKind.Utc);
+                var fechaHasta = DateTime.SpecifyKind((dpHastaOp.SelectedDate?.Date ?? DateTime.Today).AddDays(1), DateTimeKind.Utc);
+                var response = await _apiClient.ObtenerOperacionesAsync(fechaDesde, fechaHasta, pageSize: 500);
+                dgOperaciones.ItemsSource = response.Items;
+            }
+            catch (Exception ex) { AppLogger.Warn("BtnGenerarOperaciones_Reload", ex); }
         }
 
         private void BtnCerrar_Click(object? sender, RoutedEventArgs e) => Close();

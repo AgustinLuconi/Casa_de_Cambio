@@ -59,7 +59,7 @@
             <TextBox x:Name="txtMonedaExtranjera" Grid.Row="1" Grid.Column="1"
                      Text="0.00" TextAlignment="Right" Margin="0,0,0,9"
                      helpers:NumericInput.Enabled="True"
-                     KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
+                     KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
             <TextBlock Grid.Row="1" Grid.Column="2"
                        Text="Acredita en cuenta" VerticalAlignment="Center"
                        Foreground="{DynamicResource PrimaryTextBrush}"
@@ -77,7 +77,7 @@
             <TextBox x:Name="txtIngresa" Grid.Row="2" Grid.Column="1"
                      Text="0.00" TextAlignment="Right" Margin="0,0,0,9"
                      helpers:NumericInput.Enabled="True"
-                     KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
+                     KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
 
             <!-- ── Fila 3: Vuelto (solo lectura) ── -->
             <TextBlock Grid.Row="3" Grid.Column="0"
@@ -96,7 +96,7 @@
             <TextBox x:Name="txtCotizacion" Grid.Row="4" Grid.Column="1"
                      Text="0.00000" TextAlignment="Right" Margin="0,0,0,9"
                      helpers:NumericInput.Enabled="True"
-                     KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus"/>
+                     KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
 
             <!-- ── Fila 5: Pesos (solo lectura) | Debita de cuenta (VERDE) ── -->
             <TextBlock Grid.Row="5" Grid.Column="0"
