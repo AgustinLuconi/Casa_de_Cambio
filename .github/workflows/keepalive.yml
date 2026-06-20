@@ -16,16 +16,17 @@ jobs:
       - name: Query real a una tabla (genera actividad en Postgres)
         env:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         run: |
-          if [ -z "$SUPABASE_SERVICE_KEY" ]; then
-            echo "ERROR: el secret SUPABASE_SERVICE_KEY no está configurado en el repo."
+          if [ -z "$SUPABASE_SERVICE_KEY" ] || [ -z "$SUPABASE_URL" ]; then
+            echo "ERROR: los secrets SUPABASE_SERVICE_KEY y SUPABASE_URL no están configurados."
             echo "Settings → Secrets and variables → Actions → New repository secret"
             exit 1
           fi
 
           # SELECT id FROM monedas LIMIT 1  → ejecuta una query real en la base
-          URL="https://vtyaunxljytbxbgyhmaz.supabase.co/rest/v1/monedas?select=id&limit=1"
-          echo "Ejecutando query real contra: $URL"
+          URL="$SUPABASE_URL/rest/v1/monedas?select=id&limit=1"
+          echo "Ejecutando query real contra Supabase..."
 
           response=$(curl -s -o response_body.txt -w "%{http_code}" \
             --max-time 30 --retry 3 --retry-delay 10 \
