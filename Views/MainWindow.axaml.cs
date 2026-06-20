@@ -158,13 +158,25 @@ public partial class MainWindow : Window
         try
         {
             var mgr = new UpdateManager(new GithubSource(RepoUpdates, null, false));
-            // En desarrollo (corriendo desde bin/, no instalado por Velopack) no hay nada que hacer
-            if (!mgr.IsInstalled) return;
+
+            // En desarrollo (sin Velopack instalado) IsInstalled=false.
+            // En producción (instalado vía .pkg) debe ser true; si no, el .pkg no creó los metadatos.
+            if (!mgr.IsInstalled)
+            {
+                AppLogger.Warn("ChequearActualizacionesAsync", "IsInstalled=false — el .pkg no instaló los metadatos de Velopack");
+                Services.NotificationService.Warning("Actualizaciones",
+                    "La app no detecta su propia instalación (IsInstalled=false). Instalá manualmente el .pkg de la versión más reciente desde GitHub Releases.");
+                return;
+            }
 
             var info = await mgr.CheckForUpdatesAsync();
-            if (info is null) return;   // ya está en la última versión
+            if (info is null)
+            {
+                Services.NotificationService.Info("Sin actualizaciones", "Ya estás en la versión más reciente.");
+                return;
+            }
 
-            // Descarga en segundo plano (silenciosa)
+            Services.NotificationService.Info("Actualización detectada", $"Descargando v{info.TargetFullRelease.Version}...");
             await mgr.DownloadUpdatesAsync(info);
 
             var aplicar = await DialogHelper.ConfirmarAsync(this,
@@ -175,9 +187,12 @@ public partial class MainWindow : Window
 
             if (aplicar)
                 mgr.ApplyUpdatesAndRestart(info.TargetFullRelease);
-            // Si dice que no, la descarga queda cacheada y se vuelve a ofrecer al próximo arranque
         }
-        catch (Exception ex) { AppLogger.Warn("ChequearActualizacionesAsync", ex); }
+        catch (Exception ex)
+        {
+            AppLogger.Warn("ChequearActualizacionesAsync", ex);
+            Services.NotificationService.Warning("Actualización", $"No se pudo verificar: {ex.Message}");
+        }
     }
 
     private void PoblarGraficoSaldos(CasaCambio.Shared.DTOs.DashboardDto dashboard)
