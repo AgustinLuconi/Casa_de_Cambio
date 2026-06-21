@@ -55,7 +55,25 @@
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
                                 <TextBlock Text="Oscuro" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                <ToggleSwitch x:Name="toggleTema" IsChecked="True" OnContent="" OffContent="" IsCheckedChanged="ToggleTema_Changed"/>
+                                <!-- Toggle custom con ícono dentro del knob -->
+                                <Border x:Name="toggleTemaTrack"
+                                        Width="56" Height="30" CornerRadius="15"
+                                        Background="{DynamicResource AccentBrush}"
+                                        Cursor="Hand"
+                                        PointerPressed="ToggleTema_Click">
+                                    <Border x:Name="toggleTemaKnob"
+                                            Width="24" Height="24" CornerRadius="12"
+                                            Background="White"
+                                            HorizontalAlignment="Left" Margin="3,0,0,0"
+                                            VerticalAlignment="Center">
+                                        <icon:MaterialIcon x:Name="iconTema"
+                                                           Kind="WeatherNight"
+                                                           Width="14" Height="14"
+                                                           Foreground="#1a6fa8"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
+                                    </Border>
+                                </Border>
                                 <TextBlock Text="Claro" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Grid>

@@ -1,7 +1,10 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Styling;
+using Material.Icons;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
@@ -29,10 +32,28 @@ namespace SistemaCambio.Views
             CargarMonedasAsync();
         }
 
-        private void ToggleTema_Changed(object? sender, RoutedEventArgs e)
+        private bool _isDarkMode = true;
+
+        private void ToggleTema_Click(object? sender, PointerPressedEventArgs e)
         {
+            _isDarkMode = !_isDarkMode;
             if (Application.Current != null)
-                Application.Current.RequestedThemeVariant = toggleTema.IsChecked == true ? ThemeVariant.Dark : ThemeVariant.Light;
+                Application.Current.RequestedThemeVariant = _isDarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
+
+            if (_isDarkMode)
+            {
+                toggleTemaKnob.HorizontalAlignment = HorizontalAlignment.Left;
+                toggleTemaKnob.Margin = new Thickness(3, 0, 0, 0);
+                iconTema.Kind = MaterialIconKind.WeatherNight;
+                iconTema.Foreground = Avalonia.Media.Brush.Parse("#1a6fa8");
+            }
+            else
+            {
+                toggleTemaKnob.HorizontalAlignment = HorizontalAlignment.Right;
+                toggleTemaKnob.Margin = new Thickness(0, 0, 3, 0);
+                iconTema.Kind = MaterialIconKind.WeatherSunny;
+                iconTema.Foreground = Avalonia.Media.Brush.Parse("#d97706");
+            }
         }
 
         private async void CargarMonedasAsync()
