@@ -41,7 +41,7 @@ namespace SistemaCambio.Views
 
                 cmbCuenta.Items.Add(new ComboBoxItem { Content = "Todas", Tag = 0 });
                 cmbCuentaExterna.Items.Add(new ComboBoxItem { Content = "Todas", Tag = 0 });
-                foreach (var cuenta in _cuentasCache.OrderBy(c => c.Nombre))
+                foreach (var cuenta in _cuentasCache.Where(c => c.Tipo != "Externo").OrderBy(c => c.Nombre))
                 {
                     cmbCuenta.Items.Add(new ComboBoxItem { Content = cuenta.Nombre, Tag = cuenta.Id });
                     cmbCuentaExterna.Items.Add(new ComboBoxItem { Content = cuenta.Nombre, Tag = cuenta.Id });

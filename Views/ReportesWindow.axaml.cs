@@ -51,6 +51,7 @@ namespace SistemaCambio.Views
                 var itemTipo = cmbTipoSaldos.SelectedItem as ComboBoxItem;
                 string tipo = itemTipo?.Content?.ToString() ?? "Todos";
                 var cuentas = await _apiClient.ObtenerCuentasAsync();
+                cuentas = cuentas.Where(c => c.Tipo != "Externo").ToList();
                 if (tipo != "Todos") cuentas = cuentas.Where(c => c.Tipo == tipo).ToList();
 
                 // Aplanar: una fila por (cuenta, saldo). CuentaDto no expone Moneda/Saldo

@@ -202,8 +202,8 @@ namespace SistemaCambio.ViewModels
                     Console.WriteLine($"Error cargando dashboard: {exDash.Message}");
                 }
 
-                // Una sola fila por cuenta (agrupada por propietario)
-                foreach (var cuenta in cuentasApi.OrderBy(c => c.Id))
+                // Una sola fila por cuenta (agrupada por propietario); Externo es interna contable
+                foreach (var cuenta in cuentasApi.Where(c => c.Tipo != "Externo").OrderBy(c => c.Id))
                 {
                     var saldos = cuenta.Saldos
                         .OrderBy(s => s.Moneda)
