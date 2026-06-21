@@ -66,8 +66,11 @@ namespace SistemaCambio.Views
                         var color = m.Monto > 0 ? successBrush : (m.Monto < 0 ? dangerBrush : fgBrush);
                         Movimientos.Add(new MovimientoDisplay
                         {
-                            Fecha = m.Fecha, TipoOperacion = "Operacion", Moneda = m.Moneda,
-                            MontoFormatted = $"{prefijo}{m.Monto:N2}", MontoColor = color, Detalle = ""
+                            Fecha = m.Fecha,
+                            CodigoOperacion = $"OP-{m.OperacionId:D5}",
+                            Moneda = m.Moneda,
+                            MontoFormatted = $"{prefijo}{m.Monto:N2}",
+                            MontoColor = color
                         });
                     }
                     dgMovimientos.ItemsSource = Movimientos;
@@ -83,11 +86,10 @@ namespace SistemaCambio.Views
     public class MovimientoDisplay
     {
         public DateTime Fecha { get; set; }
-        public string TipoOperacion { get; set; } = "";
+        public string CodigoOperacion { get; set; } = "";
         public string Moneda { get; set; } = "";
         public string MontoFormatted { get; set; } = "";
         public ISolidColorBrush? MontoColor { get; set; }
-        public string Detalle { get; set; } = "";
     }
 
     public class DetalleSaldoItem

@@ -67,27 +67,26 @@
                 <TextBlock Grid.Row="0" Text="Últimos Movimientos" FontWeight="SemiBold" FontSize="14" 
                            Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,12"/>
                 
-                <DataGrid Grid.Row="1" x:Name="dgMovimientos" AutoGenerateColumns="False" 
+                <DataGrid Grid.Row="1" x:Name="dgMovimientos" AutoGenerateColumns="False"
                           BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
                           GridLinesVisibility="Horizontal"
                           HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
                           HeadersVisibility="Column"
                           IsReadOnly="True">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="140"/>
-                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}" Width="130"/>
-                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="100"/>
-                        <DataGridTemplateColumn Header="MONTO" Width="140">
+                        <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="158"/>
+                        <DataGridTextColumn Header="CÓDIGO OPERACIÓN" Binding="{Binding CodigoOperacion}" Width="Auto" MinWidth="150"/>
+                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="Auto" MinWidth="80"/>
+                        <DataGridTemplateColumn Header="MONTO" Width="*" MinWidth="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding MontoFormatted}" 
-                                               Foreground="{Binding MontoColor}" 
-                                               FontWeight="Bold" 
+                                    <TextBlock Text="{Binding MontoFormatted}"
+                                               Foreground="{Binding MontoColor}"
+                                               FontWeight="Bold"
                                                VerticalAlignment="Center"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="DETALLE / OBSERVACIONES" Binding="{Binding Detalle}" Width="*"/>
                     </DataGrid.Columns>
                 </DataGrid>
                 <TextBlock Grid.Row="1" x:Name="txtSinMovimientos" Text="No hay movimientos registrados en esta cuenta."
