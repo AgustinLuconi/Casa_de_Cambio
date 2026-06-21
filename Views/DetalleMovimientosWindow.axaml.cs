@@ -3,6 +3,8 @@ using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
+using SistemaCambio.Views.Helpers;
+using CasaCambio.Shared.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,14 +16,20 @@ namespace SistemaCambio.Views
     {
         private readonly ICasaCambioApiClient _apiClient;
         private readonly ObservableCollection<MovimientoDetalle> _movimientos = new();
-        private List<CasaCambio.Shared.DTOs.CuentaDto> _cuentasCache = new();
+        private List<CuentaDto> _cuentasCache = new();
 
         public DetalleMovimientosWindow()
         {
             _apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
             InitializeComponent();
+            NotificationService.Initialize(notificationPanel);
+            Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
+
             dpDesde.SelectedDate = DateTime.Today;
             dpHasta.SelectedDate = DateTime.Today;
+            dpDesdeOp.SelectedDate = new DateTimeOffset(DateTime.Today.AddDays(-30));
+            dpHastaOp.SelectedDate = new DateTimeOffset(DateTime.Today);
+
             CargarDatosAsync();
         }
 
@@ -56,6 +64,8 @@ namespace SistemaCambio.Views
             catch (Exception ex) { AppLogger.Warn("CargarDatosAsync", ex); }
         }
 
+        // ── Tab Movimientos ────────────────────────────────────────────────
+
         private async void BtnBuscar_Click(object? sender, RoutedEventArgs e)
         {
             _movimientos.Clear();
@@ -63,7 +73,6 @@ namespace SistemaCambio.Views
             var itemCuenta = cmbCuenta.SelectedItem as ComboBoxItem;
             int cuentaId = itemCuenta?.Tag is int id ? id : 0;
 
-            // Cuando no se buscan históricos, el rango es solo hoy
             bool usarRango = chkHistoricos.IsChecked ?? false;
             DateTime fechaDesde = DateTime.SpecifyKind(
                 usarRango ? dpDesde.SelectedDate?.DateTime ?? DateTime.Today : DateTime.Today,
@@ -72,7 +81,6 @@ namespace SistemaCambio.Views
                 (usarRango ? dpHasta.SelectedDate?.DateTime ?? DateTime.Today : DateTime.Today).AddDays(1),
                 DateTimeKind.Utc);
 
-            // ── Fetch ────────────────────────────────────────────────────
             var todos = new List<MovimientoDetalle>();
             try
             {
@@ -112,10 +120,8 @@ namespace SistemaCambio.Views
             }
             catch (Exception ex) { AppLogger.Warn("BtnBuscar_Click", ex); }
 
-            // ── Filtros cliente (lazy LINQ) ───────────────────────────────
             IEnumerable<MovimientoDetalle> resultado = todos;
 
-            // Filtro por Moneda
             if (cmbMoneda.SelectedItem is ComboBoxItem monedaItem
                 && monedaItem.Tag is string monedaTag
                 && !string.IsNullOrEmpty(monedaTag)
@@ -124,8 +130,6 @@ namespace SistemaCambio.Views
                 resultado = resultado.Where(m => m.Moneda == monedaTag);
             }
 
-            // Filtro por Cuenta Externa: muestra solo movimientos cuyo NombreCuenta
-            // coincide con la cuenta externa seleccionada
             if (cmbCuentaExterna.SelectedItem is ComboBoxItem extItem
                 && extItem.Tag is int extId && extId > 0)
             {
@@ -134,11 +138,52 @@ namespace SistemaCambio.Views
                     resultado = resultado.Where(m => m.CuentaNombre == nombreExt);
             }
 
-            // Materializar el resultado en la colección observable
             foreach (var m in resultado)
                 _movimientos.Add(m);
 
             txtResultados.Text = $"{_movimientos.Count} movimiento(s) encontrado(s)";
+        }
+
+        // ── Tab Operaciones ────────────────────────────────────────────────
+
+        private async void BtnGenerarOperaciones_Click(object? sender, RoutedEventArgs e)
+            => await CargarOperacionesAsync();
+
+        private async System.Threading.Tasks.Task CargarOperacionesAsync()
+        {
+            try
+            {
+                var fechaDesde = DateTime.SpecifyKind(
+                    dpDesdeOp.SelectedDate?.Date ?? DateTime.Today.AddDays(-30), DateTimeKind.Utc);
+                var fechaHasta = DateTime.SpecifyKind(
+                    (dpHastaOp.SelectedDate?.Date ?? DateTime.Today).AddDays(1), DateTimeKind.Utc);
+                var response = await _apiClient.ObtenerOperacionesAsync(fechaDesde, fechaHasta, pageSize: 500);
+                dgOperaciones.ItemsSource = response.Items;
+            }
+            catch (Exception ex) { AppLogger.Warn("CargarOperacionesAsync", ex); }
+        }
+
+        private async void BtnAnular_Click(object? sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { Tag: OperacionDto op }) return;
+            var confirmar = await DialogHelper.ConfirmarAsync(this,
+                "Confirmar anulación",
+                $"¿Anular la operación {op.CodigoOperacion}?\n\nSe generará una contrapartida que revierte todos los movimientos. Esta acción no se puede deshacer.",
+                "Anular operación");
+            if (!confirmar) return;
+            try
+            {
+                var resultado = await _apiClient.AnularOperacionAsync(op.Id);
+                if (resultado.Exitoso)
+                {
+                    NotificationService.Success("Anulación registrada",
+                        $"{op.CodigoOperacion} anulada. Se generó la contrapartida OP-{resultado.OperacionId:D5}.");
+                    await CargarOperacionesAsync();
+                }
+                else
+                    NotificationService.Error("Error al anular", resultado.Mensaje ?? "Error desconocido.");
+            }
+            catch (Exception ex) { NotificationService.Error("Error", ex.Message); }
         }
 
         private void BtnCancelar_Click(object? sender, RoutedEventArgs e) => Close();

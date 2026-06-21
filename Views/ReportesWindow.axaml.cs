@@ -115,40 +115,6 @@ namespace SistemaCambio.Views
             }
         }
 
-        private async void BtnAnular_Click(object? sender, RoutedEventArgs e)
-        {
-            if (sender is not Button { Tag: OperacionDto op }) return;
-            var confirmar = await DialogHelper.ConfirmarAsync(this,
-                "Confirmar anulación",
-                $"¿Anular la operación {op.CodigoOperacion}?\n\nSe generará una contrapartida que revierte todos los movimientos. Esta acción no se puede deshacer.",
-                "Anular operación");
-            if (!confirmar) return;
-            try
-            {
-                var resultado = await _apiClient.AnularOperacionAsync(op.Id);
-                if (resultado.Exitoso)
-                {
-                    NotificationService.Success("Anulación registrada", $"{op.CodigoOperacion} anulada. Se generó la contrapartida OP-{resultado.OperacionId:D5}.");
-                    await BtnGenerarOperaciones_Click_Internal();
-                }
-                else
-                    NotificationService.Error("Error al anular", resultado.Mensaje ?? "Error desconocido.");
-            }
-            catch (Exception ex) { NotificationService.Error("Error", ex.Message); }
-        }
-
-        private async System.Threading.Tasks.Task BtnGenerarOperaciones_Click_Internal()
-        {
-            try
-            {
-                var fechaDesde = DateTime.SpecifyKind(dpDesdeOp.SelectedDate?.Date ?? DateTime.Today.AddDays(-30), DateTimeKind.Utc);
-                var fechaHasta = DateTime.SpecifyKind((dpHastaOp.SelectedDate?.Date ?? DateTime.Today).AddDays(1), DateTimeKind.Utc);
-                var response = await _apiClient.ObtenerOperacionesAsync(fechaDesde, fechaHasta, pageSize: 500);
-                dgOperaciones.ItemsSource = response.Items;
-            }
-            catch (Exception ex) { AppLogger.Warn("BtnGenerarOperaciones_Reload", ex); }
-        }
-
         private void BtnCerrar_Click(object? sender, RoutedEventArgs e) => Close();
     }
 

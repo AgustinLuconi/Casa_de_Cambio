@@ -72,22 +72,6 @@
                             <DataGridTextColumn Header="MONTO DESTINO" Binding="{Binding MontoTotalDestino, StringFormat='{}{0:N2}'}" Width="120"/>
                             <DataGridTextColumn Header="OBSERVACIONES" Binding="{Binding Observaciones}" Width="*"/>
                             <DataGridTextColumn Header="ESTADO" Binding="{Binding EstadoDisplay}" Width="90"/>
-                            <DataGridTemplateColumn Header="" Width="80">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="Anular"
-                                                Tag="{Binding}"
-                                                IsEnabled="{Binding PuedeAnular}"
-                                                IsVisible="{Binding PuedeAnular}"
-                                                FontSize="11"
-                                                Padding="6,3"
-                                                Background="{DynamicResource DangerBrush}"
-                                                Foreground="White"
-                                                CornerRadius="4"
-                                                Click="BtnAnular_Click"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
