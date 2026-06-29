@@ -108,7 +108,8 @@
                             <TextBlock Text="Límites de Deuda Generales por Divisa" FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14"/>
                             <TextBlock Text="Se aplican a cuentas de tipo Cliente sin límite específico para esa divisa. Dejá un campo en 0 para quitar el límite de esa divisa."
-                                       Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                       Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"
+                                       TextWrapping="Wrap"/>
 
                             <!-- Opción global: sin límite para todas las divisas -->
                             <Border Background="{DynamicResource AppBackgroundBrush}"

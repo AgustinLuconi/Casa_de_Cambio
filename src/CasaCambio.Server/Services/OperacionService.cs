@@ -191,12 +191,13 @@ public class OperacionService : IOperacionService
     private static decimal? LeerLimiteConfig(AppDbContext db, string clave)
     {
         var config = db.ConfiguracionSistema.Find(clave);
-        if (config != null && decimal.TryParse(config.Valor,
+        if (config == null) return null;
+        if (!decimal.TryParse(config.Valor,
                 System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out var limite)
-            && limite > 0)
-            return limite;
-        return null;
+                System.Globalization.CultureInfo.InvariantCulture, out var limite))
+            return null;
+        // 0 = sin límite (ilimitado); > 0 = límite específico; < 0 = no configurado
+        return limite >= 0 ? (limite == 0 ? decimal.MaxValue : limite) : null;
     }
 
     private OperacionResult? ValidarMonoMonedaEfectivo(AppDbContext db, int cuentaId, string moneda)
