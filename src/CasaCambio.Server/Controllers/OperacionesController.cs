@@ -58,7 +58,7 @@ public class OperacionesController : ControllerBase
     {
         var result = _operacionService.GuardarOperacion("Compra", req.CuentaOrigenId, req.CuentaDestinoId, req.MonedaOrigen, req.MonedaDestino, req.MontoOrigen, req.MontoDestino, req.Cotizacion, req.ClienteId, req.Observaciones, req.IdempotencyKey);
         if (result.Exitoso) _pppService.RegistrarCompra(req.MonedaDestino, req.MontoDestino, req.MontoOrigen);
-        return result.Exitoso ? Ok(OperacionResponse.Success(result.OperacionId!.Value)) : BadRequest(OperacionResponse.Error(result.Mensaje));
+        return Ok(result.Exitoso ? OperacionResponse.Success(result.OperacionId!.Value) : OperacionResponse.Error(result.Mensaje));
     }
 
     [HttpPost("venta")]
@@ -66,28 +66,28 @@ public class OperacionesController : ControllerBase
     {
         var result = _operacionService.GuardarOperacion("Venta", req.CuentaOrigenId, req.CuentaDestinoId, req.MonedaOrigen, req.MonedaDestino, req.MontoOrigen, req.MontoDestino, req.Cotizacion, req.ClienteId, req.Observaciones, req.IdempotencyKey);
         if (result.Exitoso) _pppService.RegistrarVenta(req.MonedaOrigen, req.MontoOrigen);
-        return result.Exitoso ? Ok(OperacionResponse.Success(result.OperacionId!.Value)) : BadRequest(OperacionResponse.Error(result.Mensaje));
+        return Ok(result.Exitoso ? OperacionResponse.Success(result.OperacionId!.Value) : OperacionResponse.Error(result.Mensaje));
     }
 
     [HttpPost("credito-debito")]
     public IActionResult CreditoDebito([FromBody] CrearCreditoDebitoRequest req)
     {
         var result = _operacionService.GuardarCreditoDebito(req.CuentaCreditoId, req.CuentaDebitoId, req.MonedaCredito, req.MonedaDebito, req.MontoCredito, req.MontoDebito, req.Cotizacion, req.ClienteId, req.Observaciones, req.IdempotencyKey);
-        return result.Exitoso ? Ok(OperacionResponse.Success(result.OperacionId!.Value)) : BadRequest(OperacionResponse.Error(result.Mensaje));
+        return Ok(result.Exitoso ? OperacionResponse.Success(result.OperacionId!.Value) : OperacionResponse.Error(result.Mensaje));
     }
 
     [HttpPost("interbancaria")]
     public IActionResult Interbancaria([FromBody] CrearInterbancarioRequest req)
     {
         var result = _operacionService.GuardarOperacionInterbancaria("Interbancaria", req.CuentaOrigenId, req.CuentaDestinoId, req.MonedaOrigen, req.MonedaDestino, req.MontoOrigen, req.MontoDestino, req.Cotizacion, req.Observaciones);
-        return result.Exitoso ? Ok(OperacionResponse.Success(result.OperacionId!.Value)) : BadRequest(OperacionResponse.Error(result.Mensaje));
+        return Ok(result.Exitoso ? OperacionResponse.Success(result.OperacionId!.Value) : OperacionResponse.Error(result.Mensaje));
     }
 
     [HttpPost("{id}/anular")]
     public IActionResult Anular(int id)
     {
         var result = _operacionService.AnularOperacion(id);
-        return result.Exitoso ? Ok(OperacionResponse.Success(result.OperacionId!.Value)) : BadRequest(OperacionResponse.Error(result.Mensaje));
+        return Ok(result.Exitoso ? OperacionResponse.Success(result.OperacionId!.Value) : OperacionResponse.Error(result.Mensaje));
     }
 
     private static OperacionDto MapOperacion(Models.Operacion o) => new()
