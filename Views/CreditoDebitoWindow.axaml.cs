@@ -235,30 +235,11 @@ namespace SistemaCambio.Views
         private CuentaMonedaTag? ObtenerTagDebito()
             => (cmbDebito.SelectedItem as ComboBoxItem)?.Tag as CuentaMonedaTag;
 
-        // ── Validación ───────────────────────────────────────────────
-
-        private bool ValidarCampos()
-        {
-            decimal importeCredito = ParsearMonto(txtImporteCredito.Text);
-            decimal importeDebito  = ParsearMonto(txtImporteDebito.Text);
-            if (importeCredito <= 0 && importeDebito <= 0)
-            {
-                NotificationService.Warning("Campo requerido", "Ingrese al menos un importe mayor a cero.");
-                txtImporteCredito.Focus();
-                return false;
-            }
-            if (ObtenerTagCredito() == null || ObtenerTagDebito() == null)
-            {
-                NotificationService.Warning("Selección incompleta", "Seleccione las cuentas crédito y débito.");
-                return false;
-            }
-            return true;
-        }
-
         private void MostrarErrorServidor(string mensaje)
         {
             borderError.IsVisible = true;
             txtErrorServidor.Text = mensaje;
+            NotificationService.Error("Operación rechazada", mensaje.Split('\n')[0]);
         }
 
         private void OcultarErrorServidor()
@@ -271,23 +252,41 @@ namespace SistemaCambio.Views
 
         private async void BtnAceptar_Click(object? sender, RoutedEventArgs e)
         {
-            if (await EjecutarOperacion())
+            try
             {
-                NotificationService.Success("Crédito/Débito registrado", "Operación completada");
-                Close();
+                if (await EjecutarOperacion())
+                {
+                    NotificationService.Success("Crédito/Débito registrado", "Operación completada");
+                    Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                MostrarErrorServidor($"Error inesperado: {ex.Message}");
             }
         }
 
         private async Task<bool> EjecutarOperacion()
         {
             OcultarErrorServidor();
-            if (!ValidarCampos()) return false;
 
             decimal importeCredito = ParsearMonto(txtImporteCredito.Text);
             decimal importeDebito  = ParsearMonto(txtImporteDebito.Text);
+            var tagCredito = ObtenerTagCredito();
+            var tagDebito  = ObtenerTagDebito();
 
-            var tagCredito = ObtenerTagCredito()!;
-            var tagDebito  = ObtenerTagDebito()!;
+            // Validar todo en un solo lugar con los valores ya capturados
+            if (importeCredito <= 0 && importeDebito <= 0)
+            {
+                NotificationService.Warning("Campo requerido", "Ingrese al menos un importe mayor a cero.");
+                txtImporteCredito.Focus();
+                return false;
+            }
+            if (tagCredito == null || tagDebito == null)
+            {
+                NotificationService.Warning("Selección incompleta", "Seleccione las cuentas crédito y débito.");
+                return false;
+            }
 
             int? clienteId = null;
             if ((cmbCliente.SelectedItem as ComboBoxItem)?.Tag is int cId) clienteId = cId;
