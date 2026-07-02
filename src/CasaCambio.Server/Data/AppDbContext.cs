@@ -9,7 +9,6 @@ public class AppDbContext : DbContext
 
     public DbSet<Cuenta> Cuentas { get; set; }
     public DbSet<SaldoCuenta> SaldosCuenta { get; set; }
-    public DbSet<Cliente> Clientes { get; set; }
     public DbSet<Operacion> Operaciones { get; set; }
     public DbSet<Movimiento> Movimientos { get; set; }
     public DbSet<Moneda> Monedas { get; set; }
@@ -24,12 +23,6 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Operacion>()
-            .HasOne(o => o.Cliente)
-            .WithMany()
-            .HasForeignKey(o => o.ClienteId)
-            .OnDelete(DeleteBehavior.SetNull);
-
         modelBuilder.Entity<Movimiento>()
             .HasOne(m => m.Operacion)
             .WithMany(o => o.Movimientos)

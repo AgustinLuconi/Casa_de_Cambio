@@ -29,7 +29,7 @@ public class OperacionesController : ControllerBase
     public IActionResult GetOperaciones([FromQuery] DateTime? desde, [FromQuery] DateTime? hasta, [FromQuery] string? tipo, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         using var db = _contextFactory.CreateDbContext();
-        IQueryable<Models.Operacion> query = db.Operaciones.Include(o => o.Cliente).Include(o => o.Movimientos).ThenInclude(m => m.Cuenta);
+        IQueryable<Models.Operacion> query = db.Operaciones.Include(o => o.Movimientos).ThenInclude(m => m.Cuenta);
         if (desde.HasValue) query = query.Where(o => o.Fecha >= desde.Value);
         if (hasta.HasValue) query = query.Where(o => o.Fecha < hasta.Value);
         if (!string.IsNullOrEmpty(tipo)) query = query.Where(o => o.TipoOperacion == tipo);
@@ -48,7 +48,7 @@ public class OperacionesController : ControllerBase
     public IActionResult GetOperacion(int id)
     {
         using var db = _contextFactory.CreateDbContext();
-        var op = db.Operaciones.Include(o => o.Cliente).Include(o => o.Movimientos).ThenInclude(m => m.Cuenta).AsNoTracking().FirstOrDefault(o => o.Id == id);
+        var op = db.Operaciones.Include(o => o.Movimientos).ThenInclude(m => m.Cuenta).AsNoTracking().FirstOrDefault(o => o.Id == id);
         if (op == null) return NotFound();
         return Ok(MapOperacion(op));
     }
@@ -56,7 +56,7 @@ public class OperacionesController : ControllerBase
     [HttpPost("compra")]
     public IActionResult Compra([FromBody] CrearOperacionRequest req)
     {
-        var result = _operacionService.GuardarOperacion("Compra", req.CuentaOrigenId, req.CuentaDestinoId, req.MonedaOrigen, req.MonedaDestino, req.MontoOrigen, req.MontoDestino, req.Cotizacion, req.ClienteId, req.Observaciones, req.IdempotencyKey);
+        var result = _operacionService.GuardarOperacion("Compra", req.CuentaOrigenId, req.CuentaDestinoId, req.MonedaOrigen, req.MonedaDestino, req.MontoOrigen, req.MontoDestino, req.Cotizacion, req.Observaciones, req.IdempotencyKey);
         if (result.Exitoso) _pppService.RegistrarCompra(req.MonedaDestino, req.MontoDestino, req.MontoOrigen);
         return Ok(result.Exitoso ? OperacionResponse.Success(result.OperacionId!.Value) : OperacionResponse.Error(result.Mensaje));
     }
@@ -64,7 +64,7 @@ public class OperacionesController : ControllerBase
     [HttpPost("venta")]
     public IActionResult Venta([FromBody] CrearOperacionRequest req)
     {
-        var result = _operacionService.GuardarOperacion("Venta", req.CuentaOrigenId, req.CuentaDestinoId, req.MonedaOrigen, req.MonedaDestino, req.MontoOrigen, req.MontoDestino, req.Cotizacion, req.ClienteId, req.Observaciones, req.IdempotencyKey);
+        var result = _operacionService.GuardarOperacion("Venta", req.CuentaOrigenId, req.CuentaDestinoId, req.MonedaOrigen, req.MonedaDestino, req.MontoOrigen, req.MontoDestino, req.Cotizacion, req.Observaciones, req.IdempotencyKey);
         if (result.Exitoso) _pppService.RegistrarVenta(req.MonedaOrigen, req.MontoOrigen);
         return Ok(result.Exitoso ? OperacionResponse.Success(result.OperacionId!.Value) : OperacionResponse.Error(result.Mensaje));
     }
@@ -72,7 +72,7 @@ public class OperacionesController : ControllerBase
     [HttpPost("credito-debito")]
     public IActionResult CreditoDebito([FromBody] CrearCreditoDebitoRequest req)
     {
-        var result = _operacionService.GuardarCreditoDebito(req.CuentaCreditoId, req.CuentaDebitoId, req.MonedaCredito, req.MonedaDebito, req.MontoCredito, req.MontoDebito, req.Cotizacion, req.ClienteId, req.Observaciones, req.IdempotencyKey);
+        var result = _operacionService.GuardarCreditoDebito(req.CuentaCreditoId, req.CuentaDebitoId, req.MonedaCredito, req.MonedaDebito, req.MontoCredito, req.MontoDebito, req.Cotizacion, req.Observaciones, req.IdempotencyKey);
         return Ok(result.Exitoso ? OperacionResponse.Success(result.OperacionId!.Value) : OperacionResponse.Error(result.Mensaje));
     }
 
@@ -92,8 +92,7 @@ public class OperacionesController : ControllerBase
 
     private static OperacionDto MapOperacion(Models.Operacion o) => new()
     {
-        Id = o.Id, Fecha = o.Fecha, TipoOperacion = o.TipoOperacion, ClienteId = o.ClienteId,
-        NombreCliente = o.Cliente?.Nombre, MontoTotalOrigen = o.MontoTotalOrigen,
+        Id = o.Id, Fecha = o.Fecha, TipoOperacion = o.TipoOperacion, MontoTotalOrigen = o.MontoTotalOrigen,
         MontoTotalDestino = o.MontoTotalDestino, CotizacionAplicada = o.CotizacionAplicada,
         Observaciones = o.Observaciones, Anulada = o.Anulada, OperacionOriginalId = o.OperacionOriginalId,
         Movimientos = o.Movimientos.Select(m => new MovimientoDto

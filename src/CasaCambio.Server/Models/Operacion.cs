@@ -11,8 +11,6 @@ public class Operacion
     [Key] [Column("id")] public int Id { get; set; }
     [Column("fecha")] public DateTime Fecha { get; set; } = DateTime.Now;
     [Column("tipo_operacion")] public string TipoOperacion { get; set; } = "Compra";
-    [Column("cliente_id")] public int? ClienteId { get; set; }
-    [ForeignKey("ClienteId")] public Cliente? Cliente { get; set; }
     [Column("monto_total_origen")] public decimal MontoTotalOrigen { get; set; }
     [Column("monto_total_destino")] public decimal MontoTotalDestino { get; set; }
     [Column("cotizacion_aplicada")] public decimal CotizacionAplicada { get; set; }

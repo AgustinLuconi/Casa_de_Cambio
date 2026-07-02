@@ -123,16 +123,6 @@ public class IntegrationTests : IDisposable
     }
 
     [Fact]
-    public void Cliente_Crear_DeberiaGuardarse()
-    {
-        _db.Clientes.Add(new Cliente { Nombre = "Juan Perez", Documento = "12345678", Email = "juan@ejemplo.com" });
-        _db.SaveChanges();
-
-        var cliente = _db.Clientes.First();
-        Assert.Equal("Juan Perez", cliente.Nombre);
-    }
-
-    [Fact]
     public void CotizacionDiaria_Crear_DeberiaGuardarse()
     {
         _db.CotizacionesDiarias.Add(new CotizacionDiaria

@@ -52,7 +52,6 @@ namespace SistemaCambio.Views
                 _monedasApi = monedasTask.Result;
 
                 CargarCombos();
-                await CargarClientesAsync();
             }
             catch (Exception ex)
             {
@@ -87,20 +86,6 @@ namespace SistemaCambio.Views
             }
             if (cmbCredito.Items.Count > 0) cmbCredito.SelectedIndex = 0;
             if (cmbDebito.Items.Count > 0)  cmbDebito.SelectedIndex = 0;
-        }
-
-        private async Task CargarClientesAsync()
-        {
-            try
-            {
-                var clientes = await _apiClient.ObtenerClientesAsync();
-                cmbCliente.Items.Clear();
-                cmbCliente.Items.Add(new ComboBoxItem { Content = "(Sin cliente)", Tag = null });
-                foreach (var cliente in clientes)
-                    cmbCliente.Items.Add(new ComboBoxItem { Content = cliente.Nombre, Tag = cliente.Id });
-                cmbCliente.SelectedIndex = 0;
-            }
-            catch (Exception ex) { AppLogger.Warn("CargarClientesAsync", ex); }
         }
 
         // ── Eventos ─────────────────────────────────────────────────
@@ -217,14 +202,6 @@ namespace SistemaCambio.Views
                 tb.Text = "0";
         }
 
-        // ── Siguiente: saltar a la pestaña Cliente ──────────────────
-
-        private void BtnSiguiente_Click(object? sender, RoutedEventArgs e)
-        {
-            if (tabRoot.Items.Count > 1)
-                tabRoot.SelectedIndex = 1;
-        }
-
         // ── Helpers ──────────────────────────────────────────────────
 
         private static decimal ParsearMonto(string? texto) => MontoHelper.Parsear(texto);
@@ -298,9 +275,6 @@ namespace SistemaCambio.Views
                 return null;
             }
 
-            int? clienteId = null;
-            if ((cmbCliente.SelectedItem as ComboBoxItem)?.Tag is int cId) clienteId = cId;
-
             // En operaciones de la misma moneda no hay tipo de cambio real (ej. ARS-ARS);
             // el textbox de cotización queda en 0 porque no existe cotización de una moneda contra sí misma.
             decimal cotizacion = tagCredito.Moneda == tagDebito.Moneda
@@ -316,7 +290,6 @@ namespace SistemaCambio.Views
                 MontoCredito    = importeCredito,
                 MontoDebito     = importeDebito,
                 Cotizacion      = cotizacion,
-                ClienteId       = clienteId,
                 Observaciones   = txtObservaciones.Text ?? ""
             };
 

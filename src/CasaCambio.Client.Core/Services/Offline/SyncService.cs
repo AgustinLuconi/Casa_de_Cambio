@@ -82,7 +82,6 @@ public class SyncService : BackgroundService
                 MontoOrigen = op.MontoOrigen,
                 MontoDestino = op.MontoDestino,
                 CotizacionAplicada = op.CotizacionAplicada,
-                ClienteId = op.ClienteId,
                 Observaciones = op.Observaciones,
                 FechaCreacionLocal = op.FechaCreacionLocal
             }).ToList()

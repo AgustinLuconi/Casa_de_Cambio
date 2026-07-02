@@ -49,7 +49,6 @@ public class OfflineOperacionService : IOfflineOperacionService
             MontoOrigen = request.MontoDebito,
             MontoDestino = request.MontoCredito,
             CotizacionAplicada = request.Cotizacion,
-            ClienteId = request.ClienteId,
             Observaciones = request.Observaciones
         };
 
@@ -115,7 +114,6 @@ public class OfflineOperacionService : IOfflineOperacionService
         MontoOrigen = request.MontoOrigen,
         MontoDestino = request.MontoDestino,
         CotizacionAplicada = request.Cotizacion,
-        ClienteId = request.ClienteId,
         Observaciones = request.Observaciones
     };
 

@@ -50,9 +50,6 @@ public interface ICasaCambioApiClient
     Task<List<CotizacionDto>> ObtenerCotizacionesHoyAsync();
     Task GuardarCotizacionAsync(CrearCotizacionRequest request);
 
-    // Clientes
-    Task<List<ClienteDto>> ObtenerClientesAsync();
-
     // Arqueo
     Task<ArqueoDto> RealizarArqueoAsync(CrearArqueoRequest request);
 

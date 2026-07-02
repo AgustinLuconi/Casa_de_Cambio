@@ -16,7 +16,6 @@ public class OperacionOfflineRequest
     public decimal MontoOrigen { get; set; }
     public decimal MontoDestino { get; set; }
     public decimal CotizacionAplicada { get; set; }
-    public int? ClienteId { get; set; }
     public string Observaciones { get; set; } = "";
     public DateTime FechaCreacionLocal { get; set; }
 }

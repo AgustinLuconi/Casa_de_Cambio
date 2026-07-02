@@ -15,7 +15,7 @@ public class OperacionService : IOperacionService
     public OperacionService(IDbContextFactory<AppDbContext> contextFactory, IAuditService auditService, ICierreCajaService cierreCajaService, OperacionValidator validator)
     { _contextFactory = contextFactory; _auditService = auditService; _cierreCajaService = cierreCajaService; _validator = validator; }
 
-    public OperacionResult GuardarOperacion(string tipo, int cuentaOrigenId, int cuentaDestinoId, string monedaOrigen, string monedaDestino, decimal montoOrigen, decimal montoDestino, decimal cotizacion, int? clienteId = null, string observaciones = "", string? idempotencyKey = null)
+    public OperacionResult GuardarOperacion(string tipo, int cuentaOrigenId, int cuentaDestinoId, string monedaOrigen, string monedaDestino, decimal montoOrigen, decimal montoDestino, decimal cotizacion, string observaciones = "", string? idempotencyKey = null)
     {
         montoOrigen = Math.Round(montoOrigen, 2, MidpointRounding.AwayFromZero);
         montoDestino = Math.Round(montoDestino, 2, MidpointRounding.AwayFromZero);
@@ -56,7 +56,7 @@ public class OperacionService : IOperacionService
                     return OperacionResult.Error($"Saldo insuficiente en '{cuentaOrigen.Nombre}' ({monedaOrigen}). Disponible: {saldoOrigen.Saldo:N2}, Requerido: {montoOrigen:N2}");
                 }
             }
-            var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = tipo, ClienteId = clienteId, MontoTotalOrigen = montoOrigen, MontoTotalDestino = montoDestino, CotizacionAplicada = cotizacion, Observaciones = observaciones, IdempotencyKey = idempotencyKey };
+            var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = tipo, MontoTotalOrigen = montoOrigen, MontoTotalDestino = montoDestino, CotizacionAplicada = cotizacion, Observaciones = observaciones, IdempotencyKey = idempotencyKey };
             db.Operaciones.Add(operacion);
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaOrigenId, Moneda = monedaOrigen, Monto = -montoOrigen, Fecha = DateTime.UtcNow });
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaDestinoId, Moneda = monedaDestino, Monto = montoDestino, Fecha = DateTime.UtcNow });
@@ -68,7 +68,7 @@ public class OperacionService : IOperacionService
         catch (Exception ex) { transaction.Rollback(); return OperacionResult.Error($"Error al guardar operacion: {ex.InnerException?.Message ?? ex.Message}"); }
     }
 
-    public OperacionResult GuardarCreditoDebito(int cuentaCreditoId, int cuentaDebitoId, string monedaCredito, string monedaDebito, decimal montoCredito, decimal montoDebito, decimal cotizacion, int? clienteId = null, string observaciones = "", string? idempotencyKey = null)
+    public OperacionResult GuardarCreditoDebito(int cuentaCreditoId, int cuentaDebitoId, string monedaCredito, string monedaDebito, decimal montoCredito, decimal montoDebito, decimal cotizacion, string observaciones = "", string? idempotencyKey = null)
     {
         montoCredito = Math.Round(montoCredito, 2, MidpointRounding.AwayFromZero);
         montoDebito = Math.Round(montoDebito, 2, MidpointRounding.AwayFromZero);
@@ -105,7 +105,7 @@ public class OperacionService : IOperacionService
                     return OperacionResult.Error($"Saldo insuficiente en '{cuentaDebito2.Nombre}' ({monedaDebito}). Disponible: {saldoDebito.Saldo:N2}");
                 }
             }
-            var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Credito/Debito", ClienteId = clienteId, MontoTotalOrigen = montoDebito, MontoTotalDestino = montoCredito, CotizacionAplicada = cotizacion, Observaciones = observaciones, IdempotencyKey = idempotencyKey };
+            var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Credito/Debito", MontoTotalOrigen = montoDebito, MontoTotalDestino = montoCredito, CotizacionAplicada = cotizacion, Observaciones = observaciones, IdempotencyKey = idempotencyKey };
             db.Operaciones.Add(operacion);
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaCreditoId, Moneda = monedaCredito, Monto = montoCredito, Fecha = DateTime.UtcNow });
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaDebitoId, Moneda = monedaDebito, Monto = -montoDebito, Fecha = DateTime.UtcNow });
@@ -229,7 +229,6 @@ public class OperacionService : IOperacionService
             {
                 Fecha = DateTime.UtcNow,
                 TipoOperacion = "Anulacion",
-                ClienteId = original.ClienteId,
                 MontoTotalOrigen = original.MontoTotalOrigen,
                 MontoTotalDestino = original.MontoTotalDestino,
                 CotizacionAplicada = original.CotizacionAplicada,

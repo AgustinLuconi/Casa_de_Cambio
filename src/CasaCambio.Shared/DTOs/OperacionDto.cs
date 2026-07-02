@@ -6,8 +6,6 @@ public class OperacionDto
     public string CodigoOperacion => $"OP-{Id:D5}";
     public DateTime Fecha { get; set; }
     public string TipoOperacion { get; set; } = "";
-    public int? ClienteId { get; set; }
-    public string? NombreCliente { get; set; }
     public decimal MontoTotalOrigen { get; set; }
     public decimal MontoTotalDestino { get; set; }
     public decimal CotizacionAplicada { get; set; }

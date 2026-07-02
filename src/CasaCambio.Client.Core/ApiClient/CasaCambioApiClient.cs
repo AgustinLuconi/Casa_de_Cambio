@@ -245,11 +245,6 @@ public class CasaCambioApiClient : ICasaCambioApiClient
     public async Task GuardarCotizacionAsync(CrearCotizacionRequest request)
         => await PostAuthenticatedAsync<object>("api/cotizaciones", request);
 
-    // Clientes
-
-    public async Task<List<ClienteDto>> ObtenerClientesAsync()
-        => await GetAuthenticatedAsync<List<ClienteDto>>("api/clientes");
-
     // Arqueo
 
     public async Task<ArqueoDto> RealizarArqueoAsync(CrearArqueoRequest request)
