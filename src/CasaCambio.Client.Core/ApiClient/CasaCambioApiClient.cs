@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -320,13 +321,33 @@ public class CasaCambioApiClient : ICasaCambioApiClient
     {
         if (response.IsSuccessStatusCode) return;
         var body = await response.Content.ReadAsStringAsync();
+
+        // Errores de validación automática de ASP.NET Core: {"errors": {"Campo": ["mensaje"]}}
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("errors", out var errors))
+            {
+                var mensajes = errors.EnumerateObject()
+                    .SelectMany(p => p.Value.EnumerateArray())
+                    .Select(e => e.GetString())
+                    .Where(m => !string.IsNullOrEmpty(m));
+                var mensaje = string.Join(" ", mensajes);
+                if (!string.IsNullOrEmpty(mensaje))
+                    throw new HttpRequestException(mensaje, null, response.StatusCode);
+            }
+        }
+        catch (JsonException) { }
+
+        // Errores de negocio propios: {"message": "..."}
         try
         {
             var error = JsonSerializer.Deserialize<ApiErrorResponse>(body, JsonOptions);
             if (!string.IsNullOrEmpty(error?.Message))
-                throw new Exception(error.Message);
+                throw new HttpRequestException(error.Message, null, response.StatusCode);
         }
         catch (JsonException) { }
+
         throw new HttpRequestException(
             string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase : body.Trim('"'),
             null, response.StatusCode);

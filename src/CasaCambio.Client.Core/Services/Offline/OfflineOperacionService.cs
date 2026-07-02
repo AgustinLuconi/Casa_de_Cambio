@@ -60,6 +60,11 @@ public class OfflineOperacionService : IOfflineOperacionService
                 var response = await _apiClient.CrearCreditoDebitoAsync(request);
                 return new OfflineOperacionResult { Exitoso = response.Exitoso, Mensaje = response.Mensaje, OperacionId = response.OperacionId, IsOffline = false };
             }
+            catch (HttpRequestException ex) when (ex.StatusCode.HasValue)
+            {
+                // El servidor respondió (validación, error de negocio, etc.) — no es un problema de conectividad.
+                return new OfflineOperacionResult { Exitoso = false, Mensaje = ex.Message, IsOffline = false };
+            }
             catch (Exception ex)
             {
                 return await GuardarLocalAsync(local, ex.Message);
@@ -85,6 +90,11 @@ public class OfflineOperacionService : IOfflineOperacionService
                     ? await _apiClient.CrearCompraAsync(request)
                     : await _apiClient.CrearVentaAsync(request);
                 return new OfflineOperacionResult { Exitoso = response.Exitoso, Mensaje = response.Mensaje, OperacionId = response.OperacionId, IsOffline = false };
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode.HasValue)
+            {
+                // El servidor respondió (validación, error de negocio, etc.) — no es un problema de conectividad.
+                return new OfflineOperacionResult { Exitoso = false, Mensaje = ex.Message, IsOffline = false };
             }
             catch (Exception ex)
             {

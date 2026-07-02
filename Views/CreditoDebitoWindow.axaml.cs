@@ -254,11 +254,21 @@ namespace SistemaCambio.Views
         {
             try
             {
-                if (await EjecutarOperacion())
+                var resultado = await EjecutarOperacion();
+                if (resultado == null) return;
+
+                if (!resultado.Exitoso)
                 {
-                    NotificationService.Success("Crédito/Débito registrado", "Operación completada");
-                    Close();
+                    MostrarErrorServidor(resultado.Mensaje);
+                    return;
                 }
+
+                if (resultado.IsOffline)
+                    NotificationService.Warning("Guardada offline", resultado.Mensaje);
+                else
+                    NotificationService.OperacionGuardada("Crédito/Débito", resultado.OperacionId ?? 0);
+
+                Close();
             }
             catch (Exception ex)
             {
@@ -266,7 +276,7 @@ namespace SistemaCambio.Views
             }
         }
 
-        private async Task<bool> EjecutarOperacion()
+        private async Task<OfflineOperacionResult?> EjecutarOperacion()
         {
             OcultarErrorServidor();
 
@@ -280,16 +290,22 @@ namespace SistemaCambio.Views
             {
                 NotificationService.Warning("Campo requerido", "Ingrese al menos un importe mayor a cero.");
                 txtImporteCredito.Focus();
-                return false;
+                return null;
             }
             if (tagCredito == null || tagDebito == null)
             {
                 NotificationService.Warning("Selección incompleta", "Seleccione las cuentas crédito y débito.");
-                return false;
+                return null;
             }
 
             int? clienteId = null;
             if ((cmbCliente.SelectedItem as ComboBoxItem)?.Tag is int cId) clienteId = cId;
+
+            // En operaciones de la misma moneda no hay tipo de cambio real (ej. ARS-ARS);
+            // el textbox de cotización queda en 0 porque no existe cotización de una moneda contra sí misma.
+            decimal cotizacion = tagCredito.Moneda == tagDebito.Moneda
+                ? 1m
+                : ParsearMonto(txtCotizacionCredito.Text);
 
             var request = new CrearCreditoDebitoRequest
             {
@@ -299,18 +315,12 @@ namespace SistemaCambio.Views
                 MonedaDebito    = tagDebito.Moneda,
                 MontoCredito    = importeCredito,
                 MontoDebito     = importeDebito,
-                Cotizacion      = ParsearMonto(txtCotizacionCredito.Text),
+                Cotizacion      = cotizacion,
                 ClienteId       = clienteId,
                 Observaciones   = txtObservaciones.Text ?? ""
             };
 
-            var resultado = await _offlineService.GuardarCreditoDebitoAsync(request);
-            if (!resultado.Exitoso)
-            {
-                MostrarErrorServidor(resultado.Mensaje);
-                return false;
-            }
-            return true;
+            return await _offlineService.GuardarCreditoDebitoAsync(request);
         }
 
         private void BtnCancelar_Click(object? sender, RoutedEventArgs e) => Close();
