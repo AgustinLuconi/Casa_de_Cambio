@@ -31,7 +31,7 @@ namespace SistemaCambio.Views
 
             InitializeComponent();
             _orden = [cmbMoneda, cmbCredito, txtImporteCredito, txtCotizacionCredito,
-                      cmbDebito, txtImporteDebito, txtCotizacionDebito, txtObservaciones];
+                      cmbDebito, txtImporteDebito, txtCotizacionDebito, txtObservaciones, btnAceptar];
             AddHandler(KeyDownEvent, Window_KeyDown, RoutingStrategies.Tunnel);
             NotificationService.Initialize(notificationPanel);
             Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
@@ -281,6 +281,14 @@ namespace SistemaCambio.Views
                 ? 1m
                 : ParsearMonto(txtCotizacionCredito.Text);
 
+            // Confirmación explícita: evita que un Enter accidental dispare la operación sin revisar
+            var confirmar = await DialogHelper.ConfirmarAsync(this,
+                "Confirmar Crédito/Débito",
+                $"Crédito: {tagCredito.NombreCuenta} +{importeCredito:N2} {tagCredito.Moneda}\n" +
+                $"Débito: {tagDebito.NombreCuenta} -{importeDebito:N2} {tagDebito.Moneda}\n\n¿Confirmar la operación?",
+                "Confirmar");
+            if (!confirmar) return null;
+
             var request = new CrearCreditoDebitoRequest
             {
                 CuentaCreditoId = tagCredito.CuentaId,
@@ -303,10 +311,12 @@ namespace SistemaCambio.Views
         private void Window_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) { Close(); e.Handled = true; return; }
-            if (e.Key != Key.Down && e.Key != Key.Up) return;
+            // Enter avanza al siguiente campo (como Tab/flecha abajo) en vez de disparar Aceptar directo,
+            // para que un Enter apretado sin querer no envíe la operación sin revisar.
+            if (e.Key != Key.Down && e.Key != Key.Up && e.Key != Key.Enter) return;
             if (e.Source is ComboBox cb && cb.IsDropDownOpen) return;
             if (e.Source is not (TextBox or ComboBox)) return;
-            MoverFoco(e.Key == Key.Down ? 1 : -1);
+            MoverFoco(e.Key == Key.Up ? -1 : 1);
             e.Handled = true;
         }
 

@@ -153,7 +153,7 @@
         <!-- ─────────── Footer: Aceptar / Cancelar ─────────── -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10"
                     HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button Content="Aceptar" Classes="Primary" IsDefault="True"
+            <Button x:Name="btnAceptar" Content="Aceptar" Classes="Primary"
                     Width="110" Height="36"
                     Click="BtnAceptar_Click"/>
             <Button Content="Cancelar" Classes="Secondary"

@@ -36,7 +36,7 @@ namespace SistemaCambio.Views
             CuentaAutoComplete.Configurar(cmbCuentaAcreditar);
             _orden = [cmbMoneda, txtMonedaExtranjera, cmbCuentaDebitar,
                       txtCotizacion, txtIngresa, cmbCuentaAcreditar,
-                      txtObservaciones, cmbTipoOperacion];
+                      txtObservaciones, cmbTipoOperacion, btnAceptar];
             AddHandler(KeyDownEvent, Window_KeyDown, RoutingStrategies.Tunnel);
             NotificationService.Initialize(notificationPanel);
             Closed += (_, _) => (Owner as MainWindow)?.RestaurarNotificationPanel();
@@ -273,6 +273,15 @@ namespace SistemaCambio.Views
             var tagDebitar           = ObtenerTagDebitar()!;
             var tagAcreditar         = ObtenerTagAcreditar()!;
 
+            // Confirmación explícita: evita que un Enter accidental dispare la operación sin revisar
+            var confirmar = await DialogHelper.ConfirmarAsync(this,
+                "Confirmar Venta",
+                $"Vender {monedaExtranjera:N2} {tagDebitar.Moneda} a {cotizacion:N5}\n" +
+                $"Debita de: {tagDebitar.NombreCuenta}\n" +
+                $"Acredita ${pesos:N2} en: {tagAcreditar.NombreCuenta}\n\n¿Confirmar la operación?",
+                "Confirmar");
+            if (!confirmar) return;
+
             // Advertencia cotización inusual (>5% del precio del día)
             if (_cotizacionDia > 0)
             {
@@ -354,12 +363,14 @@ namespace SistemaCambio.Views
                 { acbEsc.IsDropDownOpen = false; e.Handled = true; return; }
                 Close(); e.Handled = true; return;
             }
-            if (e.Key != Key.Down && e.Key != Key.Up) return;
+            // Enter avanza al siguiente campo (como Tab/flecha abajo) en vez de disparar Aceptar directo,
+            // para que un Enter apretado sin querer no envíe la operación sin revisar.
+            if (e.Key != Key.Down && e.Key != Key.Up && e.Key != Key.Enter) return;
             if (e.Source is ComboBox cb && cb.IsDropDownOpen) return;
             if (e.Source is Control c &&
                 c.FindAncestorOfType<AutoCompleteBox>(includeSelf: true) is { IsDropDownOpen: true }) return;
             if (e.Source is not (TextBox or ComboBox)) return;
-            MoverFoco(e.Key == Key.Down ? 1 : -1);
+            MoverFoco(e.Key == Key.Up ? -1 : 1);
             e.Handled = true;
         }
 

@@ -148,7 +148,7 @@
             </Border>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                <Button Content="Aceptar" Classes="Primary" IsDefault="True"
+                <Button x:Name="btnAceptar" Content="Aceptar" Classes="Primary"
                         Width="110" Height="36"
                         Click="BtnAceptar_Click"/>
                 <Button Content="Cancelar" Classes="Secondary"
