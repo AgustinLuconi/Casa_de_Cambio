@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
+using SistemaCambio.Views.Helpers;
 
 namespace SistemaCambio.Views
 {
@@ -40,44 +41,53 @@ namespace SistemaCambio.Views
                 var cuentas = await _apiClient.ObtenerCuentasAsync();
                 var cuenta = cuentas.FirstOrDefault(c => c.Id == _cuentaId);
 
-                if (cuenta != null)
+                if (cuenta == null)
                 {
-                    txtNombreCuenta.Text = cuenta.Nombre;
-                    txtTipoCuenta.Text = cuenta.Tipo;
-
-                    string[] colors = { "#3B82F6", "#16A34A", "#D97706", "#DC2626", "#8b5cf6", "#14b8a6" };
-                    int brushIndex = 0;
-                    foreach (var saldo in cuenta.Saldos.OrderBy(s => s.Moneda))
-                    {
-                        var brush = new SolidColorBrush(Color.Parse(colors[brushIndex % colors.Length]));
-                        Saldos.Add(new DetalleSaldoItem { Moneda = saldo.Moneda, SaldoFormatted = $"{saldo.Saldo:N2}", ColorBrush = brush });
-                        brushIndex++;
-                    }
-                    icSaldos.ItemsSource = Saldos;
-
-                    var movimientosPage = await _apiClient.ObtenerMovimientosCuentaAsync(_cuentaId);
-                    var dangerBrush = (ISolidColorBrush)this.FindResource("DangerBrush")!;
-                    var successBrush = (ISolidColorBrush)this.FindResource("SuccessBrush")!;
-                    var fgBrush = (ISolidColorBrush)this.FindResource("PrimaryTextBrush")!;
-
-                    foreach (var m in movimientosPage.Items)
-                    {
-                        string prefijo = m.Monto > 0 ? "+" : "";
-                        var color = m.Monto > 0 ? successBrush : (m.Monto < 0 ? dangerBrush : fgBrush);
-                        Movimientos.Add(new MovimientoDisplay
-                        {
-                            Fecha = m.Fecha,
-                            CodigoOperacion = $"OP-{m.OperacionId:D5}",
-                            Moneda = m.Moneda,
-                            MontoFormatted = $"{prefijo}{m.Monto:N2}",
-                            MontoColor = color
-                        });
-                    }
-                    dgMovimientos.ItemsSource = Movimientos;
-                    if (Movimientos.Count == 0) txtSinMovimientos.IsVisible = true;
+                    await DialogHelper.MensajeAsync(this, "Cuenta no encontrada", "No se pudo encontrar la cuenta solicitada.");
+                    Close();
+                    return;
                 }
+
+                txtNombreCuenta.Text = cuenta.Nombre;
+                txtTipoCuenta.Text = cuenta.Tipo;
+
+                string[] colors = { "#3B82F6", "#16A34A", "#D97706", "#DC2626", "#8b5cf6", "#14b8a6" };
+                int brushIndex = 0;
+                foreach (var saldo in cuenta.Saldos.OrderBy(s => s.Moneda))
+                {
+                    var brush = new SolidColorBrush(Color.Parse(colors[brushIndex % colors.Length]));
+                    Saldos.Add(new DetalleSaldoItem { Moneda = saldo.Moneda, SaldoFormatted = $"{saldo.Saldo:N2}", ColorBrush = brush });
+                    brushIndex++;
+                }
+                icSaldos.ItemsSource = Saldos;
+
+                var movimientosPage = await _apiClient.ObtenerMovimientosCuentaAsync(_cuentaId);
+                var dangerBrush = (ISolidColorBrush)this.FindResource("DangerBrush")!;
+                var successBrush = (ISolidColorBrush)this.FindResource("SuccessBrush")!;
+                var fgBrush = (ISolidColorBrush)this.FindResource("PrimaryTextBrush")!;
+
+                foreach (var m in movimientosPage.Items)
+                {
+                    string prefijo = m.Monto > 0 ? "+" : "";
+                    var color = m.Monto > 0 ? successBrush : (m.Monto < 0 ? dangerBrush : fgBrush);
+                    Movimientos.Add(new MovimientoDisplay
+                    {
+                        Fecha = m.Fecha,
+                        CodigoOperacion = $"OP-{m.OperacionId:D5}",
+                        Moneda = m.Moneda,
+                        MontoFormatted = $"{prefijo}{m.Monto:N2}",
+                        MontoColor = color
+                    });
+                }
+                dgMovimientos.ItemsSource = Movimientos;
+                if (Movimientos.Count == 0) txtSinMovimientos.IsVisible = true;
             }
-            catch (Exception ex) { AppLogger.Warn("CargarDatosAsync", ex); }
+            catch (Exception ex)
+            {
+                AppLogger.Warn("CargarDatosAsync", ex);
+                await DialogHelper.MensajeAsync(this, "Error al cargar detalle de cuenta", ex.Message);
+                Close();
+            }
         }
 
         private void BtnCerrar_Click(object? sender, RoutedEventArgs e) => Close();

@@ -135,10 +135,43 @@ public class OperacionService : IOperacionService
             if (validacion.HasErrors) return OperacionResult.Error(string.Join("\n", validacion.Errors.Select(e => $"• {e.Message}")));
             if (_cierreCajaService.HayDiaCerrado()) return OperacionResult.Error("El dia de hoy ya esta cerrado.");
             var cuentaOrigen = db.Cuentas.Find(cuentaOrigenId); var cuentaDestino = db.Cuentas.Find(cuentaDestinoId);
+            if (cuentaOrigen == null) return OperacionResult.Error("Cuenta origen no encontrada");
+            if (cuentaDestino == null) return OperacionResult.Error("Cuenta destino no encontrada");
             var dbSaldoOrigenA = ObtenerOCrearSaldo(db, cuentaOrigenId, monedaOrigen);
             var dbSaldoOrigenB = ObtenerOCrearSaldo(db, cuentaOrigenId, monedaDestino);
             var dbSaldoDestinoB = ObtenerOCrearSaldo(db, cuentaDestinoId, monedaDestino);
             var dbSaldoDestinoA = ObtenerOCrearSaldo(db, cuentaDestinoId, monedaOrigen);
+
+            // Validar saldo/límite de deuda en los dos lados que se debitan (misma regla que GuardarOperacion/GuardarCreditoDebito)
+            if (dbSaldoOrigenA.Saldo < montoOrigen)
+            {
+                decimal limiteDeuda = ObtenerLimiteDeuda(db, cuentaOrigen, dbSaldoOrigenA);
+                if (limiteDeuda > 0)
+                {
+                    decimal saldoProyectado = dbSaldoOrigenA.Saldo - montoOrigen;
+                    if (saldoProyectado < -limiteDeuda)
+                        return OperacionResult.Error($"La cuenta '{cuentaOrigen.Nombre}' superaría su límite de deuda en {monedaOrigen} ({limiteDeuda:N2}).\nSaldo actual: {dbSaldoOrigenA.Saldo:N2}, Requerido: {montoOrigen:N2}");
+                }
+                else
+                {
+                    return OperacionResult.Error($"Saldo insuficiente en '{cuentaOrigen.Nombre}' ({monedaOrigen}). Disponible: {dbSaldoOrigenA.Saldo:N2}, Requerido: {montoOrigen:N2}");
+                }
+            }
+            if (dbSaldoDestinoB.Saldo < montoDestino)
+            {
+                decimal limiteDeuda = ObtenerLimiteDeuda(db, cuentaDestino, dbSaldoDestinoB);
+                if (limiteDeuda > 0)
+                {
+                    decimal saldoProyectado = dbSaldoDestinoB.Saldo - montoDestino;
+                    if (saldoProyectado < -limiteDeuda)
+                        return OperacionResult.Error($"La cuenta '{cuentaDestino.Nombre}' superaría su límite de deuda en {monedaDestino} ({limiteDeuda:N2}).\nSaldo actual: {dbSaldoDestinoB.Saldo:N2}, Requerido: {montoDestino:N2}");
+                }
+                else
+                {
+                    return OperacionResult.Error($"Saldo insuficiente en '{cuentaDestino.Nombre}' ({monedaDestino}). Disponible: {dbSaldoDestinoB.Saldo:N2}, Requerido: {montoDestino:N2}");
+                }
+            }
+
             var operacion = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Interbancaria", MontoTotalOrigen = montoOrigen, MontoTotalDestino = montoDestino, CotizacionAplicada = cotizacion, Observaciones = observaciones, IdempotencyKey = idempotencyKey };
             db.Operaciones.Add(operacion);
             db.Movimientos.Add(new Movimiento { Operacion = operacion, CuentaId = cuentaOrigenId, Moneda = monedaOrigen, Monto = -montoOrigen, Fecha = DateTime.UtcNow });

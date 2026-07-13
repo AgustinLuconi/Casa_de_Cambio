@@ -155,4 +155,49 @@ public class LimiteDeudaTests
         Assert.False(resultado.Exitoso);
         Assert.Contains("Saldo insuficiente", resultado.Mensaje);
     }
+
+    // ── Interbancaria: antes no validaba saldo/límite en absoluto ────────────
+
+    [Fact]
+    public void Interbancaria_CajaEfectivo_NuncaOperaADescubierto()
+    {
+        // La caja Efectivo intenta enviar más ARS de los que tiene vía Interbancaria
+        var resultado = _operacionService.GuardarOperacionInterbancaria(
+            tipo: "Interbancaria", cuentaOrigenId: IdCajaARS, cuentaDestinoId: IdCliente,
+            monedaOrigen: "ARS", monedaDestino: "USD",
+            montoOrigen: 99_000_000m, montoDestino: 99_000m, cotizacion: 1000m);
+
+        Assert.False(resultado.Exitoso);
+        Assert.Contains("Saldo insuficiente", resultado.Mensaje);
+    }
+
+    [Fact]
+    public void Interbancaria_ClienteConLimiteEspecifico_PuedeEndeudarseDentroDelLimite()
+    {
+        DarLimiteEspecificoUsd(500m);
+
+        var resultado = _operacionService.GuardarOperacionInterbancaria(
+            tipo: "Interbancaria", cuentaOrigenId: IdCajaARS, cuentaDestinoId: IdCliente,
+            monedaOrigen: "ARS", monedaDestino: "USD",
+            montoOrigen: 300_000m, montoDestino: 300m, cotizacion: 1000m);
+
+        Assert.True(resultado.Exitoso);
+        using var db = _factory.CreateDbContext();
+        var saldoUsd = db.SaldosCuenta.First(s => s.CuentaId == IdCliente && s.Moneda == "USD");
+        Assert.Equal(-300m, saldoUsd.Saldo);
+    }
+
+    [Fact]
+    public void Interbancaria_ClienteConLimiteEspecifico_NoPuedeExcederlo()
+    {
+        DarLimiteEspecificoUsd(500m);
+
+        var resultado = _operacionService.GuardarOperacionInterbancaria(
+            tipo: "Interbancaria", cuentaOrigenId: IdCajaARS, cuentaDestinoId: IdCliente,
+            monedaOrigen: "ARS", monedaDestino: "USD",
+            montoOrigen: 600_000m, montoDestino: 600m, cotizacion: 1000m);
+
+        Assert.False(resultado.Exitoso);
+        Assert.Contains("límite de deuda", resultado.Mensaje);
+    }
 }

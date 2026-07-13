@@ -90,14 +90,15 @@ namespace SistemaCambio.Views
                     foreach (var mov in pagina.Items)
                         todos.Add(new MovimientoDetalle
                         {
-                            Id            = mov.Id,
-                            Fecha         = mov.Fecha,
-                            TipoOperacion = "",
-                            CuentaNombre  = mov.NombreCuenta,
-                            Moneda        = mov.Moneda,
-                            Debito        = mov.Monto < 0 ? Math.Abs(mov.Monto) : 0,
-                            Credito       = mov.Monto > 0 ? mov.Monto : 0,
-                            Observaciones = ""
+                            Id              = mov.Id,
+                            CodigoOperacion = $"OP-{mov.OperacionId:D5}",
+                            Fecha           = mov.Fecha,
+                            TipoOperacion   = "",
+                            CuentaNombre    = mov.NombreCuenta,
+                            Moneda          = mov.Moneda,
+                            Debito          = mov.Monto < 0 ? Math.Abs(mov.Monto) : 0,
+                            Credito         = mov.Monto > 0 ? mov.Monto : 0,
+                            Observaciones   = ""
                         });
                 }
                 else
@@ -107,14 +108,15 @@ namespace SistemaCambio.Views
                         foreach (var mov in op.Movimientos)
                             todos.Add(new MovimientoDetalle
                             {
-                                Id            = mov.Id,
-                                Fecha         = mov.Fecha,
-                                TipoOperacion = op.TipoOperacion,
-                                CuentaNombre  = mov.NombreCuenta,
-                                Moneda        = mov.Moneda,
-                                Debito        = mov.Monto < 0 ? Math.Abs(mov.Monto) : 0,
-                                Credito       = mov.Monto > 0 ? mov.Monto : 0,
-                                Observaciones = op.Observaciones ?? ""
+                                Id              = mov.Id,
+                                CodigoOperacion = op.CodigoOperacion,
+                                Fecha           = mov.Fecha,
+                                TipoOperacion   = op.TipoOperacion,
+                                CuentaNombre    = mov.NombreCuenta,
+                                Moneda          = mov.Moneda,
+                                Debito          = mov.Monto < 0 ? Math.Abs(mov.Monto) : 0,
+                                Credito         = mov.Monto > 0 ? mov.Monto : 0,
+                                Observaciones   = op.Observaciones ?? ""
                             });
                 }
             }
@@ -192,6 +194,7 @@ namespace SistemaCambio.Views
     public class MovimientoDetalle
     {
         public int Id { get; set; }
+        public string CodigoOperacion { get; set; } = "";
         public DateTime Fecha { get; set; }
         public string TipoOperacion { get; set; } = "";
         public string CuentaNombre { get; set; } = "";

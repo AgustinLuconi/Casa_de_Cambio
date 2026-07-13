@@ -70,10 +70,14 @@ public class OperacionValidator
         if (monedaOrigen == monedaDestino) result.AddError("Arbitraje requiere monedas diferentes");
         if (monedaOrigen != "ARS" && monedaDestino != "ARS")
             result.AddError("Toda operación cambiaria debe tener ARS como una de las monedas.", $"Recibido: {monedaOrigen} ↔ {monedaDestino}");
+        // Cliente a descubierto: el límite por divisa se valida en OperacionService (ObtenerLimiteDeuda).
+        // Bloquear acá dejaba inalcanzable esa lógica, igual que en ValidarOperacion/ValidarCreditoDebito.
         var saldoOrigen = db.SaldosCuenta.FirstOrDefault(s => s.CuentaId == cuentaOrigenId && s.Moneda == monedaOrigen);
-        if ((saldoOrigen?.Saldo ?? 0) < montoOrigen) result.AddError($"Saldo insuficiente en '{cuentaOrigen!.Nombre}' ({monedaOrigen})");
+        if (cuentaOrigen!.Tipo != "Cliente" && (saldoOrigen?.Saldo ?? 0) < montoOrigen)
+            result.AddError($"Saldo insuficiente en '{cuentaOrigen.Nombre}' ({monedaOrigen})");
         var saldoDestino = db.SaldosCuenta.FirstOrDefault(s => s.CuentaId == cuentaDestinoId && s.Moneda == monedaDestino);
-        if ((saldoDestino?.Saldo ?? 0) < montoDestino) result.AddError($"Saldo insuficiente en '{cuentaDestino!.Nombre}' ({monedaDestino})");
+        if (cuentaDestino!.Tipo != "Cliente" && (saldoDestino?.Saldo ?? 0) < montoDestino)
+            result.AddError($"Saldo insuficiente en '{cuentaDestino.Nombre}' ({monedaDestino})");
         return result;
     }
 }

@@ -101,6 +101,8 @@
                             <DataGridTextColumn Header="FECHA"
                                                 Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
                                                 Width="Auto" MinWidth="120"/>
+                            <DataGridTextColumn Header="CÓDIGO" Binding="{Binding CodigoOperacion}"
+                                                Width="Auto" MinWidth="90"/>
                             <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}"
                                                 Width="*" MinWidth="80"/>
                             <DataGridTextColumn Header="CUENTA" Binding="{Binding CuentaNombre}"
