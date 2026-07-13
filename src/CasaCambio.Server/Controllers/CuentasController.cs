@@ -30,7 +30,7 @@ public class CuentasController : ControllerBase
     {
         using var db = _contextFactory.CreateDbContext();
         var cuentas = db.Cuentas.Include(c => c.Saldos).AsNoTracking()
-            .Where(c => c.Tipo != "Resultado" && c.Tipo != "Externo")
+            .Where(c => c.Tipo != "Resultado" && c.Tipo != "Externo" && c.Activa)
             .ToList();
         return Ok(cuentas.Select(c => new CuentaDto
         {
@@ -173,9 +173,25 @@ public class CuentasController : ControllerBase
         var cuenta = db.Cuentas.Include(c => c.Saldos).FirstOrDefault(c => c.Id == id);
         if (cuenta == null)
             return NotFound($"Cuenta {id} no encontrada.");
+
+        // Requisito: todos los saldos en 0, sin importar si tiene movimientos o no.
+        var saldosPendientes = cuenta.Saldos.Where(s => s.Saldo != 0).ToList();
+        if (saldosPendientes.Count > 0)
+        {
+            var detalle = string.Join(", ", saldosPendientes.Select(s => $"{s.Moneda}: {s.Saldo:N2}"));
+            return BadRequest($"No se puede eliminar: la cuenta tiene saldo distinto de cero ({detalle}).");
+        }
+
         bool tieneMovimientos = db.Movimientos.Any(m => m.CuentaId == id);
         if (tieneMovimientos)
-            return BadRequest("No se puede eliminar una cuenta con movimientos registrados.");
+        {
+            // Baja lógica: la FK movimientos→cuentas es Restrict (protege el historial contable),
+            // así que con movimientos no se puede borrar físicamente. Se oculta de las listas activas
+            // en vez de destruir el historial de la cuenta y de las operaciones donde participó.
+            cuenta.Activa = false;
+            db.SaveChanges();
+            return NoContent();
+        }
 
         db.SaldosCuenta.RemoveRange(cuenta.Saldos);
         db.Cuentas.Remove(cuenta);

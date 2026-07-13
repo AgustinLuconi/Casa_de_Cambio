@@ -11,6 +11,8 @@ public class Cuenta
     [Column("nombre")] public string Nombre { get; set; } = "";
     [Column("tipo")] public string Tipo { get; set; } = "Efectivo";
     [Column("limite_deuda")] public decimal? LimiteDeuda { get; set; }
+    /// <summary>Baja lógica: false cuando se "elimina" una cuenta que tenía movimientos históricos (saldo en 0).</summary>
+    [Column("activa")] public bool Activa { get; set; } = true;
     public List<SaldoCuenta> Saldos { get; set; } = new();
 }
 

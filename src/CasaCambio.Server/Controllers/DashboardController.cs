@@ -27,8 +27,8 @@ public class DashboardController : ControllerBase
         var compras = operacionesHoy.Where(o => o.TipoOperacion == "Compra").ToList();
         var ventas  = operacionesHoy.Where(o => o.TipoOperacion == "Venta").ToList();
         var saldos  = db.SaldosCuenta.Include(s => s.Cuenta).Where(s => s.Cuenta.Tipo == "Efectivo").AsNoTracking().ToList();
-        // Mismo criterio que la grilla de Cuentas: excluye cuentas internas del sistema
-        var totalCuentas = db.Cuentas.Count(c => c.Tipo != "Externo" && c.Tipo != "Resultado");
+        // Mismo criterio que la grilla de Cuentas: excluye cuentas internas del sistema y dadas de baja
+        var totalCuentas = db.Cuentas.Count(c => c.Tipo != "Externo" && c.Tipo != "Resultado" && c.Activa);
         var cotizaciones = db.CotizacionesDiarias.Include(c => c.Moneda).Where(c => c.Fecha.Date == hoy).AsNoTracking().ToList();
 
         var opsPorDia = db.Operaciones
