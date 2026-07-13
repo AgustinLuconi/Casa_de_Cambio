@@ -76,6 +76,9 @@ public class OperacionesController : ControllerBase
         return Ok(result.Exitoso ? OperacionResponse.Success(result.OperacionId!.Value) : OperacionResponse.Error(result.Mensaje));
     }
 
+    // Sin UI en el desktop actual: ninguna ventana llama a este endpoint. Se mantiene
+    // funcional y validado para uso futuro (transferencia directa entre dos cuentas
+    // internas en distinta moneda, sin pasar por Crédito/Débito).
     [HttpPost("interbancaria")]
     public IActionResult Interbancaria([FromBody] CrearInterbancarioRequest req)
     {

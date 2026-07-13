@@ -26,6 +26,7 @@ public interface ICasaCambioApiClient
     Task<OperacionResponse> CrearCompraAsync(CrearOperacionRequest request);
     Task<OperacionResponse> CrearVentaAsync(CrearOperacionRequest request);
     Task<OperacionResponse> CrearCreditoDebitoAsync(CrearCreditoDebitoRequest request);
+    // Ninguna ventana del desktop llama a esto hoy — no hay UI de "transferencia entre cuentas".
     Task<OperacionResponse> CrearInterbancarioAsync(CrearInterbancarioRequest request);
     Task<PaginatedResponse<OperacionDto>> ObtenerOperacionesAsync(DateTime? desde = null, DateTime? hasta = null, string? tipo = null, int page = 1, int pageSize = 50);
     Task<OperacionDto?> ObtenerOperacionAsync(int id);

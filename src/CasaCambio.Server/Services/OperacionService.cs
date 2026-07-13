@@ -117,6 +117,10 @@ public class OperacionService : IOperacionService
         catch (Exception ex) { transaction.Rollback(); return OperacionResult.Error($"Error: {ex.Message}"); }
     }
 
+    // Sin ventana propia en el desktop actual — solo se alcanza vía el endpoint
+    // api/operaciones/interbancaria (sin UI que lo llame) o internamente desde
+    // GuardarCreditoDebito cuando monedaCredito != monedaDebito (rama hoy inalcanzable,
+    // ya que CreditoDebitoWindow usa un único selector de moneda para ambos lados).
     public OperacionResult GuardarOperacionInterbancaria(string tipo, int cuentaOrigenId, int cuentaDestinoId, string monedaOrigen, string monedaDestino, decimal montoOrigen, decimal montoDestino, decimal cotizacion, string observaciones = "", string? idempotencyKey = null)
     {
         montoOrigen = Math.Round(montoOrigen, 2, MidpointRounding.AwayFromZero);
