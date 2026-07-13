@@ -10,4 +10,5 @@ public class Moneda
     [Required] [Column("codigo")] [MaxLength(10)] public string Codigo { get; set; } = "";
     [Required] [Column("nombre")] [MaxLength(100)] public string Nombre { get; set; } = "";
     [Column("activa")] public bool Activa { get; set; } = true;
+    [Column("tipo_pase")] public string TipoPase { get; set; } = "D";
 }
