@@ -7,7 +7,7 @@ using CasaCambio.Shared.DTOs;
 namespace CasaCambio.Server.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/posicion-diaria")]
 [Authorize]
 public class PosicionDiariaController : ControllerBase
 {
