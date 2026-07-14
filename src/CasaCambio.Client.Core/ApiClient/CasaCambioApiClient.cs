@@ -302,6 +302,9 @@ public class CasaCambioApiClient : ICasaCambioApiClient
     public async Task<DashboardDto> ObtenerDashboardAsync()
         => await GetAuthenticatedAsync<DashboardDto>("api/dashboard");
 
+    public async Task<List<PosicionDiariaDto>> ObtenerPosicionDiariaAsync(DateTime desde, DateTime hasta)
+        => await GetAuthenticatedAsync<List<PosicionDiariaDto>>($"api/posicion-diaria?desde={desde:O}&hasta={hasta:O}");
+
     // Sync
 
     public async Task<SyncPushResponse> SyncPushAsync(SyncPushRequest request)

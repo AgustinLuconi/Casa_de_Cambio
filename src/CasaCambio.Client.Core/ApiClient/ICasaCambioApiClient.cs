@@ -69,6 +69,7 @@ public interface ICasaCambioApiClient
 
     // Dashboard
     Task<DashboardDto> ObtenerDashboardAsync();
+    Task<List<PosicionDiariaDto>> ObtenerPosicionDiariaAsync(DateTime desde, DateTime hasta);
 
     // Sync
     Task<SyncPushResponse> SyncPushAsync(SyncPushRequest request);
