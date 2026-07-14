@@ -1,0 +1,100 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
+        xmlns:helpers="clr-namespace:SistemaCambio.Views.Helpers"
+        x:Class="SistemaCambio.Views.PosicionDiariaWindow"
+        x:CompileBindings="False"
+        Title="Posición Diaria"
+        Width="1280" MinWidth="1000" Height="640" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="{DynamicResource AppBackgroundBrush}">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="16">
+
+        <controls:NotificationPanel x:Name="notificationPanel"
+                                    Grid.RowSpan="3"
+                                    VerticalAlignment="Top"
+                                    HorizontalAlignment="Right"
+                                    ZIndex="100"/>
+
+        <!-- Header: rango de fechas -->
+        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="8" Padding="16,12" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="Desde" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <DatePicker x:Name="dpDesde" Width="180"/>
+                <TextBlock Text="Hasta" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" Margin="10,0,0,0"/>
+                <DatePicker x:Name="dpHasta" Width="180"/>
+                <Button Content="Buscar" Classes="Primary" Margin="10,0,0,0"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Click="BtnBuscar_Click"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Grid de posición -->
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8">
+            <Grid RowDefinitions="*, Auto">
+                <DataGrid Grid.Row="0" x:Name="dgPosicion" AutoGenerateColumns="False" IsReadOnly="True"
+                          BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
+                          HeadersVisibility="Column">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="CÓDIGO" Binding="{Binding Codigo}" Width="70"/>
+                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Nombre}" Width="140"/>
+                        <DataGridTextColumn Header="T.PASE" Binding="{Binding TipoPase}" Width="70"/>
+                        <DataGridTextColumn Header="CAP. INICIAL" Binding="{Binding CapInicial, StringFormat='{}{0:N2}'}" Width="120"/>
+                        <DataGridTemplateColumn Header="COT. INICIAL" Width="110">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding CotInicialTexto, Mode=TwoWay}"
+                                             Background="Transparent" BorderThickness="0"
+                                             TextAlignment="Right" Padding="6,3"
+                                             helpers:NumericInput.Enabled="True"
+                                             Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="USD INICIAL" Binding="{Binding UsdInicialFormatted}" Width="110"/>
+                        <DataGridTextColumn Header="CAP. FINAL" Binding="{Binding CapFinal, StringFormat='{}{0:N2}'}" Width="120"/>
+                        <DataGridTemplateColumn Header="COT. FINAL" Width="110">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding CotFinalTexto, Mode=TwoWay}"
+                                             Background="Transparent" BorderThickness="0"
+                                             TextAlignment="Right" Padding="6,3"
+                                             helpers:NumericInput.Enabled="True"
+                                             Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="USD FINAL" Binding="{Binding UsdFinalFormatted}" Width="110"/>
+                        <DataGridTemplateColumn Header="GANANCIA" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding GananciaFormatted}"
+                                               Foreground="{Binding GananciaColor}"
+                                               FontWeight="Bold" TextAlignment="Right"
+                                               Padding="6,3" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <TextBlock Grid.Row="0" x:Name="txtSinDatos" Text="No hay monedas activas para mostrar."
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="False"/>
+            </Grid>
+        </Border>
+
+        <!-- Footer -->
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Button HorizontalAlignment="Right" Content="Cerrar" Classes="Secondary" Width="100" Height="36"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                    Click="BtnCerrar_Click"/>
+        </Grid>
+    </Grid>
+</Window>
