@@ -172,16 +172,23 @@
                             <StackPanel Spacing="10">
                                 <TextBlock Text="Agregar Nueva Moneda" FontWeight="SemiBold" 
                                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                <Grid ColumnDefinitions="Auto, 100, Auto, *, Auto" RowDefinitions="Auto">
-                                    <TextBlock Grid.Column="0" Text="Código:" VerticalAlignment="Center" 
+                                <Grid ColumnDefinitions="Auto, 100, Auto, *, Auto, 80, Auto" RowDefinitions="Auto">
+                                    <TextBlock Grid.Column="0" Text="Código:" VerticalAlignment="Center"
                                                Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,0"/>
                                     <TextBox x:Name="txtNuevoCodigo" Grid.Column="1" Watermark="Ej: BRL" MaxLength="10"/>
-                                    
-                                    <TextBlock Grid.Column="2" Text="Nombre:" VerticalAlignment="Center" 
+
+                                    <TextBlock Grid.Column="2" Text="Nombre:" VerticalAlignment="Center"
                                                Foreground="{DynamicResource SecondaryTextBrush}" Margin="20,0,10,0"/>
                                     <TextBox x:Name="txtNuevoNombre" Grid.Column="3" Watermark="Ej: Real Brasileño" MaxLength="100"/>
-                                    
-                                    <Button Grid.Column="4" Content="Agregar Moneda" Background="{DynamicResource AccentBrush}"
+
+                                    <TextBlock Grid.Column="4" Text="T.Pase:" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryTextBrush}" Margin="20,0,10,0"/>
+                                    <ComboBox x:Name="cmbNuevoTipoPase" Grid.Column="5" Width="80" SelectedIndex="0">
+                                        <ComboBoxItem Content="D"/>
+                                        <ComboBoxItem Content="M"/>
+                                    </ComboBox>
+
+                                    <Button Grid.Column="6" Content="Agregar Moneda" Background="{DynamicResource AccentBrush}"
                                             Foreground="White" CornerRadius="6" Margin="20,0,0,0" Cursor="Hand"
                                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                             Click="BtnNuevaMoneda_Click"/>
@@ -219,6 +226,19 @@
                                     <DataTemplate>
                                         <TextBox Text="{Binding Nombre, Mode=TwoWay}" Background="Transparent" 
                                                  BorderThickness="0" Foreground="{DynamicResource PrimaryTextBrush}" Padding="5,3"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="T.PASE" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedItem="{Binding TipoPase, Mode=TwoWay}"
+                                                  HorizontalAlignment="Stretch" Margin="2">
+                                            <ComboBox.Items>
+                                                <x:String>D</x:String>
+                                                <x:String>M</x:String>
+                                            </ComboBox.Items>
+                                        </ComboBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

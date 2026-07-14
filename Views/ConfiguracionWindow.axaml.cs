@@ -80,6 +80,7 @@ namespace SistemaCambio.Views
         {
             var codigo = txtNuevoCodigo.Text?.Trim().ToUpper();
             var nombre = txtNuevoNombre.Text?.Trim();
+            var tipoPase = (cmbNuevoTipoPase.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "D";
             if (string.IsNullOrEmpty(codigo) || string.IsNullOrEmpty(nombre))
             {
                 await DialogHelper.MensajeAsync(this,"Error", "Debe ingresar el codigo y el nombre de la moneda.");
@@ -87,7 +88,7 @@ namespace SistemaCambio.Views
             }
             try
             {
-                await _apiClient.CrearMonedaAsync(new CrearMonedaRequest { Codigo = codigo, Nombre = nombre });
+                await _apiClient.CrearMonedaAsync(new CrearMonedaRequest { Codigo = codigo, Nombre = nombre, TipoPase = tipoPase });
                 txtNuevoCodigo.Text = "";
                 txtNuevoNombre.Text = "";
                 CargarMonedasAsync();
@@ -104,7 +105,7 @@ namespace SistemaCambio.Views
             {
                 try
                 {
-                    await _apiClient.ActualizarMonedaAsync(m.Id, new ActualizarMonedaRequest { Codigo = m.Codigo, Nombre = m.Nombre, Activa = m.Activa });
+                    await _apiClient.ActualizarMonedaAsync(m.Id, new ActualizarMonedaRequest { Codigo = m.Codigo, Nombre = m.Nombre, Activa = m.Activa, TipoPase = m.TipoPase });
                 }
                 catch (HttpRequestException ex) { errores.Add($"{m.Codigo}: {ex.Message}"); }
             }
