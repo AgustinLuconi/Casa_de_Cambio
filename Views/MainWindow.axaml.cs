@@ -407,6 +407,7 @@ public partial class MainWindow : Window
     }
 
     private async void BtnReportes_Click(object? sender, RoutedEventArgs e) => await AbrirReportesWindow();
+    private async void BtnPosicionDiaria_Click(object? sender, RoutedEventArgs e) => await AbrirPosicionDiariaWindow();
     private async void BtnConfiguracion_Click(object? sender, RoutedEventArgs e) => await AbrirConfiguracionWindow();
     private async void BtnNuevaCuenta_Click(object? sender, RoutedEventArgs e) => await AbrirNuevaCuentaWindow();
 
@@ -475,6 +476,7 @@ public partial class MainWindow : Window
     private async Task AbrirArqueoWindow() { var w = new ArqueoWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos(); }
     private async Task AbrirMovimientosWindow() { var w = new DetalleMovimientosWindow(); await w.ShowDialog(this); }
     private async Task AbrirReportesWindow() { var w = new ReportesWindow(); await w.ShowDialog(this); }
+    private async Task AbrirPosicionDiariaWindow() { var w = new PosicionDiariaWindow(); await w.ShowDialog(this); }
     private async Task AbrirConfiguracionWindow() { var w = new ConfiguracionWindow(); await w.ShowDialog(this); }
 
     // ── Historial de notificaciones ──────────────────────────────────────────

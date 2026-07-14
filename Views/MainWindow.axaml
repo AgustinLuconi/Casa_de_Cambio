@@ -194,7 +194,14 @@
                                 <TextBlock Text="Reportes" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
-                        
+
+                        <Button Classes="SidebarButton" Click="BtnPosicionDiaria_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="CurrencyUsd" Width="18" Height="18"/>
+                                <TextBlock Text="Posición Diaria" VerticalAlignment="Center" FontSize="13"/>
+                            </StackPanel>
+                        </Button>
+
                         <Button Classes="SidebarButton" Click="BtnConfiguracion_Click">
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <icon:MaterialIcon Kind="Cog" Width="18" Height="18"/>
