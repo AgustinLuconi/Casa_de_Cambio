@@ -193,6 +193,88 @@ public class OperacionService : IOperacionService
         catch (Exception ex) { transaction.Rollback(); return OperacionResult.Error($"Error: {ex.Message}"); }
     }
 
+    public ArbitrajeResult GuardarArbitraje(string monedaCompra, int cuentaAcreditaCompraId, decimal montoExtranjeroCompra, decimal cotizacionCompra, decimal pesosCompra, string monedaVenta, int cuentaDebitaVentaId, decimal montoExtranjeroVenta, decimal cotizacionVenta, decimal pesosVenta, int cuentaPesosId, string tipoOperacion, string observaciones = "")
+    {
+        montoExtranjeroCompra = Math.Round(montoExtranjeroCompra, 2, MidpointRounding.AwayFromZero);
+        cotizacionCompra = Math.Round(cotizacionCompra, 5, MidpointRounding.AwayFromZero);
+        pesosCompra = Math.Round(pesosCompra, 2, MidpointRounding.AwayFromZero);
+        montoExtranjeroVenta = Math.Round(montoExtranjeroVenta, 2, MidpointRounding.AwayFromZero);
+        cotizacionVenta = Math.Round(cotizacionVenta, 5, MidpointRounding.AwayFromZero);
+        pesosVenta = Math.Round(pesosVenta, 2, MidpointRounding.AwayFromZero);
+
+        if (pesosCompra != pesosVenta)
+            return ArbitrajeResult.Error($"El monto en Pesos de la Compra ({pesosCompra:N2}) debe ser igual al de la Venta ({pesosVenta:N2}).");
+
+        using var db = _contextFactory.CreateDbContext();
+        using var transaction = db.Database.BeginTransaction();
+        try
+        {
+            if (_cierreCajaService.HayDiaCerrado()) return ArbitrajeResult.Error("El dia de hoy ya esta cerrado.");
+
+            var cuentaAcredita = db.Cuentas.Find(cuentaAcreditaCompraId);
+            var cuentaDebita = db.Cuentas.Find(cuentaDebitaVentaId);
+            var cuentaPesos = db.Cuentas.Find(cuentaPesosId);
+            if (cuentaAcredita == null) return ArbitrajeResult.Error("Cuenta de Compra no encontrada");
+            if (cuentaDebita == null) return ArbitrajeResult.Error("Cuenta de Venta no encontrada");
+            if (cuentaPesos == null) return ArbitrajeResult.Error("Cuenta de Pesos no encontrada");
+
+            var errAcredita = ValidarMonoMonedaEfectivo(db, cuentaAcreditaCompraId, monedaCompra);
+            if (errAcredita != null) return ArbitrajeResult.Error(errAcredita.Mensaje);
+            var errDebita = ValidarMonoMonedaEfectivo(db, cuentaDebitaVentaId, monedaVenta);
+            if (errDebita != null) return ArbitrajeResult.Error(errDebita.Mensaje);
+
+            var saldoPesos = ObtenerOCrearSaldo(db, cuentaPesosId, "ARS");
+            var saldoAcredita = ObtenerOCrearSaldo(db, cuentaAcreditaCompraId, monedaCompra);
+            var saldoDebita = ObtenerOCrearSaldo(db, cuentaDebitaVentaId, monedaVenta);
+
+            // Único chequeo de saldo/límite necesario: la cuenta que entrega moneda extranjera en la Venta.
+            // La cuenta ARS pivote no se chequea: como PesosCompra==PesosVenta, su efecto neto es siempre cero.
+            // La cuenta que acredita en la Compra tampoco: solo recibe, nunca puede quedar insuficiente.
+            if (saldoDebita.Saldo < montoExtranjeroVenta)
+            {
+                decimal limiteDeuda = ObtenerLimiteDeuda(db, cuentaDebita, saldoDebita);
+                if (limiteDeuda > 0)
+                {
+                    decimal saldoProyectado = saldoDebita.Saldo - montoExtranjeroVenta;
+                    if (saldoProyectado < -limiteDeuda)
+                        return ArbitrajeResult.Error($"La cuenta '{cuentaDebita.Nombre}' superaría su límite de deuda en {monedaVenta} ({limiteDeuda:N2}).\nSaldo actual: {saldoDebita.Saldo:N2}, Requerido: {montoExtranjeroVenta:N2}");
+                }
+                else
+                {
+                    return ArbitrajeResult.Error($"Saldo insuficiente en '{cuentaDebita.Nombre}' ({monedaVenta}). Disponible: {saldoDebita.Saldo:N2}, Requerido: {montoExtranjeroVenta:N2}");
+                }
+            }
+
+            var tipoOpTexto = string.IsNullOrWhiteSpace(tipoOperacion) ? "" : $"[{tipoOperacion}] ";
+            var observacionesCompletas = $"{tipoOpTexto}{observaciones}".Trim();
+
+            var operacionCompra = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Compra", MontoTotalOrigen = pesosCompra, MontoTotalDestino = montoExtranjeroCompra, CotizacionAplicada = cotizacionCompra, Observaciones = observacionesCompletas };
+            db.Operaciones.Add(operacionCompra);
+            db.Movimientos.Add(new Movimiento { Operacion = operacionCompra, CuentaId = cuentaPesosId, Moneda = "ARS", Monto = -pesosCompra, Fecha = DateTime.UtcNow });
+            db.Movimientos.Add(new Movimiento { Operacion = operacionCompra, CuentaId = cuentaAcreditaCompraId, Moneda = monedaCompra, Monto = montoExtranjeroCompra, Fecha = DateTime.UtcNow });
+            saldoPesos.Saldo -= pesosCompra;
+            saldoAcredita.Saldo += montoExtranjeroCompra;
+
+            var operacionVenta = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Venta", MontoTotalOrigen = montoExtranjeroVenta, MontoTotalDestino = pesosVenta, CotizacionAplicada = cotizacionVenta, Observaciones = observacionesCompletas };
+            db.Operaciones.Add(operacionVenta);
+            db.Movimientos.Add(new Movimiento { Operacion = operacionVenta, CuentaId = cuentaDebitaVentaId, Moneda = monedaVenta, Monto = -montoExtranjeroVenta, Fecha = DateTime.UtcNow });
+            db.Movimientos.Add(new Movimiento { Operacion = operacionVenta, CuentaId = cuentaPesosId, Moneda = "ARS", Monto = pesosVenta, Fecha = DateTime.UtcNow });
+            saldoDebita.Saldo -= montoExtranjeroVenta;
+            saldoPesos.Saldo += pesosVenta;
+
+            db.SaveChanges(); // Necesario para obtener los Ids antes de vincularlos entre sí
+
+            operacionCompra.OperacionParejaId = operacionVenta.Id;
+            operacionVenta.OperacionParejaId = operacionCompra.Id;
+            db.SaveChanges();
+
+            transaction.Commit();
+            try { _auditService.Registrar("CREATE", "Operacion_Arbitraje", operacionCompra.Id, new { OperacionCompraId = operacionCompra.Id, OperacionVentaId = operacionVenta.Id, montoExtranjeroCompra, montoExtranjeroVenta, pesosCompra }); } catch { }
+            return ArbitrajeResult.Success(operacionCompra.Id, operacionVenta.Id);
+        }
+        catch (Exception ex) { transaction.Rollback(); return ArbitrajeResult.Error($"Error al guardar arbitraje: {ex.InnerException?.Message ?? ex.Message}"); }
+    }
+
     /// <summary>
     /// Resuelve el límite de deuda aplicable a una cuenta Cliente para UNA divisa concreta.
     /// Cadena de herencia:
