@@ -19,5 +19,7 @@ public class Operacion
     [Column("anulada")] public bool Anulada { get; set; } = false;
     [Column("operacion_original_id")] public int? OperacionOriginalId { get; set; }
     [ForeignKey("OperacionOriginalId")] public Operacion? OperacionOriginal { get; set; }
+    [Column("operacion_pareja_id")] public int? OperacionParejaId { get; set; }
+    [ForeignKey("OperacionParejaId")] public Operacion? OperacionPareja { get; set; }
     public List<Movimiento> Movimientos { get; set; } = new();
 }
