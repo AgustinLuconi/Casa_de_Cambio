@@ -128,3 +128,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Marcador público para que WebApplicationFactory<Program> (tests de integración HTTP) pueda referenciar el entry point.
+public partial class Program { }

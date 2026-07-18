@@ -22,22 +22,27 @@ public class PosicionDiariaController : ControllerBase
         var corteInicial = desde.Date;
         var corteFinal = hasta.Date.AddDays(1);
 
+        // Una sola consulta agrupada por moneda en vez de dos consultas por moneda (N+1).
+        var posicionesPorMoneda = db.Movimientos
+            .Where(mv => mv.Cuenta.Tipo == "Efectivo" && mv.Fecha < corteFinal)
+            .GroupBy(mv => mv.Moneda)
+            .Select(g => new
+            {
+                Moneda = g.Key,
+                CapInicial = g.Sum(mv => mv.Fecha < corteInicial ? mv.Monto : 0m),
+                CapFinal = g.Sum(mv => mv.Monto)
+            })
+            .ToDictionary(x => x.Moneda);
+
         var resultado = monedas.Select(m => new PosicionDiariaDto
         {
             Codigo = m.Codigo,
             Nombre = m.Nombre,
             TipoPase = m.TipoPase,
-            CapInicial = SumaMovimientosEfectivo(db, m.Codigo, corteInicial),
-            CapFinal = SumaMovimientosEfectivo(db, m.Codigo, corteFinal)
+            CapInicial = posicionesPorMoneda.TryGetValue(m.Codigo, out var pos) ? pos.CapInicial : 0,
+            CapFinal = posicionesPorMoneda.TryGetValue(m.Codigo, out var pos2) ? pos2.CapFinal : 0
         }).ToList();
 
         return Ok(resultado);
-    }
-
-    private static decimal SumaMovimientosEfectivo(AppDbContext db, string moneda, DateTime corte)
-    {
-        return db.Movimientos
-            .Where(mv => mv.Moneda == moneda && mv.Fecha < corte && mv.Cuenta.Tipo == "Efectivo")
-            .Sum(mv => (decimal?)mv.Monto) ?? 0;
     }
 }
