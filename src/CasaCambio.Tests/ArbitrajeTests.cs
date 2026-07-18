@@ -110,4 +110,43 @@ public class ArbitrajeTests
 
         Assert.False(resultado.Exitoso);
     }
+
+    [Fact]
+    public void AnularOperacion_ConPareja_AnulaAmbasEnCascada()
+    {
+        var creado = Arbitrar(montoCompra: 10000m, cotCompra: 1800m, montoVenta: 10000m, cotVenta: 1800m);
+        Assert.True(creado.Exitoso);
+
+        var resultadoAnular = _operacionService.AnularOperacion(creado.OperacionIdCompra!.Value);
+
+        Assert.True(resultadoAnular.Exitoso);
+        using var db = _factory.CreateDbContext();
+        var opCompra = db.Operaciones.First(o => o.Id == creado.OperacionIdCompra);
+        var opVenta = db.Operaciones.First(o => o.Id == creado.OperacionIdVenta);
+        Assert.True(opCompra.Anulada);
+        Assert.True(opVenta.Anulada, "La Venta debe anularse automáticamente al anular su pareja (la Compra).");
+
+        // 2 anulaciones nuevas además de las 2 operaciones originales = 4 filas en total
+        Assert.Equal(4, db.Operaciones.Count());
+
+        // Saldos vuelven a su estado original: EFECTIVO EUR sin cambio neto, EFECTIVO ARS sin cambio neto
+        var saldoEur = db.SaldosCuenta.First(s => s.CuentaId == IdCajaEur && s.Moneda == "EUR");
+        Assert.Equal(20000m, saldoEur.Saldo);
+        var saldoArs = db.SaldosCuenta.First(s => s.CuentaId == IdCajaArs && s.Moneda == "ARS");
+        Assert.Equal(1000000m, saldoArs.Saldo);
+    }
+
+    [Fact]
+    public void AnularOperacion_ParejaYaAnulada_NoIntentaAnularlaDeNuevo()
+    {
+        var creado = Arbitrar(montoCompra: 10000m, cotCompra: 1800m, montoVenta: 10000m, cotVenta: 1800m);
+        Assert.True(creado.Exitoso);
+
+        _operacionService.AnularOperacion(creado.OperacionIdCompra!.Value);
+        // Intentar anular la Venta, que ya fue anulada en cascada — debe fallar con el mensaje existente, no duplicar la reversión.
+        var segundoIntento = _operacionService.AnularOperacion(creado.OperacionIdVenta!.Value);
+
+        Assert.False(segundoIntento.Exitoso);
+        Assert.Contains("ya fue anulada", segundoIntento.Mensaje);
+    }
 }
