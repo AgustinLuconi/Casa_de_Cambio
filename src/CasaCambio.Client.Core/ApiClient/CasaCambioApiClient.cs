@@ -170,6 +170,9 @@ public class CasaCambioApiClient : ICasaCambioApiClient
     public async Task<OperacionResponse> CrearInterbancarioAsync(CrearInterbancarioRequest request)
         => await PostAuthenticatedAsync<OperacionResponse>("api/operaciones/interbancaria", request);
 
+    public async Task<ArbitrajeResponse> CrearArbitrajeAsync(CrearArbitrajeRequest request)
+        => await PostAuthenticatedAsync<ArbitrajeResponse>("api/operaciones/arbitraje", request);
+
     public async Task<PaginatedResponse<OperacionDto>> ObtenerOperacionesAsync(DateTime? desde = null, DateTime? hasta = null, string? tipo = null, int page = 1, int pageSize = 50)
     {
         var query = $"api/operaciones?page={page}&pageSize={pageSize}";
