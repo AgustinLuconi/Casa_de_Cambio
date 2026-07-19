@@ -76,6 +76,23 @@ public class OperacionesController : ControllerBase
         return Ok(result.Exitoso ? OperacionResponse.Success(result.OperacionId!.Value) : OperacionResponse.Error(result.Mensaje));
     }
 
+    [HttpPost("arbitraje")]
+    public IActionResult Arbitraje([FromBody] CrearArbitrajeRequest req)
+    {
+        var result = _operacionService.GuardarArbitraje(
+            req.MonedaCompra, req.CuentaAcreditaCompraId, req.MontoExtranjeroCompra, req.CotizacionCompra, req.PesosCompra,
+            req.MonedaVenta, req.CuentaDebitaVentaId, req.MontoExtranjeroVenta, req.CotizacionVenta, req.PesosVenta,
+            req.CuentaPesosId, req.TipoOperacion, req.Observaciones);
+        if (result.Exitoso)
+        {
+            _pppService.RegistrarCompra(req.MonedaCompra, req.MontoExtranjeroCompra, req.PesosCompra);
+            _pppService.RegistrarVenta(req.MonedaVenta, req.MontoExtranjeroVenta);
+        }
+        return Ok(result.Exitoso
+            ? ArbitrajeResponse.Success(result.OperacionIdCompra!.Value, result.OperacionIdVenta!.Value)
+            : ArbitrajeResponse.Error(result.Mensaje));
+    }
+
     // Sin UI en el desktop actual: ninguna ventana llama a este endpoint. Se mantiene
     // funcional y validado para uso futuro (transferencia directa entre dos cuentas
     // internas en distinta moneda, sin pasar por Crédito/Débito).
