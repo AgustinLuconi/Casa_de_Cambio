@@ -336,17 +336,22 @@ public class OperacionService : IOperacionService
     {
         using var db = _contextFactory.CreateDbContext();
         using var transaction = db.Database.BeginTransaction();
+        var anulaciones = new List<(int OperacionId, int AnulacionId)>();
         try
         {
-            var resultado = AnularOperacionInterno(db, id);
+            var resultado = AnularOperacionInterno(db, id, anulaciones);
             if (!resultado.Exitoso) { transaction.Rollback(); return resultado; }
             transaction.Commit();
+            foreach (var (operacionId, anulacionId) in anulaciones)
+            {
+                try { _auditService.Registrar("ANULAR", "Operacion", operacionId, datosNuevos: new { anulacion_id = anulacionId }); } catch { }
+            }
             return resultado;
         }
         catch (Exception ex) { transaction.Rollback(); return OperacionResult.Error($"Error al anular: {ex.InnerException?.Message ?? ex.Message}"); }
     }
 
-    private OperacionResult AnularOperacionInterno(AppDbContext db, int id)
+    private OperacionResult AnularOperacionInterno(AppDbContext db, int id, List<(int OperacionId, int AnulacionId)> anulaciones)
     {
         var original = db.Operaciones.Include(o => o.Movimientos).FirstOrDefault(o => o.Id == id);
         if (original == null) return OperacionResult.Error("Operación no encontrada.");
@@ -382,7 +387,7 @@ public class OperacionService : IOperacionService
 
         original.Anulada = true;
         db.SaveChanges();
-        try { _auditService.Registrar("ANULAR", "Operacion", id, datosNuevos: new { anulacion_id = anulacion.Id }); } catch { }
+        anulaciones.Add((id, anulacion.Id));
 
         // Anulación en cascada: si esta operación tiene pareja (Arbitraje) y no está ya anulada, anularla también.
         if (original.OperacionParejaId.HasValue)
@@ -390,7 +395,7 @@ public class OperacionService : IOperacionService
             var pareja = db.Operaciones.FirstOrDefault(o => o.Id == original.OperacionParejaId.Value);
             if (pareja != null && !pareja.Anulada)
             {
-                var resultadoPareja = AnularOperacionInterno(db, pareja.Id);
+                var resultadoPareja = AnularOperacionInterno(db, pareja.Id, anulaciones);
                 if (!resultadoPareja.Exitoso) return resultadoPareja;
             }
         }
