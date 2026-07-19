@@ -154,6 +154,13 @@
                             </StackPanel>
                         </Button>
                         
+                        <Button x:Name="btnArbitraje" Classes="SidebarButton" Click="BtnArbitraje_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <icon:MaterialIcon Kind="Exchange" Width="18" Height="18"/>
+                                <TextBlock Text="Compra / Venta" VerticalAlignment="Center" FontSize="13"/>
+                            </StackPanel>
+                        </Button>
+
                         <Button x:Name="btnCreditoDebito" Classes="SidebarButton" Click="BtnCreditoDebito_Click">
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <icon:MaterialIcon Kind="SwapHorizontal" Width="18" Height="18"/>

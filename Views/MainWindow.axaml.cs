@@ -357,6 +357,7 @@ public partial class MainWindow : Window
 
     private async void BtnCompra_Click(object? sender, RoutedEventArgs e) => await AbrirCompraWindow();
     private async void BtnVenta_Click(object? sender, RoutedEventArgs e) => await AbrirVentaWindow();
+    private async void BtnArbitraje_Click(object? sender, RoutedEventArgs e) => await AbrirArbitrajeWindow();
     private async void BtnCreditoDebito_Click(object? sender, RoutedEventArgs e) => await AbrirCreditoDebitoWindow();
     private async void BtnArqueo_Click(object? sender, RoutedEventArgs e) => await AbrirArqueoWindow();
     private async void BtnMovimientos_Click(object? sender, RoutedEventArgs e) => await AbrirMovimientosWindow();
@@ -431,6 +432,7 @@ public partial class MainWindow : Window
             btnToolbarCreditoDebito.IsEnabled = false;
             btnCompra.IsEnabled = false;
             btnVenta.IsEnabled = false;
+            btnArbitraje.IsEnabled = false;
             btnCreditoDebito.IsEnabled = false;
             borderDiaCerrado.IsVisible = true;
             Services.NotificationService.Warning("Día cerrado", "Las operaciones del día están bloqueadas.");
@@ -472,6 +474,11 @@ public partial class MainWindow : Window
     {
         if (_diaCerrado) { Services.NotificationService.Warning("Día cerrado", "No se pueden registrar operaciones."); return; }
         var w = new CreditoDebitoWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos();
+    }
+    private async Task AbrirArbitrajeWindow()
+    {
+        if (_diaCerrado) { Services.NotificationService.Warning("Día cerrado", "No se pueden registrar operaciones."); return; }
+        var w = new ArbitrajeWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos();
     }
     private async Task AbrirArqueoWindow() { var w = new ArqueoWindow(); await w.ShowDialog(this); _viewModel?.RefrescarDatos(); }
     private async Task AbrirMovimientosWindow() { var w = new DetalleMovimientosWindow(); await w.ShowDialog(this); }
