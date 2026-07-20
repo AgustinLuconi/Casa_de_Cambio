@@ -40,7 +40,7 @@ namespace SistemaCambio.ViewModels
         [ObservableProperty] private string _ingresaTexto = "0.00";
         [ObservableProperty] private string _vueltoTexto = "0.00";
 
-        [ObservableProperty] private string _observaciones = "";
+        [ObservableProperty] private string? _observaciones;
 
         [ObservableProperty] private bool _mostrarError;
         [ObservableProperty] private string _mensajeError = "";
@@ -122,7 +122,6 @@ namespace SistemaCambio.ViewModels
                     _cotizacionDia = 0;
                     CotizacionTexto = "0.00000";
                 }
-                Recalcular();
             }
             catch (Exception ex) { AppLogger.Warn("CargarCotizacionDelDiaAsync", ex); }
         }
@@ -246,7 +245,7 @@ namespace SistemaCambio.ViewModels
                 MontoOrigen = pesos,
                 MontoDestino = monedaExtranjera,
                 Cotizacion = cotizacion,
-                Observaciones = string.IsNullOrEmpty(Observaciones) ? "Compra de divisa" : Observaciones
+                Observaciones = Observaciones ?? "Compra de divisa"
             };
 
             try
@@ -259,11 +258,6 @@ namespace SistemaCambio.ViewModels
                     MostrarError = true;
                     return;
                 }
-
-                if (resultado.IsOffline)
-                    NotificationService.Warning("Guardada offline", resultado.Mensaje);
-                else
-                    NotificationService.OperacionGuardada("Compra", resultado.OperacionId ?? 0);
 
                 OperacionGuardada?.Invoke(resultado.OperacionId ?? 0, resultado.IsOffline, resultado.Mensaje);
                 SolicitarCierre?.Invoke();

@@ -35,6 +35,13 @@ namespace SistemaCambio.Views
             var viewModel = new CompraViewModel(apiClient, offlineService, dialogService);
             DataContext = viewModel;
 
+            viewModel.OperacionGuardada += (operacionId, isOffline, mensaje) =>
+            {
+                if (isOffline)
+                    NotificationService.Warning("Guardada offline", mensaje);
+                else
+                    NotificationService.OperacionGuardada("Compra", operacionId);
+            };
             viewModel.SolicitarCierre += Close;
 
             // Sincroniza la selección de cuenta del ViewModel con los AutoCompleteBox
