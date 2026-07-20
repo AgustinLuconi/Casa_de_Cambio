@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
+        xmlns:converters="clr-namespace:SistemaCambio.Views.Converters"
         x:Class="SistemaCambio.Views.CierreCajaWindow"
         x:CompileBindings="False"
         Title="Cierre de Caja Diario"
@@ -9,6 +10,14 @@
         WindowStartupLocation="CenterOwner"
         CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">
+
+    <Window.Resources>
+        <converters:SinDiferenciasToBrushConverter x:Key="SinDiferenciasToBrushConverter"/>
+        <converters:CerradoToBackgroundBrushConverter x:Key="CerradoToBackgroundBrushConverter"/>
+        <converters:CerradoToBorderBrushConverter x:Key="CerradoToBorderBrushConverter"/>
+        <converters:CerradoToEstadoTextoBrushConverter x:Key="CerradoToEstadoTextoBrushConverter"/>
+        <converters:HexColorToBrushConverter x:Key="HexColorToBrushConverter"/>
+    </Window.Resources>
 
     <Grid RowDefinitions="Auto, *, Auto" Margin="20">
         
@@ -22,7 +31,7 @@
                     <TextBlock Text="Cierre de Caja Diario" FontWeight="SemiBold" FontSize="16" 
                                Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                 </StackPanel>
-                <TextBlock Grid.Column="2" x:Name="txtFecha" Text="" FontSize="14" 
+                <TextBlock Grid.Column="2" Text="{Binding FechaTexto}" FontSize="14"
                            Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
             </Grid>
         </Border>
@@ -48,17 +57,17 @@
                                                Foreground="{DynamicResource SuccessBrush}"/>
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <TextBlock Text="Cantidad:" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock x:Name="txtCantidadCompras" Text="0" FontWeight="Bold" 
+                                        <TextBlock Text="{Binding CantidadComprasTexto}" FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <TextBlock Text="Total USD:" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock x:Name="txtComprasUSD" Text="$0.00" FontWeight="Bold" 
+                                        <TextBlock Text="{Binding ComprasUsdTexto}" FontWeight="Bold"
                                                    Foreground="{DynamicResource SuccessBrush}"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <TextBlock Text="Total ARS:" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock x:Name="txtComprasARS" Text="$0.00" 
+                                        <TextBlock Text="{Binding ComprasArsTexto}"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -73,17 +82,17 @@
                                                Foreground="{DynamicResource DangerBrush}"/>
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <TextBlock Text="Cantidad:" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock x:Name="txtCantidadVentas" Text="0" FontWeight="Bold" 
+                                        <TextBlock Text="{Binding CantidadVentasTexto}" FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <TextBlock Text="Total USD:" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock x:Name="txtVentasUSD" Text="$0.00" FontWeight="Bold" 
+                                        <TextBlock Text="{Binding VentasUsdTexto}" FontWeight="Bold"
                                                    Foreground="{DynamicResource DangerBrush}"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <TextBlock Text="Total ARS:" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock x:Name="txtVentasARS" Text="$0.00" 
+                                        <TextBlock Text="{Binding VentasArsTexto}"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -99,7 +108,7 @@
                         <TextBlock Text="SALDOS ACTUALES DE CAJA" FontWeight="SemiBold" FontSize="13" 
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                         
-                        <ItemsControl x:Name="icSaldos" Margin="0,5">
+                        <ItemsControl ItemsSource="{Binding Saldos}" Margin="0,5">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <WrapPanel Orientation="Horizontal" />
@@ -107,12 +116,12 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{DynamicResource CardBackgroundBrush}" 
-                                            BorderBrush="{Binding ColorBrush}" BorderThickness="1" 
+                                    <Border Background="{DynamicResource CardBackgroundBrush}"
+                                            BorderBrush="{Binding ColorHex, Converter={StaticResource HexColorToBrushConverter}}" BorderThickness="1"
                                             CornerRadius="8" Padding="16" Margin="0,0,10,10" Width="180">
                                         <StackPanel Spacing="5">
-                                            <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold" 
-                                                       Foreground="{Binding ColorBrush}" FontSize="12"/>
+                                            <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"
+                                                       Foreground="{Binding ColorHex, Converter={StaticResource HexColorToBrushConverter}}" FontSize="12"/>
                                             <TextBlock Text="{Binding SaldoFormatted}" FontSize="18" FontWeight="Bold" 
                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
                                         </StackPanel>
@@ -131,8 +140,8 @@
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <TextBlock Text="Total diferencias del día:" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            <TextBlock x:Name="txtTotalDiferencias" Text="$0.00" FontWeight="Bold" FontSize="16"
-                                       Foreground="{DynamicResource WarningBrush}"/>
+                            <TextBlock Text="{Binding TotalDiferenciasTexto}" FontWeight="Bold" FontSize="16"
+                                       Foreground="{Binding SinDiferencias, Converter={StaticResource SinDiferenciasToBrushConverter}}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -144,11 +153,11 @@
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <TextBlock Text="OPERACIONES DEL DÍA" FontWeight="SemiBold" FontSize="13"
                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <TextBlock x:Name="txtCantidadOps" Text="(0)"
+                            <TextBlock Text="{Binding CantidadOperacionesTexto}"
                                        Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
-                        <DataGrid x:Name="dgOperacionesDia" AutoGenerateColumns="False"
+                        <DataGrid ItemsSource="{Binding OperacionesDia}" AutoGenerateColumns="False"
                                   MaxHeight="200" IsReadOnly="True"
                                   BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
                                   GridLinesVisibility="Horizontal"
@@ -179,7 +188,8 @@
                     <StackPanel Spacing="10">
                         <TextBlock Text="OBSERVACIONES" FontWeight="SemiBold" FontSize="13" 
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        <TextBox x:Name="txtObservaciones" Height="80" AcceptsReturn="True"
+                        <TextBox Text="{Binding Observaciones}" Height="80" AcceptsReturn="True"
+                                 IsReadOnly="{Binding ObservacionesSoloLectura}"
                                  Watermark="Ingrese observaciones sobre el cierre del día..."/>
                     </StackPanel>
                 </Border>
@@ -189,33 +199,35 @@
 
         <!-- Footer -->
         <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Margin="0,20,0,0">
-            <Border Grid.Column="0" x:Name="borderEstado" 
-                    Background="{DynamicResource CardBackgroundBrush}" 
-                    BorderBrush="{DynamicResource WarningBrush}" 
-                    BorderThickness="1" CornerRadius="6" Padding="12,8" IsVisible="False">
+            <Border Grid.Column="0"
+                    Background="{Binding Cerrado, Converter={StaticResource CerradoToBackgroundBrushConverter}}"
+                    BorderBrush="{Binding Cerrado, Converter={StaticResource CerradoToBorderBrushConverter}}"
+                    BorderThickness="1" CornerRadius="6" Padding="12,8" IsVisible="{Binding BorderEstadoVisible}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <icon:MaterialIcon Kind="Information" Foreground="{DynamicResource WarningBrush}" Width="16" Height="16"/>
-                    <TextBlock x:Name="txtEstado" Text="Cierre generado - Sin cerrar definitivamente" 
-                               Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding EstadoTexto}"
+                               Foreground="{Binding Cerrado, Converter={StaticResource CerradoToEstadoTextoBrushConverter}}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Border>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
-                <Button x:Name="btnGenerar" Background="{DynamicResource AccentBrush}" Foreground="White"
+                <Button Background="{DynamicResource AccentBrush}" Foreground="White"
                         Height="38" Padding="15,0" CornerRadius="8" Cursor="Hand"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                         IsDefault="True"
-                        Click="BtnGenerar_Click">
+                        IsEnabled="{Binding BtnGenerarHabilitado}"
+                        Command="{Binding GenerarCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <icon:MaterialIcon Kind="Calculator" Width="16" Height="16" VerticalAlignment="Center"/>
                         <TextBlock Text="Generar Cierre" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
-                <Button x:Name="btnCerrarDefinitivo" Background="{DynamicResource SuccessBrush}" Foreground="White"
-                        Height="38" Padding="15,0" CornerRadius="8" Cursor="Hand" IsEnabled="False"
+                <Button Background="{DynamicResource SuccessBrush}" Foreground="White"
+                        Height="38" Padding="15,0" CornerRadius="8" Cursor="Hand"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                        Click="BtnCerrarDefinitivo_Click">
+                        IsEnabled="{Binding BtnCerrarDefinitivoHabilitado}"
+                        Command="{Binding CerrarDefinitivoCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <icon:MaterialIcon Kind="Lock" Width="16" Height="16" VerticalAlignment="Center"/>
                         <TextBlock Text="Cerrar Definitivo" VerticalAlignment="Center"/>
