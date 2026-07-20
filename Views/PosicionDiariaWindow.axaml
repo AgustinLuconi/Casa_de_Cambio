@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
         xmlns:helpers="clr-namespace:SistemaCambio.Views.Helpers"
+        xmlns:conv="clr-namespace:SistemaCambio.Views.Converters"
         x:Class="SistemaCambio.Views.PosicionDiariaWindow"
         x:CompileBindings="False"
         Title="Posición Diaria"
@@ -9,6 +10,10 @@
         WindowStartupLocation="CenterOwner"
         CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">
+
+    <Window.Resources>
+        <conv:GananciaSignoToBrushConverter x:Key="GananciaSignoToBrushConverter"/>
+    </Window.Resources>
 
     <Grid RowDefinitions="Auto, *, Auto" Margin="16">
 
@@ -24,12 +29,12 @@
                 CornerRadius="8" Padding="16,12" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <TextBlock Text="Desde" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <DatePicker x:Name="dpDesde" Width="180"/>
+                <DatePicker x:Name="dpDesde" Width="180" SelectedDate="{Binding FechaDesde}"/>
                 <TextBlock Text="Hasta" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" Margin="10,0,0,0"/>
-                <DatePicker x:Name="dpHasta" Width="180"/>
+                <DatePicker x:Name="dpHasta" Width="180" SelectedDate="{Binding FechaHasta}"/>
                 <Button Content="Buscar" Classes="Primary" Margin="10,0,0,0"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                        Click="BtnBuscar_Click"/>
+                        Command="{Binding BuscarCommand}"/>
             </StackPanel>
         </Border>
 
@@ -37,7 +42,7 @@
         <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8">
             <Grid RowDefinitions="*, Auto">
-                <DataGrid Grid.Row="0" x:Name="dgPosicion" AutoGenerateColumns="False" IsReadOnly="True"
+                <DataGrid Grid.Row="0" x:Name="dgPosicion" ItemsSource="{Binding Items}" AutoGenerateColumns="False" IsReadOnly="True"
                           BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
                           GridLinesVisibility="Horizontal"
                           HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
@@ -76,7 +81,7 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding GananciaFormatted}"
-                                               Foreground="{Binding GananciaColor}"
+                                               Foreground="{Binding Ganancia, Converter={StaticResource GananciaSignoToBrushConverter}}"
                                                FontWeight="Bold" TextAlignment="Right"
                                                Padding="6,3" VerticalAlignment="Center"/>
                                 </DataTemplate>
@@ -86,7 +91,7 @@
                 </DataGrid>
                 <TextBlock Grid.Row="0" x:Name="txtSinDatos" Text="No hay monedas activas para mostrar."
                            Foreground="{DynamicResource SecondaryTextBrush}"
-                           HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="False"/>
+                           HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding SinDatos}"/>
             </Grid>
         </Border>
 
