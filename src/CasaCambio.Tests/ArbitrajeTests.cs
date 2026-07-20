@@ -173,6 +173,39 @@ public class ArbitrajeTests
     }
 
     [Fact]
+    public void GuardarArbitraje_ConIdempotencyKeyRepetida_NoDuplicaOperaciones()
+    {
+        decimal montoCompra = 10000m, cotCompra = 1800m;
+        decimal pesos = montoCompra * cotCompra;
+        decimal montoVenta = 10000m, cotVenta = 1800m;
+
+        var primero = _operacionService.GuardarArbitraje(
+            monedaCompra: "EUR", cuentaAcreditaCompraId: IdCajaEur, montoExtranjeroCompra: montoCompra, cotizacionCompra: cotCompra, pesosCompra: pesos,
+            monedaVenta: "EUR", cuentaDebitaVentaId: IdCajaEur, montoExtranjeroVenta: montoVenta, cotizacionVenta: cotVenta, pesosVenta: pesos,
+            cuentaPesosId: IdCajaArs, tipoOperacion: "CLIENTE", observaciones: "idempotencia", idempotencyKey: "clave-fija");
+
+        Assert.True(primero.Exitoso, primero.Mensaje);
+
+        int countDespuesDelPrimero;
+        using (var db = _factory.CreateDbContext())
+        {
+            countDespuesDelPrimero = db.Operaciones.Count();
+        }
+
+        var segundo = _operacionService.GuardarArbitraje(
+            monedaCompra: "EUR", cuentaAcreditaCompraId: IdCajaEur, montoExtranjeroCompra: montoCompra, cotizacionCompra: cotCompra, pesosCompra: pesos,
+            monedaVenta: "EUR", cuentaDebitaVentaId: IdCajaEur, montoExtranjeroVenta: montoVenta, cotizacionVenta: cotVenta, pesosVenta: pesos,
+            cuentaPesosId: IdCajaArs, tipoOperacion: "CLIENTE", observaciones: "idempotencia", idempotencyKey: "clave-fija");
+
+        Assert.True(segundo.Exitoso, segundo.Mensaje);
+        Assert.Equal(primero.OperacionIdCompra, segundo.OperacionIdCompra);
+        Assert.Equal(primero.OperacionIdVenta, segundo.OperacionIdVenta);
+
+        using var dbFinal = _factory.CreateDbContext();
+        Assert.Equal(countDespuesDelPrimero, dbFinal.Operaciones.Count());
+    }
+
+    [Fact]
     public void AnularOperacion_ParejaYaAnulada_NoIntentaAnularlaDeNuevo()
     {
         var creado = Arbitrar(montoCompra: 10000m, cotCompra: 1800m, montoVenta: 10000m, cotVenta: 1800m);

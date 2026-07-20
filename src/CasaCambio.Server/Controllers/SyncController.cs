@@ -43,6 +43,19 @@ public class SyncController : ControllerBase
                         else _pppService.RegistrarVenta(op.MonedaOrigen, op.MontoOrigen);
                     }
                 }
+                else if (op.TipoOperacion == "Arbitraje")
+                {
+                    var arbitrajeResult = _operacionService.GuardarArbitraje(
+                        op.MonedaDestino, op.CuentaDestinoId, op.MontoDestino, op.CotizacionAplicada, op.MontoOrigen,
+                        op.MonedaVenta, op.CuentaDebitaVentaId, op.MontoExtranjeroVenta, op.CotizacionVenta, op.MontoOrigen,
+                        op.CuentaOrigenId, op.TipoOperacionArbitraje, op.Observaciones, op.LocalId);
+                    if (arbitrajeResult.Exitoso)
+                    {
+                        _pppService.RegistrarCompra(op.MonedaDestino, op.MontoDestino, op.MontoOrigen);
+                        _pppService.RegistrarVenta(op.MonedaVenta, op.MontoExtranjeroVenta);
+                    }
+                    result = ArbitrajeResultToOperacionResult(arbitrajeResult);
+                }
                 else
                 {
                     result = _operacionService.GuardarCreditoDebito(op.CuentaDestinoId, op.CuentaOrigenId, op.MonedaDestino, op.MonedaOrigen, op.MontoDestino, op.MontoOrigen, op.CotizacionAplicada, op.Observaciones, op.LocalId);
@@ -57,6 +70,9 @@ public class SyncController : ControllerBase
         var statusCode = resultados.All(r => r.Exitoso) ? 200 : 207;
         return StatusCode(statusCode, new SyncPushResponse { Resultados = resultados });
     }
+
+    private static OperacionResult ArbitrajeResultToOperacionResult(ArbitrajeResult r) =>
+        r.Exitoso ? OperacionResult.Success(r.OperacionIdCompra!.Value) : OperacionResult.Error(r.Mensaje);
 
     [HttpGet("pull")]
     public IActionResult Pull()

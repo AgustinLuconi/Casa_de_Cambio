@@ -193,7 +193,7 @@ public class OperacionService : IOperacionService
         catch (Exception ex) { transaction.Rollback(); return OperacionResult.Error($"Error: {ex.Message}"); }
     }
 
-    public ArbitrajeResult GuardarArbitraje(string monedaCompra, int cuentaAcreditaCompraId, decimal montoExtranjeroCompra, decimal cotizacionCompra, decimal pesosCompra, string monedaVenta, int cuentaDebitaVentaId, decimal montoExtranjeroVenta, decimal cotizacionVenta, decimal pesosVenta, int cuentaPesosId, string tipoOperacion, string observaciones = "")
+    public ArbitrajeResult GuardarArbitraje(string monedaCompra, int cuentaAcreditaCompraId, decimal montoExtranjeroCompra, decimal cotizacionCompra, decimal pesosCompra, string monedaVenta, int cuentaDebitaVentaId, decimal montoExtranjeroVenta, decimal cotizacionVenta, decimal pesosVenta, int cuentaPesosId, string tipoOperacion, string observaciones = "", string? idempotencyKey = null)
     {
         montoExtranjeroCompra = Math.Round(montoExtranjeroCompra, 2, MidpointRounding.AwayFromZero);
         cotizacionCompra = Math.Round(cotizacionCompra, 5, MidpointRounding.AwayFromZero);
@@ -209,6 +209,11 @@ public class OperacionService : IOperacionService
         using var transaction = db.Database.BeginTransaction();
         try
         {
+            if (idempotencyKey != null)
+            {
+                var existente = db.Operaciones.AsNoTracking().FirstOrDefault(o => o.IdempotencyKey == idempotencyKey);
+                if (existente != null) return ArbitrajeResult.Success(existente.Id, existente.OperacionParejaId ?? 0);
+            }
             if (_cierreCajaService.HayDiaCerrado()) return ArbitrajeResult.Error("El dia de hoy ya esta cerrado.");
 
             var cuentaAcredita = db.Cuentas.Find(cuentaAcreditaCompraId);
@@ -230,7 +235,7 @@ public class OperacionService : IOperacionService
             var tipoOpTexto = string.IsNullOrWhiteSpace(tipoOperacion) ? "" : $"[{tipoOperacion}] ";
             var observacionesCompletas = $"{tipoOpTexto}{observaciones}".Trim();
 
-            var operacionCompra = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Compra", MontoTotalOrigen = pesosCompra, MontoTotalDestino = montoExtranjeroCompra, CotizacionAplicada = cotizacionCompra, Observaciones = observacionesCompletas };
+            var operacionCompra = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Compra", MontoTotalOrigen = pesosCompra, MontoTotalDestino = montoExtranjeroCompra, CotizacionAplicada = cotizacionCompra, Observaciones = observacionesCompletas, IdempotencyKey = idempotencyKey };
             db.Operaciones.Add(operacionCompra);
             db.Movimientos.Add(new Movimiento { Operacion = operacionCompra, CuentaId = cuentaPesosId, Moneda = "ARS", Monto = -pesosCompra, Fecha = DateTime.UtcNow });
             db.Movimientos.Add(new Movimiento { Operacion = operacionCompra, CuentaId = cuentaAcreditaCompraId, Moneda = monedaCompra, Monto = montoExtranjeroCompra, Fecha = DateTime.UtcNow });
