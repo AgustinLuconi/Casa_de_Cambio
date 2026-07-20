@@ -27,7 +27,7 @@
         <!-- Name -->
         <Grid Grid.Row="1" ColumnDefinitions="120, *" Margin="0,0,0,10">
             <TextBlock Text="Nombre" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox x:Name="txtNombre" Grid.Column="1" Watermark="Nombre de la cuenta"/>
+            <TextBox x:Name="txtNombre" Grid.Column="1" Watermark="Nombre de la cuenta" Text="{Binding Nombre}"/>
         </Grid>
 
         <!-- Type: sin selección inicial — el usuario debe elegir explícitamente -->
@@ -35,16 +35,17 @@
             <TextBlock Text="Tipo" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
             <ComboBox x:Name="cmbTipo" Grid.Column="1" HorizontalAlignment="Stretch"
                       PlaceholderText="Seleccione un tipo..."
-                      PlaceholderForeground="{DynamicResource SecondaryTextBrush}">
-                <ComboBoxItem>Efectivo</ComboBoxItem>
-                <ComboBoxItem>Banco</ComboBoxItem>
-                <ComboBoxItem>Cliente</ComboBoxItem>
-                <ComboBoxItem>Proveedor</ComboBoxItem>
+                      PlaceholderForeground="{DynamicResource SecondaryTextBrush}"
+                      SelectedItem="{Binding TipoSeleccionado}">
+                <x:String>Efectivo</x:String>
+                <x:String>Banco</x:String>
+                <x:String>Cliente</x:String>
+                <x:String>Proveedor</x:String>
             </ComboBox>
         </Grid>
 
         <!-- Initial Balances: oculto hasta que el usuario elija un tipo -->
-        <Border x:Name="borderSaldos" Grid.Row="3" IsVisible="False"
+        <Border x:Name="borderSaldos" Grid.Row="3" IsVisible="{Binding BorderSaldosVisible}"
                 Background="{DynamicResource CardBackgroundBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="8" Padding="16" Margin="0,0,0,16">
@@ -56,7 +57,8 @@
                 <DataGrid Grid.Row="1" x:Name="dgSaldosIniciales" AutoGenerateColumns="False"
                           BorderThickness="0" IsReadOnly="True"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="{DynamicResource BorderBrush}">
+                          HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
+                          ItemsSource="{Binding SaldosIniciales}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="80"/>
                         <DataGridTextColumn Header="NOMBRE" Binding="{Binding Nombre}" Width="*"/>
@@ -93,12 +95,14 @@
                                VerticalAlignment="Center" Margin="0,0,12,8"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <ComboBox Grid.Row="0" Grid.Column="1" x:Name="cmbMonedaEfectivo"
-                              HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+                              HorizontalAlignment="Stretch" Margin="0,0,0,8"
+                              ItemsSource="{Binding MonedasEfectivo}"
+                              SelectedItem="{Binding MonedaEfectivoSeleccionada}"/>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Saldo inicial"
                                VerticalAlignment="Center" Margin="0,0,12,8"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBox Grid.Row="1" Grid.Column="1" x:Name="txtSaldoEfectivo"
-                             Text="0.00" TextAlignment="Right" Margin="0,0,0,8"
+                             Text="{Binding SaldoEfectivoTexto}" TextAlignment="Right" Margin="0,0,0,8"
                              helpers:NumericInput.Enabled="True"/>
                     <TextBlock Grid.Row="2" Grid.ColumnSpan="2"
                                Text="Las cajas Efectivo operan con una única moneda."
@@ -112,7 +116,9 @@
             <Button x:Name="btnGuardar" Content="Guardar" Classes="Primary"
                     Width="110" Height="36"
                     IsDefault="True"
-                    Click="BtnGuardar_Click"/>
+                    IsEnabled="{Binding GuardarHabilitado}"
+                    ToolTip.Tip="{Binding TooltipGuardar}"
+                    Command="{Binding GuardarCommand}"/>
             <Button Content="Cancelar" Classes="Secondary" Width="110" Height="36"
                     Click="BtnCancelar_Click"/>
         </StackPanel>
