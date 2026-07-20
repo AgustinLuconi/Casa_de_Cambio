@@ -82,7 +82,7 @@ public class OperacionesController : ControllerBase
         var result = _operacionService.GuardarArbitraje(
             req.MonedaCompra, req.CuentaAcreditaCompraId, req.MontoExtranjeroCompra, req.CotizacionCompra, req.PesosCompra,
             req.MonedaVenta, req.CuentaDebitaVentaId, req.MontoExtranjeroVenta, req.CotizacionVenta, req.PesosVenta,
-            req.CuentaPesosId, req.TipoOperacion, req.Observaciones);
+            req.CuentaPesosId, req.TipoOperacion, req.Observaciones, req.IdempotencyKey);
         if (result.Exitoso)
         {
             _pppService.RegistrarCompra(req.MonedaCompra, req.MontoExtranjeroCompra, req.PesosCompra);
