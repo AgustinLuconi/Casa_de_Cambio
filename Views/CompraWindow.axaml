@@ -4,6 +4,7 @@
         xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
         xmlns:helpers="clr-namespace:SistemaCambio.Views.Helpers"
         x:Class="SistemaCambio.Views.CompraWindow"
+        x:CompileBindings="False"
         Title="Compra de Divisa"
         Width="740" Height="470"
         WindowStartupLocation="CenterOwner"
@@ -45,7 +46,9 @@
                   ColumnDefinitions="95, *" Margin="0,0,0,9">
                 <ComboBox x:Name="cmbMoneda" Grid.Column="0"
                           HorizontalAlignment="Stretch"
-                          SelectionChanged="CmbMoneda_SelectionChanged"/>
+                          ItemsSource="{Binding MonedasDisponibles}"
+                          SelectedItem="{Binding MonedaSeleccionada}"
+                          DisplayMemberBinding="{Binding Codigo}"/>
                 <TextBox x:Name="txtMonedaNombre" Grid.Column="1" Margin="8,0,0,0"
                          Foreground="{DynamicResource PrimaryTextBrush}"
                          TextChanged="TxtMoneda_TextChanged"
@@ -57,9 +60,9 @@
                        Text="Mon. Extranjera" VerticalAlignment="Center"
                        Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,9"/>
             <TextBox x:Name="txtMonedaExtranjera" Grid.Row="1" Grid.Column="1"
-                     Text="0.00" TextAlignment="Right" Margin="0,0,0,9"
+                     Text="{Binding MonedaExtranjeraTexto}" TextAlignment="Right" Margin="0,0,0,9"
                      helpers:NumericInput.Enabled="True"
-                     KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
+                     GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
             <TextBlock Grid.Row="1" Grid.Column="2"
                        Text="Acredita en cuenta" VerticalAlignment="Center"
                        Foreground="{DynamicResource PrimaryTextBrush}"
@@ -75,16 +78,16 @@
                        Text="Ingresa" VerticalAlignment="Center"
                        Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,9"/>
             <TextBox x:Name="txtIngresa" Grid.Row="2" Grid.Column="1"
-                     Text="0.00" TextAlignment="Right" Margin="0,0,0,9"
+                     Text="{Binding IngresaTexto}" TextAlignment="Right" Margin="0,0,0,9"
                      helpers:NumericInput.Enabled="True"
-                     KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
+                     GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
 
             <!-- ── Fila 3: Vuelto (solo lectura) ── -->
             <TextBlock Grid.Row="3" Grid.Column="0"
                        Text="Vuelto" VerticalAlignment="Center"
                        Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,9"/>
             <TextBox x:Name="txtVuelto" Grid.Row="3" Grid.Column="1"
-                     Text="0.00" TextAlignment="Right" IsReadOnly="True" IsTabStop="False"
+                     Text="{Binding VueltoTexto}" TextAlignment="Right" IsReadOnly="True" IsTabStop="False"
                      Margin="0,0,0,9"
                      Background="{DynamicResource SidebarBackgroundBrush}"
                      Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -94,16 +97,16 @@
                        Text="Cotización" VerticalAlignment="Center"
                        Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,9"/>
             <TextBox x:Name="txtCotizacion" Grid.Row="4" Grid.Column="1"
-                     Text="0.00000" TextAlignment="Right" Margin="0,0,0,9"
+                     Text="{Binding CotizacionTexto}" TextAlignment="Right" Margin="0,0,0,9"
                      helpers:NumericInput.Enabled="True"
-                     KeyUp="Recalcular_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
+                     GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
 
             <!-- ── Fila 5: Pesos (solo lectura) | Debita de cuenta (VERDE) ── -->
             <TextBlock Grid.Row="5" Grid.Column="0"
                        Text="Pesos" VerticalAlignment="Center"
                        Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,9"/>
             <TextBox x:Name="txtPesos" Grid.Row="5" Grid.Column="1"
-                     Text="0.00" TextAlignment="Right" IsReadOnly="True" IsTabStop="False"
+                     Text="{Binding PesosTexto}" TextAlignment="Right" IsReadOnly="True" IsTabStop="False"
                      Margin="0,0,0,9"/>
             <TextBlock Grid.Row="5" Grid.Column="2"
                        Text="Debita de cuenta" VerticalAlignment="Center"
@@ -120,6 +123,7 @@
                        Text="Observaciones" VerticalAlignment="Center"
                        Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,9"/>
             <TextBox x:Name="txtObservaciones" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3"
+                     Text="{Binding Observaciones}"
                      Height="32" Margin="0,0,0,9"/>
 
             <!-- ── Fila 7: Tipo operación ── -->
@@ -136,13 +140,13 @@
         <!-- Fila inferior: error + botones -->
         <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Margin="0,12,0,0">
 
-            <Border x:Name="borderError" IsVisible="False"
+            <Border x:Name="borderError" IsVisible="{Binding MostrarError}"
                     Background="#DC262620" BorderBrush="{DynamicResource DangerBrush}"
                     BorderThickness="1" CornerRadius="8" Padding="12,8">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <icon:MaterialIcon Kind="AlertCircle" Foreground="{DynamicResource DangerBrush}"
                                        Width="16" Height="16" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="txtErrorServidor" Text="" TextWrapping="Wrap"
+                    <TextBlock x:Name="txtErrorServidor" Text="{Binding MensajeError}" TextWrapping="Wrap"
                                Foreground="{DynamicResource DangerBrush}" FontSize="12"
                                VerticalAlignment="Center"/>
                 </StackPanel>
@@ -151,7 +155,7 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
                 <Button x:Name="btnAceptar" Content="Aceptar" Classes="Primary"
                         Width="110" Height="36"
-                        Click="BotonAceptar_Click"/>
+                        Command="{Binding AceptarCommand}"/>
                 <Button Content="Cancelar" Classes="Secondary"
                         Width="110" Height="36"
                         Click="BotonCancelar_Click"/>
