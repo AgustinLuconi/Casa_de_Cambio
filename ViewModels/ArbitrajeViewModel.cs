@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
+using SistemaCambio.Services.Offline;
 using SistemaCambio.Views;
 using SistemaCambio.Views.Helpers;
 
@@ -17,6 +18,7 @@ namespace SistemaCambio.ViewModels
     public partial class ArbitrajeViewModel : ViewModelBase
     {
         private readonly ICasaCambioApiClient _apiClient;
+        private readonly IOfflineOperacionService _offlineService;
         private List<CuentaDto> _todasLasCuentas = new();
         private bool _recalculandoCompra;
         private bool _recalculandoVenta;
@@ -48,12 +50,13 @@ namespace SistemaCambio.ViewModels
 
         public ICommand AceptarCommand { get; }
 
-        public event Action<int, int>? OperacionGuardada;
+        public event Action<int, int, bool, string>? OperacionGuardada;
         public event Action? SolicitarCierre;
 
-        public ArbitrajeViewModel(ICasaCambioApiClient apiClient)
+        public ArbitrajeViewModel(ICasaCambioApiClient apiClient, IOfflineOperacionService offlineService)
         {
             _apiClient = apiClient;
+            _offlineService = offlineService;
             AceptarCommand = new AsyncRelayCommand(AceptarAsync);
             _ = CargarDatosAsync();
         }
@@ -197,14 +200,14 @@ namespace SistemaCambio.ViewModels
 
             try
             {
-                var resultado = await _apiClient.CrearArbitrajeAsync(request);
+                var resultado = await _offlineService.GuardarArbitrajeAsync(request);
                 if (!resultado.Exitoso)
                 {
                     MensajeError = resultado.Mensaje;
                     MostrarError = true;
                     return;
                 }
-                OperacionGuardada?.Invoke(resultado.OperacionIdCompra ?? 0, resultado.OperacionIdVenta ?? 0);
+                OperacionGuardada?.Invoke(resultado.OperacionIdCompra ?? 0, resultado.OperacionIdVenta ?? 0, resultado.IsOffline, resultado.Mensaje);
                 SolicitarCierre?.Invoke();
             }
             catch (Exception ex)

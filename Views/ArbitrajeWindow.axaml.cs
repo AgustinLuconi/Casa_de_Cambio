@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
+using SistemaCambio.Services.Offline;
 using SistemaCambio.ViewModels;
 using SistemaCambio.Views.Helpers;
 
@@ -20,11 +21,17 @@ namespace SistemaCambio.Views
             CuentaAutoComplete.Configurar(cmbCuentaVenta);
 
             var apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
-            var viewModel = new ArbitrajeViewModel(apiClient);
+            var offlineService = App.Services.GetRequiredService<IOfflineOperacionService>();
+            var viewModel = new ArbitrajeViewModel(apiClient, offlineService);
             DataContext = viewModel;
 
-            viewModel.OperacionGuardada += (idCompra, idVenta) =>
-                NotificationService.Success("Arbitraje registrado", $"Compra OP-{idCompra:D5} / Venta OP-{idVenta:D5}");
+            viewModel.OperacionGuardada += (idCompra, idVenta, isOffline, mensaje) =>
+            {
+                if (isOffline)
+                    NotificationService.Warning("Guardada offline", mensaje);
+                else
+                    NotificationService.Success("Arbitraje registrado", $"Compra OP-{idCompra:D5} / Venta OP-{idVenta:D5}");
+            };
             viewModel.SolicitarCierre += Close;
 
             // Sincroniza la selección de cuenta del ViewModel con los AutoCompleteBox

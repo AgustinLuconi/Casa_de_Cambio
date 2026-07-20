@@ -19,4 +19,5 @@ public class CrearArbitrajeRequest
     [Required] public int CuentaPesosId { get; set; }
     public string TipoOperacion { get; set; } = "CLIENTE";
     public string Observaciones { get; set; } = "";
+    public string? IdempotencyKey { get; set; }
 }

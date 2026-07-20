@@ -39,6 +39,23 @@ public partial class App : Application
             using (var localDb = localDbFactory.CreateDbContext())
             {
                 localDb.Database.EnsureCreated();
+
+                // Migración defensiva: instalaciones existentes con un local.db viejo (creado antes de
+                // agregar los campos de Arbitraje) no tienen estas columnas, ya que EnsureCreated() solo
+                // crea la base si no existe, no la migra. Se ignora el error si la columna ya existe
+                // (caso normal en instalaciones nuevas, donde EnsureCreated() ya las creó).
+                foreach (var alterSql in new[]
+                {
+                    "ALTER TABLE operaciones_pendientes ADD COLUMN CuentaDebitaVentaId INTEGER NOT NULL DEFAULT 0",
+                    "ALTER TABLE operaciones_pendientes ADD COLUMN MonedaVenta TEXT NOT NULL DEFAULT ''",
+                    "ALTER TABLE operaciones_pendientes ADD COLUMN MontoExtranjeroVenta TEXT NOT NULL DEFAULT '0'",
+                    "ALTER TABLE operaciones_pendientes ADD COLUMN CotizacionVenta TEXT NOT NULL DEFAULT '0'",
+                    "ALTER TABLE operaciones_pendientes ADD COLUMN TipoOperacionArbitraje TEXT NOT NULL DEFAULT ''"
+                })
+                {
+                    try { localDb.Database.ExecuteSqlRaw(alterSql); }
+                    catch { /* la columna ya existe (instalación nueva vía EnsureCreated) */ }
+                }
             }
 
             // Prevent app from shutting down when LoginWindow closes
