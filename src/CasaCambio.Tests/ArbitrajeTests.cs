@@ -101,6 +101,42 @@ public class ArbitrajeTests
     }
 
     [Fact]
+    public void GuardarArbitraje_MismaCuentaYMoneda_CreditoCompraSeAplicaAntesDeValidarSaldoVenta()
+    {
+        // Reproduce el bug de aliasing de EF Core: cuentaAcreditaCompraId == cuentaDebitaVentaId y
+        // monedaCompra == monedaVenta hacen que ObtenerOCrearSaldo devuelva el MISMO SaldoCuenta rastreado
+        // para ambas patas. Si el chequeo de saldo de la Venta corre ANTES de aplicar el crédito de la
+        // Compra, ve el saldo viejo (insuficiente) en vez del saldo real que la cuenta tendría después
+        // de sumar la Compra.
+        //
+        // Saldo inicial bajo: 5000 EUR. Compra 10000 EUR, Venta 12000 EUR (a cotizaciones que igualan
+        // PesosCompra == PesosVenta). Saldo final correcto: 5000 + 10000 - 12000 = 3000 (positivo, válido).
+        // Con el bug, el chequeo evalúa 5000 < 12000 y rechaza con "Saldo insuficiente" aunque la
+        // operación sea perfectamente válida.
+        using (var db = _factory.CreateDbContext())
+        {
+            var saldoEur = db.SaldosCuenta.First(s => s.CuentaId == IdCajaEur && s.Moneda == "EUR");
+            saldoEur.Saldo = 5000m;
+            db.SaveChanges();
+        }
+
+        decimal montoCompra = 10000m, cotCompra = 1800m;
+        decimal pesos = montoCompra * cotCompra;
+        decimal montoVenta = 12000m, cotVenta = Math.Round(pesos / montoVenta, 5, MidpointRounding.AwayFromZero);
+
+        var resultado = _operacionService.GuardarArbitraje(
+            monedaCompra: "EUR", cuentaAcreditaCompraId: IdCajaEur, montoExtranjeroCompra: montoCompra, cotizacionCompra: cotCompra, pesosCompra: pesos,
+            monedaVenta: "EUR", cuentaDebitaVentaId: IdCajaEur, montoExtranjeroVenta: montoVenta, cotizacionVenta: cotVenta, pesosVenta: pesos,
+            cuentaPesosId: IdCajaArs, tipoOperacion: "CLIENTE", observaciones: "Aliasing compra/venta misma cuenta");
+
+        Assert.True(resultado.Exitoso, resultado.Mensaje);
+
+        using var dbVerif = _factory.CreateDbContext();
+        var saldoFinal = dbVerif.SaldosCuenta.First(s => s.CuentaId == IdCajaEur && s.Moneda == "EUR");
+        Assert.Equal(3000m, saldoFinal.Saldo);
+    }
+
+    [Fact]
     public void GuardarArbitraje_CuentaPesosInexistente_RetornaError()
     {
         var resultado = _operacionService.GuardarArbitraje(

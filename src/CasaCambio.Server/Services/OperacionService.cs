@@ -227,9 +227,26 @@ public class OperacionService : IOperacionService
             var saldoAcredita = ObtenerOCrearSaldo(db, cuentaAcreditaCompraId, monedaCompra);
             var saldoDebita = ObtenerOCrearSaldo(db, cuentaDebitaVentaId, monedaVenta);
 
+            var tipoOpTexto = string.IsNullOrWhiteSpace(tipoOperacion) ? "" : $"[{tipoOperacion}] ";
+            var observacionesCompletas = $"{tipoOpTexto}{observaciones}".Trim();
+
+            var operacionCompra = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Compra", MontoTotalOrigen = pesosCompra, MontoTotalDestino = montoExtranjeroCompra, CotizacionAplicada = cotizacionCompra, Observaciones = observacionesCompletas };
+            db.Operaciones.Add(operacionCompra);
+            db.Movimientos.Add(new Movimiento { Operacion = operacionCompra, CuentaId = cuentaPesosId, Moneda = "ARS", Monto = -pesosCompra, Fecha = DateTime.UtcNow });
+            db.Movimientos.Add(new Movimiento { Operacion = operacionCompra, CuentaId = cuentaAcreditaCompraId, Moneda = monedaCompra, Monto = montoExtranjeroCompra, Fecha = DateTime.UtcNow });
+            saldoPesos.Saldo -= pesosCompra;
+            saldoAcredita.Saldo += montoExtranjeroCompra;
+
             // Único chequeo de saldo/límite necesario: la cuenta que entrega moneda extranjera en la Venta.
             // La cuenta ARS pivote no se chequea: como PesosCompra==PesosVenta, su efecto neto es siempre cero.
             // La cuenta que acredita en la Compra tampoco: solo recibe, nunca puede quedar insuficiente.
+            // Nota: el crédito de la pata Compra (saldoAcredita.Saldo += montoExtranjeroCompra) ya se aplicó
+            // arriba, ANTES de este chequeo. Esto es necesario porque cuando cuentaAcreditaCompraId ==
+            // cuentaDebitaVentaId y monedaCompra == monedaVenta, EF Core resuelve saldoAcredita y saldoDebita
+            // al MISMO objeto rastreado (identity map): si el chequeo corriera antes del crédito, evaluaría
+            // el saldo previo a la Compra en vez del saldo real que la cuenta va a tener, rechazando
+            // operaciones válidas. Aplicar la Compra primero no cambia el resultado del chequeo cuando las
+            // cuentas/monedas son distintas (saldoDebita sigue siendo un objeto separado, sin modificar).
             if (saldoDebita.Saldo < montoExtranjeroVenta)
             {
                 decimal limiteDeuda = ObtenerLimiteDeuda(db, cuentaDebita, saldoDebita);
@@ -244,16 +261,6 @@ public class OperacionService : IOperacionService
                     return ArbitrajeResult.Error($"Saldo insuficiente en '{cuentaDebita.Nombre}' ({monedaVenta}). Disponible: {saldoDebita.Saldo:N2}, Requerido: {montoExtranjeroVenta:N2}");
                 }
             }
-
-            var tipoOpTexto = string.IsNullOrWhiteSpace(tipoOperacion) ? "" : $"[{tipoOperacion}] ";
-            var observacionesCompletas = $"{tipoOpTexto}{observaciones}".Trim();
-
-            var operacionCompra = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Compra", MontoTotalOrigen = pesosCompra, MontoTotalDestino = montoExtranjeroCompra, CotizacionAplicada = cotizacionCompra, Observaciones = observacionesCompletas };
-            db.Operaciones.Add(operacionCompra);
-            db.Movimientos.Add(new Movimiento { Operacion = operacionCompra, CuentaId = cuentaPesosId, Moneda = "ARS", Monto = -pesosCompra, Fecha = DateTime.UtcNow });
-            db.Movimientos.Add(new Movimiento { Operacion = operacionCompra, CuentaId = cuentaAcreditaCompraId, Moneda = monedaCompra, Monto = montoExtranjeroCompra, Fecha = DateTime.UtcNow });
-            saldoPesos.Saldo -= pesosCompra;
-            saldoAcredita.Saldo += montoExtranjeroCompra;
 
             var operacionVenta = new Operacion { Fecha = DateTime.UtcNow, TipoOperacion = "Venta", MontoTotalOrigen = montoExtranjeroVenta, MontoTotalDestino = pesosVenta, CotizacionAplicada = cotizacionVenta, Observaciones = observacionesCompletas };
             db.Operaciones.Add(operacionVenta);
