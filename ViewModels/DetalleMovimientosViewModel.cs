@@ -32,7 +32,7 @@ namespace SistemaCambio.ViewModels
         [ObservableProperty] private DateTimeOffset? _fechaDesde = new DateTimeOffset(DateTime.Today);
         [ObservableProperty] private DateTimeOffset? _fechaHasta = new DateTimeOffset(DateTime.Today);
 
-        [ObservableProperty] private string _textoResultados = "0 movimiento(s) encontrado(s)";
+        [ObservableProperty] private string _textoResultados = "0 movimientos encontrados";
 
         [ObservableProperty] private DateTimeOffset? _fechaDesdeOp = new DateTimeOffset(DateTime.Today.AddDays(-30));
         [ObservableProperty] private DateTimeOffset? _fechaHastaOp = new DateTimeOffset(DateTime.Today);
@@ -52,7 +52,6 @@ namespace SistemaCambio.ViewModels
             GenerarCommand = new AsyncRelayCommand(CargarOperacionesAsync);
 
             _ = CargarDatosAsync();
-            _ = CargarOperacionesAsync();
         }
 
         // ── Carga inicial ────────────────────────────────────────────
