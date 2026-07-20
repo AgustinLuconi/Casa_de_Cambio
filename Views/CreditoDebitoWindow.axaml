@@ -4,6 +4,7 @@
         xmlns:controls="clr-namespace:SistemaCambio.Views.Controls"
         xmlns:helpers="clr-namespace:SistemaCambio.Views.Helpers"
         x:Class="SistemaCambio.Views.CreditoDebitoWindow"
+        x:CompileBindings="False"
         Title="Crédito/Débito"
         Width="580" Height="640"
         WindowStartupLocation="CenterOwner"
@@ -24,7 +25,9 @@
             <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="95, *" Margin="0,0,0,10">
                 <ComboBox x:Name="cmbMoneda" Grid.Column="0"
                           HorizontalAlignment="Stretch"
-                          SelectionChanged="CmbMoneda_SelectionChanged"/>
+                          ItemsSource="{Binding MonedasDisponibles}"
+                          SelectedItem="{Binding MonedaSeleccionada}"
+                          DisplayMemberBinding="{Binding Codigo}"/>
                 <TextBox x:Name="txtMonedaDescripcion" Grid.Column="1" Margin="8,0,0,0"
                          Foreground="{DynamicResource PrimaryTextBrush}"
                          TextChanged="TxtMoneda_TextChanged"
@@ -43,7 +46,9 @@
             <ComboBox x:Name="cmbCredito" Grid.Row="2" Grid.Column="1"
                       HorizontalAlignment="Stretch" Margin="0,0,0,10"
                       FontWeight="SemiBold"
-                      Background="#CC0000" Foreground="White" BorderBrush="#990000"/>
+                      Background="#CC0000" Foreground="White" BorderBrush="#990000"
+                      ItemsSource="{Binding CuentasDisponibles}"
+                      SelectedItem="{Binding CuentaCredito}"/>
 
             <!-- Fila 3: Importe Crédito + sub-bloque (Cotización / Pesos) -->
             <TextBlock Grid.Row="3" Grid.Column="0"
@@ -51,26 +56,26 @@
                        Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
             <Grid Grid.Row="3" Grid.Column="1" ColumnDefinitions="*, 230" Margin="0,0,0,10">
                 <TextBox x:Name="txtImporteCredito" Grid.Column="0"
-                         Text="0.00" TextAlignment="Right"
+                         Text="{Binding ImporteCreditoTexto}" TextAlignment="Right"
                          FontSize="20" FontWeight="Bold"
                          helpers:NumericInput.Enabled="True"
-                         KeyUp="RecalcularCredito_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
+                         GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
                 <StackPanel Grid.Column="1" Spacing="4" Margin="12,0,0,0">
                     <Grid ColumnDefinitions="80, *">
                         <TextBlock Text="Cotización" VerticalAlignment="Center"
                                    Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                         <TextBox x:Name="txtCotizacionCredito" Grid.Column="1"
-                                 Text="0.00000" TextAlignment="Right"
+                                 Text="{Binding CotizacionCreditoTexto}" TextAlignment="Right"
                                  Background="{DynamicResource SidebarBackgroundBrush}"
                                  Foreground="{DynamicResource SecondaryTextBrush}"
                                  helpers:NumericInput.Enabled="True"
-                                 KeyUp="RecalcularCredito_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
+                                 GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
                     </Grid>
                     <Grid ColumnDefinitions="80, *">
                         <TextBlock Text="Pesos" VerticalAlignment="Center"
                                    Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                         <TextBox x:Name="txtPesosCredito" Grid.Column="1"
-                                 Text="0.00" TextAlignment="Right" IsReadOnly="True" IsTabStop="False"
+                                 Text="{Binding PesosCreditoTexto}" TextAlignment="Right" IsReadOnly="True" IsTabStop="False"
                                  Background="{DynamicResource SidebarBackgroundBrush}"
                                  Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </Grid>
@@ -89,7 +94,9 @@
             <ComboBox x:Name="cmbDebito" Grid.Row="5" Grid.Column="1"
                       HorizontalAlignment="Stretch" Margin="0,0,0,10"
                       FontWeight="SemiBold"
-                      Background="#008800" Foreground="White" BorderBrush="#005500"/>
+                      Background="#008800" Foreground="White" BorderBrush="#005500"
+                      ItemsSource="{Binding CuentasDisponibles}"
+                      SelectedItem="{Binding CuentaDebito}"/>
 
             <!-- Fila 6: Importe Débito + sub-bloque (Cotización / Pesos) -->
             <TextBlock Grid.Row="6" Grid.Column="0"
@@ -97,26 +104,26 @@
                        Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
             <Grid Grid.Row="6" Grid.Column="1" ColumnDefinitions="*, 230" Margin="0,0,0,10">
                 <TextBox x:Name="txtImporteDebito" Grid.Column="0"
-                         Text="0.00" TextAlignment="Right"
+                         Text="{Binding ImporteDebitoTexto}" TextAlignment="Right"
                          FontSize="20" FontWeight="Bold"
                          helpers:NumericInput.Enabled="True"
-                         KeyUp="RecalcularDebito_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
+                         GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
                 <StackPanel Grid.Column="1" Spacing="4" Margin="12,0,0,0">
                     <Grid ColumnDefinitions="80, *">
                         <TextBlock Text="Cotización" VerticalAlignment="Center"
                                    Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                         <TextBox x:Name="txtCotizacionDebito" Grid.Column="1"
-                                 Text="0.00000" TextAlignment="Right"
+                                 Text="{Binding CotizacionDebitoTexto}" TextAlignment="Right"
                                  Background="{DynamicResource SidebarBackgroundBrush}"
                                  Foreground="{DynamicResource SecondaryTextBrush}"
                                  helpers:NumericInput.Enabled="True"
-                                 KeyUp="RecalcularDebito_KeyUp" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
+                                 GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
                     </Grid>
                     <Grid ColumnDefinitions="80, *">
                         <TextBlock Text="Pesos" VerticalAlignment="Center"
                                    Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                         <TextBox x:Name="txtPesosDebito" Grid.Column="1"
-                                 Text="0.00" TextAlignment="Right" IsReadOnly="True" IsTabStop="False"
+                                 Text="{Binding PesosDebitoTexto}" TextAlignment="Right" IsReadOnly="True" IsTabStop="False"
                                  Background="{DynamicResource SidebarBackgroundBrush}"
                                  Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </Grid>
@@ -133,18 +140,19 @@
                        Text="Observ." VerticalAlignment="Center"
                        Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
             <TextBox x:Name="txtObservaciones" Grid.Row="8" Grid.Column="1"
+                     Text="{Binding Observaciones}"
                      Height="32" Margin="0,0,0,10"/>
 
         </Grid>
 
         <!-- ─────────── Error panel ─────────── -->
-        <Border x:Name="borderError" Grid.Row="1" IsVisible="False"
+        <Border x:Name="borderError" Grid.Row="1" IsVisible="{Binding MostrarError}"
                 Background="#DC262620" BorderBrush="{DynamicResource DangerBrush}"
                 BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,8,0,0">
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <icon:MaterialIcon Kind="AlertCircle" Foreground="{DynamicResource DangerBrush}"
                                    Width="16" Height="16" VerticalAlignment="Center"/>
-                <TextBlock x:Name="txtErrorServidor" Text="" TextWrapping="Wrap"
+                <TextBlock x:Name="txtErrorServidor" Text="{Binding MensajeError}" TextWrapping="Wrap"
                            Foreground="{DynamicResource DangerBrush}" FontSize="12"
                            VerticalAlignment="Center"/>
             </StackPanel>
@@ -155,7 +163,7 @@
                     HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button x:Name="btnAceptar" Content="Aceptar" Classes="Primary"
                     Width="110" Height="36"
-                    Click="BtnAceptar_Click"/>
+                    Command="{Binding AceptarCommand}"/>
             <Button Content="Cancelar" Classes="Secondary"
                     Width="110" Height="36"
                     Click="BtnCancelar_Click"/>
