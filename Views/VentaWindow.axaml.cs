@@ -7,6 +7,7 @@ using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
 using SistemaCambio.Services.Offline;
 using SistemaCambio.Views.Helpers;
+using SistemaCambio.ViewModels.Models;
 using CasaCambio.Shared.DTOs;
 using CasaCambio.Shared.Requests;
 using System;

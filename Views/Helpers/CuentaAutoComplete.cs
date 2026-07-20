@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using CasaCambio.Shared.DTOs;
+using SistemaCambio.ViewModels.Models;
 
 namespace SistemaCambio.Views.Helpers
 {

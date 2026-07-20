@@ -7,6 +7,7 @@ using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
 using SistemaCambio.Services.Offline;
 using SistemaCambio.Views.Helpers;
+using SistemaCambio.ViewModels.Models;
 using CasaCambio.Shared.DTOs;
 using CasaCambio.Shared.Requests;
 using System;
@@ -16,14 +17,6 @@ using System.Threading.Tasks;
 
 namespace SistemaCambio.Views
 {
-    public class CuentaMonedaTag
-    {
-        public int CuentaId { get; set; }
-        public string Moneda { get; set; } = "";
-        public string NombreCuenta { get; set; } = "";
-        public override string ToString() => NombreCuenta;
-    }
-
     public partial class CompraWindow : Window
     {
         private readonly ICasaCambioApiClient _apiClient;

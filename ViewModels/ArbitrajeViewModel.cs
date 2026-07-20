@@ -10,7 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
 using SistemaCambio.Services.Offline;
-using SistemaCambio.Views;
+using SistemaCambio.ViewModels.Models;
 using SistemaCambio.Views.Helpers;
 
 namespace SistemaCambio.ViewModels
