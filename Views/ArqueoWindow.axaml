@@ -15,6 +15,7 @@
     <Grid RowDefinitions="*, Auto" Margin="16">
 
         <DataGrid Grid.Row="0" x:Name="dgArqueo"
+                  ItemsSource="{Binding Items}"
                   AutoGenerateColumns="False"
                   HeadersVisibility="Column"
                   GridLinesVisibility="All"
@@ -99,7 +100,7 @@
             <Button HotKey="Alt+A" Classes="Primary"
                     Width="110" Height="36"
                     IsDefault="True"
-                    Click="BtnAceptar_Click">
+                    Command="{Binding AceptarCommand}">
                 <AccessText Text="_Aceptar"/>
             </Button>
             <Button HotKey="Alt+S" Classes="Secondary"
