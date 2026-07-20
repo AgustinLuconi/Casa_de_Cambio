@@ -57,35 +57,42 @@
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="Cuenta" VerticalAlignment="Center"
                                        Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
                             <ComboBox x:Name="cmbCuenta" Grid.Row="0" Grid.Column="1"
-                                      HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+                                      HorizontalAlignment="Stretch" Margin="0,0,0,8"
+                                      ItemsSource="{Binding CuentasFiltro}"
+                                      SelectedItem="{Binding CuentaSeleccionada}"/>
 
                             <TextBlock Grid.Row="0" Grid.Column="3" Text="Cuenta Externa" VerticalAlignment="Center"
                                        Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
                             <ComboBox x:Name="cmbCuentaExterna" Grid.Row="0" Grid.Column="4"
-                                      HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
+                                      HorizontalAlignment="Stretch" Margin="0,0,0,8"
+                                      ItemsSource="{Binding CuentasExternaFiltro}"
+                                      SelectedItem="{Binding CuentaExternaSeleccionada}"/>
 
                             <!-- Row 2: Rango de fechas -->
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Desde" VerticalAlignment="Center"
                                        Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
                             <DatePicker x:Name="dpDesde" Grid.Row="1" Grid.Column="1"
                                         HorizontalAlignment="Stretch" Margin="0,0,0,8"
-                                        IsEnabled="{Binding #chkHistoricos.IsChecked}"/>
+                                        SelectedDate="{Binding FechaDesde}"
+                                        IsEnabled="{Binding HistoricosActivado}"/>
 
                             <TextBlock Grid.Row="1" Grid.Column="3" Text="Hasta" VerticalAlignment="Center"
                                        Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,8"/>
                             <DatePicker x:Name="dpHasta" Grid.Row="1" Grid.Column="4"
                                         HorizontalAlignment="Stretch" Margin="0,0,0,8"
-                                        IsEnabled="{Binding #chkHistoricos.IsChecked}"/>
+                                        SelectedDate="{Binding FechaHasta}"
+                                        IsEnabled="{Binding HistoricosActivado}"/>
 
                             <!-- Row 3: Moneda / CheckBox históricos -->
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="Moneda" VerticalAlignment="Center"
                                        Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,0"/>
-                            <ComboBox x:Name="cmbMoneda" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch">
-                                <ComboBoxItem Content="Todas" Tag=""/>
-                            </ComboBox>
+                            <ComboBox x:Name="cmbMoneda" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch"
+                                      ItemsSource="{Binding MonedasFiltro}"
+                                      SelectedItem="{Binding MonedaSeleccionada}"/>
 
                             <CheckBox x:Name="chkHistoricos" Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="2"
-                                      Content="Buscar movimientos históricos" VerticalAlignment="Center"/>
+                                      Content="Buscar movimientos históricos" VerticalAlignment="Center"
+                                      IsChecked="{Binding HistoricosActivado}"/>
                         </Grid>
                     </Border>
 
@@ -96,7 +103,8 @@
                               HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
                               HeadersVisibility="Column"
                               HorizontalScrollBarVisibility="Disabled"
-                              IsReadOnly="True">
+                              IsReadOnly="True"
+                              ItemsSource="{Binding Movimientos}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="FECHA"
                                                 Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
@@ -131,12 +139,12 @@
 
                     <!-- Footer del tab -->
                     <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Margin="0,12,0,0">
-                        <TextBlock Grid.Column="0" x:Name="txtResultados" Text="0 movimientos encontrados"
+                        <TextBlock Grid.Column="0" x:Name="txtResultados" Text="{Binding TextoResultados}"
                                    Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
                         <Button Grid.Column="1" Classes="Primary"
                                 Width="110" Height="36"
                                 IsDefault="True"
-                                Click="BtnBuscar_Click">
+                                Command="{Binding BuscarCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <icon:MaterialIcon Kind="Magnify" Width="16" Height="16" VerticalAlignment="Center"/>
                                 <TextBlock Text="Buscar" VerticalAlignment="Center"/>
@@ -157,20 +165,21 @@
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Text="Desde:" VerticalAlignment="Center"
                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            <DatePicker x:Name="dpDesdeOp" Width="150"/>
+                            <DatePicker x:Name="dpDesdeOp" Width="150" SelectedDate="{Binding FechaDesdeOp}"/>
                             <TextBlock Text="Hasta:" VerticalAlignment="Center"
                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            <DatePicker x:Name="dpHastaOp" Width="150"/>
+                            <DatePicker x:Name="dpHastaOp" Width="150" SelectedDate="{Binding FechaHastaOp}"/>
                             <Button Content="Generar" Background="{DynamicResource AccentBrush}" Foreground="White"
                                     CornerRadius="6" Cursor="Hand"
                                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                    Click="BtnGenerarOperaciones_Click"/>
+                                    Command="{Binding GenerarCommand}"/>
                         </StackPanel>
                     </Border>
 
                     <!-- DataGrid operaciones -->
                     <DataGrid Grid.Row="1" x:Name="dgOperaciones" AutoGenerateColumns="False"
-                              BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" IsReadOnly="True">
+                              BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" IsReadOnly="True"
+                              ItemsSource="{Binding Operaciones}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="CÓDIGO" Binding="{Binding CodigoOperacion}" Width="Auto" MinWidth="100"/>
                             <DataGridTextColumn Header="FECHA"
