@@ -16,47 +16,22 @@ namespace SistemaCambio.ViewModels.Tests;
 public class CompraViewModelTests
 {
     // ── Datos de prueba compartidos ─────────────────────────────────
+    // CrearCuentas/CrearMonedas/CrearCotizaciones y los mocks base viven en
+    // TestHelpers (compartido con VentaViewModelTests).
 
-    private static List<CuentaDto> CrearCuentas() => new()
-    {
-        new CuentaDto
-        {
-            Id = 1, Nombre = "EFECTIVO ARS", Tipo = "Efectivo",
-            Saldos = new() { new SaldoCuentaDto { Moneda = "ARS", Saldo = 10_000_000m } }
-        },
-        new CuentaDto
-        {
-            Id = 2, Nombre = "EFECTIVO USD", Tipo = "Efectivo",
-            Saldos = new() { new SaldoCuentaDto { Moneda = "USD", Saldo = 50_000m } }
-        }
-    };
-
-    private static List<MonedaDto> CrearMonedas() => new()
-    {
-        new MonedaDto { Id = 1, Codigo = "USD", Nombre = "Dólar", Activa = true }
-    };
-
-    private static List<CotizacionDto> CrearCotizaciones(decimal compra = 1800m, decimal venta = 1820m) => new()
-    {
-        new CotizacionDto { Id = 1, CodigoMoneda = "USD", Fecha = DateTime.Today, CotizacionCompra = compra, CotizacionVenta = venta }
-    };
+    private static List<CotizacionDto> CrearCotizaciones(decimal compra = 1800m, decimal venta = 1820m)
+        => TestHelpers.CrearCotizaciones(compra, venta);
 
     private static (Mock<ICasaCambioApiClient> api, Mock<IOfflineOperacionService> offline, Mock<IDialogService> dialog) CrearMocks(
         List<CotizacionDto>? cotizaciones = null)
     {
-        var api = new Mock<ICasaCambioApiClient>();
-        api.Setup(a => a.ObtenerCuentasAsync()).ReturnsAsync(CrearCuentas());
-        api.Setup(a => a.ObtenerMonedasAsync()).ReturnsAsync(CrearMonedas());
-        api.Setup(a => a.ObtenerCotizacionesHoyAsync()).ReturnsAsync(cotizaciones ?? CrearCotizaciones());
+        var api = TestHelpers.CrearApiMock(cotizaciones);
 
         var offline = new Mock<IOfflineOperacionService>();
         offline.Setup(o => o.GuardarCompraAsync(It.IsAny<CrearOperacionRequest>()))
             .ReturnsAsync(new OfflineOperacionResult { Exitoso = true, OperacionId = 1, IsOffline = false });
 
-        var dialog = new Mock<IDialogService>();
-        dialog.Setup(d => d.ConfirmarAsync(
-                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
-            .ReturnsAsync(true);
+        var dialog = TestHelpers.CrearDialogMockConfirmando();
 
         return (api, offline, dialog);
     }
@@ -71,8 +46,11 @@ public class CompraViewModelTests
         var vm = new CompraViewModel(api.Object, offline.Object, dialog.Object);
 
         // El constructor dispara CargarDatosAsync() sin esperarlo (fire-and-forget).
-        // Damos tiempo a que la carga inicial (cuentas/monedas/cotización) se asiente
-        // antes de tocar las propiedades de texto — este patrón se repite en todos los tests.
+        // Con mocks que devuelven tasks ya completadas (ReturnsAsync), toda la cadena de
+        // carga inicial (cuentas/monedas/cotización) se resuelve de forma síncrona antes
+        // de que este await haga nada útil. El delay queda como salvaguarda defensiva por
+        // si en el futuro algún mock introduce latencia real — este patrón se repite en
+        // todos los tests.
         await Task.Delay(50);
 
         vm.MonedaExtranjeraTexto = "100";
@@ -84,6 +62,24 @@ public class CompraViewModelTests
 
         vm.IngresaTexto = "200000";
         Assert.Equal(20000m, MontoHelper.Parsear(vm.VueltoTexto));
+    }
+
+    [Fact]
+    public async Task Recalcular_RedondeaAwayFromZero_EnPuntoMedioExacto()
+    {
+        var (api, offline, dialog) = CrearMocks();
+        var vm = new CompraViewModel(api.Object, offline.Object, dialog.Object);
+        await Task.Delay(50);
+
+        // 1.25 * 1800.1 = 2250.125 exacto (decimal, sin error de punto flotante):
+        // el tercer decimal es exactamente 5 y el segundo decimal (2) es par, así que
+        // AwayFromZero (2250.13) y ToEven (2250.12) dan resultados DISTINTOS. Un cambio
+        // accidental de MidpointRounding.AwayFromZero a ToEven (o remover el redondeo)
+        // haría que este assert falle.
+        vm.MonedaExtranjeraTexto = "1.25";
+        vm.CotizacionTexto = "1800.1";
+
+        Assert.Equal(2250.13m, MontoHelper.Parsear(vm.PesosTexto));
     }
 
     [Fact]
@@ -155,15 +151,18 @@ public class CompraViewModelTests
 
         int? operacionId = null;
         bool? isOffline = null;
-        vm.OperacionGuardada += (id, offlineFlag, _) =>
+        string? mensaje = null;
+        vm.OperacionGuardada += (id, offlineFlag, msg) =>
         {
             operacionId = id;
             isOffline = offlineFlag;
+            mensaje = msg;
         };
 
         await EjecutarAceptarAsync(vm);
 
         Assert.Equal(42, operacionId);
         Assert.False(isOffline);
+        Assert.Equal("ok", mensaje);
     }
 }

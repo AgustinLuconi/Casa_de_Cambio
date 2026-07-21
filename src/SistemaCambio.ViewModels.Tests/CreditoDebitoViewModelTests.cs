@@ -55,10 +55,7 @@ public class CreditoDebitoViewModelTests
         offline.Setup(o => o.GuardarCreditoDebitoAsync(It.IsAny<CrearCreditoDebitoRequest>()))
             .ReturnsAsync(new OfflineOperacionResult { Exitoso = true, OperacionId = 1, IsOffline = false });
 
-        var dialog = new Mock<IDialogService>();
-        dialog.Setup(d => d.ConfirmarAsync(
-                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
-            .ReturnsAsync(true);
+        var dialog = TestHelpers.CrearDialogMockConfirmando();
 
         return (api, offline, dialog);
     }
@@ -72,8 +69,10 @@ public class CreditoDebitoViewModelTests
         var (api, offline, dialog) = CrearMocks();
         var vm = new CreditoDebitoViewModel(api.Object, offline.Object, dialog.Object);
 
-        // El constructor dispara CargarDatosAsync() sin esperarlo; damos tiempo a que
-        // la carga inicial (cuentas/monedas/cotización) se asiente.
+        // El constructor dispara CargarDatosAsync() sin esperarlo. Con mocks que
+        // devuelven tasks ya completadas (ReturnsAsync), la carga inicial se resuelve
+        // de forma síncrona antes de que este await haga nada útil; queda como
+        // salvaguarda defensiva por si en el futuro algún mock introduce latencia real.
         await Task.Delay(50);
 
         Assert.Equal(2, vm.CuentasDisponibles.Count);

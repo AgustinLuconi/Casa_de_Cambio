@@ -16,38 +16,16 @@ namespace SistemaCambio.ViewModels.Tests;
 public class VentaViewModelTests
 {
     // ── Datos de prueba compartidos ─────────────────────────────────
+    // CrearCuentas/CrearMonedas/CrearCotizaciones y los mocks base viven en
+    // TestHelpers (compartido con CompraViewModelTests).
 
-    private static List<CuentaDto> CrearCuentas() => new()
-    {
-        new CuentaDto
-        {
-            Id = 1, Nombre = "EFECTIVO ARS", Tipo = "Efectivo",
-            Saldos = new() { new SaldoCuentaDto { Moneda = "ARS", Saldo = 10_000_000m } }
-        },
-        new CuentaDto
-        {
-            Id = 2, Nombre = "EFECTIVO USD", Tipo = "Efectivo",
-            Saldos = new() { new SaldoCuentaDto { Moneda = "USD", Saldo = 50_000m } }
-        }
-    };
-
-    private static List<MonedaDto> CrearMonedas() => new()
-    {
-        new MonedaDto { Id = 1, Codigo = "USD", Nombre = "Dólar", Activa = true }
-    };
-
-    private static List<CotizacionDto> CrearCotizaciones(decimal compra = 1800m, decimal venta = 1820m) => new()
-    {
-        new CotizacionDto { Id = 1, CodigoMoneda = "USD", Fecha = DateTime.Today, CotizacionCompra = compra, CotizacionVenta = venta }
-    };
+    private static List<CotizacionDto> CrearCotizaciones(decimal compra = 1800m, decimal venta = 1820m)
+        => TestHelpers.CrearCotizaciones(compra, venta);
 
     private static (Mock<ICasaCambioApiClient> api, Mock<IOfflineOperacionService> offline, Mock<IDialogService> dialog) CrearMocks(
         List<CotizacionDto>? cotizaciones = null)
     {
-        var api = new Mock<ICasaCambioApiClient>();
-        api.Setup(a => a.ObtenerCuentasAsync()).ReturnsAsync(CrearCuentas());
-        api.Setup(a => a.ObtenerMonedasAsync()).ReturnsAsync(CrearMonedas());
-        api.Setup(a => a.ObtenerCotizacionesHoyAsync()).ReturnsAsync(cotizaciones ?? CrearCotizaciones());
+        var api = TestHelpers.CrearApiMock(cotizaciones);
         api.Setup(a => a.ValidarVentaPPPAsync(It.IsAny<string>(), It.IsAny<decimal>()))
             .ReturnsAsync(new PPPValidacionDto { Moneda = "USD", PPP = 1800m, CotizacionVenta = 1820m, Ganancia = 20m, EsRentable = true });
 
@@ -55,10 +33,7 @@ public class VentaViewModelTests
         offline.Setup(o => o.GuardarVentaAsync(It.IsAny<CrearOperacionRequest>()))
             .ReturnsAsync(new OfflineOperacionResult { Exitoso = true, OperacionId = 1, IsOffline = false });
 
-        var dialog = new Mock<IDialogService>();
-        dialog.Setup(d => d.ConfirmarAsync(
-                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
-            .ReturnsAsync(true);
+        var dialog = TestHelpers.CrearDialogMockConfirmando();
 
         return (api, offline, dialog);
     }
@@ -73,7 +48,10 @@ public class VentaViewModelTests
         var vm = new VentaViewModel(api.Object, offline.Object, dialog.Object);
 
         // Ver comentario equivalente en CompraViewModelTests: el constructor dispara
-        // CargarDatosAsync() sin esperarlo, hay que darle tiempo antes de tocar propiedades.
+        // CargarDatosAsync() sin esperarlo. Con mocks que devuelven tasks ya completadas
+        // (ReturnsAsync), la carga inicial se resuelve de forma síncrona antes de que este
+        // await haga nada útil; queda como salvaguarda defensiva por si en el futuro algún
+        // mock introduce latencia real.
         await Task.Delay(50);
 
         vm.MonedaExtranjeraTexto = "100";
@@ -83,6 +61,23 @@ public class VentaViewModelTests
 
         vm.IngresaTexto = "200000";
         Assert.Equal(18000m, MontoHelper.Parsear(vm.VueltoTexto));
+    }
+
+    [Fact]
+    public async Task Recalcular_RedondeaAwayFromZero_EnPuntoMedioExacto()
+    {
+        var (api, offline, dialog) = CrearMocks();
+        var vm = new VentaViewModel(api.Object, offline.Object, dialog.Object);
+        await Task.Delay(50);
+
+        // Ver comentario equivalente en CompraViewModelTests: 1.25 * 1800.1 = 2250.125
+        // exacto, con tercer decimal 5 y segundo decimal par, de modo que AwayFromZero
+        // (2250.13) y ToEven (2250.12) difieren. Detecta un cambio accidental de modo
+        // de redondeo o la eliminación del redondeo.
+        vm.MonedaExtranjeraTexto = "1.25";
+        vm.CotizacionTexto = "1800.1";
+
+        Assert.Equal(2250.13m, MontoHelper.Parsear(vm.PesosTexto));
     }
 
     [Fact]
@@ -159,15 +154,18 @@ public class VentaViewModelTests
 
         int? operacionId = null;
         bool? isOffline = null;
-        vm.OperacionGuardada += (id, offlineFlag, _) =>
+        string? mensaje = null;
+        vm.OperacionGuardada += (id, offlineFlag, msg) =>
         {
             operacionId = id;
             isOffline = offlineFlag;
+            mensaje = msg;
         };
 
         await EjecutarAceptarAsync(vm);
 
         Assert.Equal(42, operacionId);
         Assert.False(isOffline);
+        Assert.Equal("ok", mensaje);
     }
 }
