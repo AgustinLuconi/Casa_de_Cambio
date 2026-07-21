@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasaCambio.Client.Core", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasaCambio.Client.Tests", "src\CasaCambio.Client.Tests\CasaCambio.Client.Tests.csproj", "{75D8F43D-F3C9-40A7-8D3C-34FA9ACF6138}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaCambio.ViewModels.Tests", "src\SistemaCambio.ViewModels.Tests\SistemaCambio.ViewModels.Tests.csproj", "{802B9F73-F2C0-4AA2-98B9-CC295C726527}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{75D8F43D-F3C9-40A7-8D3C-34FA9ACF6138}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{75D8F43D-F3C9-40A7-8D3C-34FA9ACF6138}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{75D8F43D-F3C9-40A7-8D3C-34FA9ACF6138}.Release|Any CPU.Build.0 = Release|Any CPU
+		{802B9F73-F2C0-4AA2-98B9-CC295C726527}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{802B9F73-F2C0-4AA2-98B9-CC295C726527}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{802B9F73-F2C0-4AA2-98B9-CC295C726527}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{802B9F73-F2C0-4AA2-98B9-CC295C726527}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -59,5 +65,6 @@ Global
 		{559DAF32-76FF-4269-BE89-D2604001A8E6} = {DE634562-295C-412E-8F44-8E02DF0CCD67}
 		{9739E9FA-5542-4202-9347-31933AB51256} = {DE634562-295C-412E-8F44-8E02DF0CCD67}
 		{75D8F43D-F3C9-40A7-8D3C-34FA9ACF6138} = {DE634562-295C-412E-8F44-8E02DF0CCD67}
+		{802B9F73-F2C0-4AA2-98B9-CC295C726527} = {DE634562-295C-412E-8F44-8E02DF0CCD67}
 	EndGlobalSection
 EndGlobal
