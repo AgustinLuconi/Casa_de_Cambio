@@ -45,19 +45,19 @@
                             <TextBlock Text="Cuentas" FontSize="12"/>
                         </StackPanel>
                     </Button>
-                    <Button x:Name="btnToolbarCompra" Classes="toolbar-btn" Command="{Binding AbrirCompraCommand}" ToolTip.Tip="Compra (F3)">
+                    <Button x:Name="btnToolbarCompra" Classes="toolbar-btn" Command="{Binding AbrirCompraCommand}" IsEnabled="{Binding !DiaCerrado}" ToolTip.Tip="Compra (F3)">
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock Text="F3" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" FontSize="11"/>
                             <TextBlock Text="Compra" FontSize="12"/>
                         </StackPanel>
                     </Button>
-                    <Button x:Name="btnToolbarVenta" Classes="toolbar-btn" Command="{Binding AbrirVentaCommand}" ToolTip.Tip="Venta (F4)">
+                    <Button x:Name="btnToolbarVenta" Classes="toolbar-btn" Command="{Binding AbrirVentaCommand}" IsEnabled="{Binding !DiaCerrado}" ToolTip.Tip="Venta (F4)">
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock Text="F4" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" FontSize="11"/>
                             <TextBlock Text="Venta" FontSize="12"/>
                         </StackPanel>
                     </Button>
-                    <Button x:Name="btnToolbarCreditoDebito" Classes="toolbar-btn" Command="{Binding AbrirCreditoDebitoCommand}" ToolTip.Tip="Crédito/Débito (F5)">
+                    <Button x:Name="btnToolbarCreditoDebito" Classes="toolbar-btn" Command="{Binding AbrirCreditoDebitoCommand}" IsEnabled="{Binding !DiaCerrado}" ToolTip.Tip="Crédito/Débito (F5)">
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock Text="F5" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" FontSize="11"/>
                             <TextBlock Text="Créd/Déb" FontSize="12"/>
@@ -140,28 +140,28 @@
                         <TextBlock Text="OPERACIONES" FontSize="10" FontWeight="Bold" 
                                    Foreground="{DynamicResource SecondaryTextBrush}" Margin="14,25,0,8"/>
                         
-                        <Button x:Name="btnCompra" Classes="SidebarButton" Click="BtnCompra_Click">
+                        <Button x:Name="btnCompra" Classes="SidebarButton" Click="BtnCompra_Click" IsEnabled="{Binding !DiaCerrado}">
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <icon:MaterialIcon Kind="CartArrowDown" Width="18" Height="18"/>
                                 <TextBlock Text="Compra (F3)" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
                         
-                        <Button x:Name="btnVenta" Classes="SidebarButton" Click="BtnVenta_Click">
+                        <Button x:Name="btnVenta" Classes="SidebarButton" Click="BtnVenta_Click" IsEnabled="{Binding !DiaCerrado}">
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <icon:MaterialIcon Kind="CartArrowUp" Width="18" Height="18"/>
                                 <TextBlock Text="Venta (F4)" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
                         
-                        <Button x:Name="btnArbitraje" Classes="SidebarButton" Click="BtnArbitraje_Click">
+                        <Button x:Name="btnArbitraje" Classes="SidebarButton" Click="BtnArbitraje_Click" IsEnabled="{Binding !DiaCerrado}">
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <icon:MaterialIcon Kind="Exchange" Width="18" Height="18"/>
                                 <TextBlock Text="Compra / Venta" VerticalAlignment="Center" FontSize="13"/>
                             </StackPanel>
                         </Button>
 
-                        <Button x:Name="btnCreditoDebito" Classes="SidebarButton" Click="BtnCreditoDebito_Click">
+                        <Button x:Name="btnCreditoDebito" Classes="SidebarButton" Click="BtnCreditoDebito_Click" IsEnabled="{Binding !DiaCerrado}">
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <icon:MaterialIcon Kind="SwapHorizontal" Width="18" Height="18"/>
                                 <TextBlock Text="Crédito/Débito (F5)" VerticalAlignment="Center" FontSize="13"/>
@@ -520,7 +520,7 @@
                     <TextBlock x:Name="txtVersion" Text="Sistema v1.0.0" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="Server: Local" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <Border x:Name="borderDiaCerrado"
-                            IsVisible="False"
+                            IsVisible="{Binding DiaCerrado}"
                             Background="#DC262620"
                             BorderBrush="{DynamicResource DangerBrush}"
                             BorderThickness="1" CornerRadius="4" Padding="8,3">

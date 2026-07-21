@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using CasaCambio.Shared.DTOs;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SistemaCambio.ApiClient;
+using SistemaCambio.Services;
 
 namespace SistemaCambio.ViewModels
 {
@@ -64,6 +66,7 @@ namespace SistemaCambio.ViewModels
         [ObservableProperty] private decimal _volumenVentasARS;
         [ObservableProperty] private decimal _volumenNetoARS;
         [ObservableProperty] private List<CotizacionDto> _cotizacionesHoy = new();
+        [ObservableProperty] private bool _diaCerrado;
 
         public ICommand LimpiarFiltrosCommand { get; }
         public ICommand AbrirDashboardCommand { get; }
@@ -137,6 +140,33 @@ namespace SistemaCambio.ViewModels
             });
 
             CargarDatosAsync();
+            VerificarDiaCerradoAsync();
+        }
+
+        public async void VerificarDiaCerradoAsync()
+        {
+            try
+            {
+                var cierre = await _apiClient.ObtenerCierreHoyAsync();
+                DiaCerrado = cierre?.Cerrado == true;
+            }
+            catch { DiaCerrado = false; }
+
+            if (DiaCerrado)
+            {
+                NotificationService.Warning("Día cerrado", "Las operaciones del día están bloqueadas.");
+            }
+        }
+
+        public string? GenerarCsvCuentas()
+        {
+            if (Cuentas == null || !Cuentas.Any()) return null;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("ID,Cuenta,Tipo,Saldos");
+            foreach (var c in Cuentas)
+                sb.AppendLine($"{c.Id},\"{c.Nombre}\",{c.Tipo},\"{c.SaldosResumen}\"");
+            return sb.ToString();
         }
 
         public void RefrescarDatos()
