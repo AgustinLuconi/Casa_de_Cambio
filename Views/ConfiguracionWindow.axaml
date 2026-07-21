@@ -126,12 +126,14 @@
                                     <ToggleSwitch x:Name="toggleSinLimite" Grid.Column="1"
                                                   OnContent="" OffContent=""
                                                   VerticalAlignment="Center" Margin="16,0,0,0"
-                                                  IsCheckedChanged="ToggleSinLimite_Changed"/>
+                                                  IsChecked="{Binding SinLimiteGeneral, Mode=TwoWay}"/>
                                 </Grid>
                             </Border>
 
                             <!-- Una fila por moneda activa: código + nombre + límite editable -->
-                            <ItemsControl x:Name="icLimitesDivisa" Margin="0,5,0,0">
+                            <ItemsControl x:Name="icLimitesDivisa" Margin="0,5,0,0"
+                                          ItemsSource="{Binding LimitesDivisa}"
+                                          IsEnabled="{Binding LimitesDivisaHabilitado}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Grid ColumnDefinitions="70, *, 180" Margin="0,3">
@@ -153,7 +155,7 @@
                                     Foreground="White" CornerRadius="6" Cursor="Hand"
                                     HorizontalAlignment="Right" Padding="14,8"
                                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                    Click="BtnGuardarLimitesDivisa_Click"/>
+                                    Command="{Binding GuardarLimitesDivisaCommand}"/>
                         </StackPanel>
                     </Border>
 
@@ -175,39 +177,41 @@
                                 <Grid ColumnDefinitions="Auto, 100, Auto, *, Auto, 80, Auto" RowDefinitions="Auto">
                                     <TextBlock Grid.Column="0" Text="Código:" VerticalAlignment="Center"
                                                Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,10,0"/>
-                                    <TextBox x:Name="txtNuevoCodigo" Grid.Column="1" Watermark="Ej: BRL" MaxLength="10"/>
+                                    <TextBox x:Name="txtNuevoCodigo" Grid.Column="1" Watermark="Ej: BRL" MaxLength="10"
+                                             Text="{Binding NuevoCodigo}"/>
 
                                     <TextBlock Grid.Column="2" Text="Nombre:" VerticalAlignment="Center"
                                                Foreground="{DynamicResource SecondaryTextBrush}" Margin="20,0,10,0"/>
-                                    <TextBox x:Name="txtNuevoNombre" Grid.Column="3" Watermark="Ej: Real Brasileño" MaxLength="100"/>
+                                    <TextBox x:Name="txtNuevoNombre" Grid.Column="3" Watermark="Ej: Real Brasileño" MaxLength="100"
+                                             Text="{Binding NuevoNombre}"/>
 
                                     <TextBlock Grid.Column="4" Text="T.Pase:" VerticalAlignment="Center"
                                                Foreground="{DynamicResource SecondaryTextBrush}" Margin="20,0,10,0"/>
-                                    <ComboBox x:Name="cmbNuevoTipoPase" Grid.Column="5" Width="80" SelectedIndex="0">
-                                        <ComboBoxItem Content="D"/>
-                                        <ComboBoxItem Content="M"/>
-                                    </ComboBox>
+                                    <ComboBox x:Name="cmbNuevoTipoPase" Grid.Column="5" Width="80"
+                                              ItemsSource="{Binding TiposPaseDisponibles}"
+                                              SelectedItem="{Binding NuevoTipoPase}"/>
 
                                     <Button Grid.Column="6" Content="Agregar Moneda" Background="{DynamicResource AccentBrush}"
                                             Foreground="White" CornerRadius="6" Margin="20,0,0,0" Cursor="Hand"
                                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                            Click="BtnNuevaMoneda_Click"/>
+                                            Command="{Binding AgregarMonedaCommand}"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
 
                         <!-- Action Buttons -->
                         <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-                            <Button Content="Refrescar" Classes="Secondary" Click="BtnRefrescarMonedas_Click"/>
+                            <Button Content="Refrescar" Classes="Secondary" Command="{Binding RefrescarCommand}"/>
                             <Button Content="Guardar Editados" Background="{DynamicResource AccentBrush}"
                                     Foreground="White" CornerRadius="6" Cursor="Hand"
                                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                     IsDefault="True"
-                                    Click="BtnGuardarCambios_Click"/>
+                                    Command="{Binding GuardarCambiosCommand}"/>
                         </StackPanel>
                     </StackPanel>
-                    
+
                     <DataGrid Grid.Row="1" x:Name="dgMonedas" AutoGenerateColumns="False"
+                              ItemsSource="{Binding Monedas}"
                               BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" IsReadOnly="True"
                               HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                               HorizontalGridLinesBrush="{DynamicResource BorderBrush}">
@@ -274,27 +278,30 @@
                         <Button Content="Cargar" Background="{DynamicResource AccentBrush}" Foreground="White"
                                 CornerRadius="6" Cursor="Hand"
                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                Click="BtnCargarCotizaciones_Click"/>
+                                Command="{Binding CargarCotizacionesCommand}"/>
                     </StackPanel>
-                    
-                    <Border Grid.Row="1" Background="{DynamicResource SidebarBackgroundBrush}" 
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
+
+                    <Border Grid.Row="1" Background="{DynamicResource SidebarBackgroundBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="8" Padding="16" Margin="0,0,0,15">
                         <Grid ColumnDefinitions="100, 150, 100, 150, Auto">
                             <TextBlock Grid.Column="0" Text="Moneda:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            <ComboBox x:Name="cmbMonedaCotiz" Grid.Column="1" HorizontalAlignment="Stretch"/>
+                            <ComboBox x:Name="cmbMonedaCotiz" Grid.Column="1" HorizontalAlignment="Stretch"
+                                      ItemsSource="{Binding CodigosMonedaCotiz}"
+                                      SelectedItem="{Binding MonedaCotizSeleccionada}"/>
                             <TextBlock Grid.Column="2" Text="Compra:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" Margin="15,0,0,0"/>
-                            <TextBox x:Name="txtCotizCompra" Grid.Column="3" Text="0.00000" TextAlignment="Right"
+                            <TextBox x:Name="txtCotizCompra" Grid.Column="3" Text="{Binding CotizCompraTexto}" TextAlignment="Right"
                                      helpers:NumericInput.Enabled="True"/>
                             <Button Grid.Column="4" Content="Guardar" Background="{DynamicResource SuccessBrush}"
                                     Foreground="White" CornerRadius="6" Margin="15,0,0,0" Cursor="Hand"
                                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                     IsDefault="True"
-                                    Click="BtnGuardarCotizacion_Click"/>
+                                    Command="{Binding GuardarCotizacionCommand}"/>
                         </Grid>
                     </Border>
-                    
+
                     <DataGrid Grid.Row="2" x:Name="dgCotizaciones" AutoGenerateColumns="False"
+                              ItemsSource="{Binding Cotizaciones}"
                               BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" IsReadOnly="True">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="MONEDA" Binding="{Binding MonedaCodigo}" Width="100"/>
