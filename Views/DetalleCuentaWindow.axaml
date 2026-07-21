@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:converters="clr-namespace:SistemaCambio.Views.Converters"
         x:Class="SistemaCambio.Views.DetalleCuentaWindow"
         x:CompileBindings="False"
         Title="Detalle de Cuenta"
@@ -8,6 +9,11 @@
         WindowStartupLocation="CenterOwner"
         CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">
+
+    <Window.Resources>
+        <converters:HexColorToBrushConverter x:Key="HexColorToBrushConverter"/>
+        <converters:GananciaSignoToBrushConverter x:Key="GananciaSignoToBrushConverter"/>
+    </Window.Resources>
 
     <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20">
         
@@ -19,9 +25,9 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
                     <icon:MaterialIcon Kind="Bank" Foreground="{DynamicResource AccentBrush}" Width="28" Height="28"/>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock x:Name="txtNombreCuenta" Text="Nombre de la Cuenta" FontWeight="Bold" FontSize="18" 
+                        <TextBlock Text="{Binding NombreCuenta}" FontWeight="Bold" FontSize="18"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        <TextBlock x:Name="txtTipoCuenta" Text="Tipo" FontWeight="Medium" FontSize="12" 
+                        <TextBlock Text="{Binding TipoCuenta}" FontWeight="Medium" FontSize="12"
                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </StackPanel>
                 </StackPanel>
@@ -35,7 +41,7 @@
             <StackPanel>
                 <TextBlock Text="Saldos Actuales" FontWeight="SemiBold" FontSize="14" 
                            Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,12"/>
-                <ItemsControl x:Name="icSaldos">
+                <ItemsControl ItemsSource="{Binding Saldos}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel Orientation="Horizontal"/>
@@ -43,13 +49,13 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="{DynamicResource AppBackgroundBrush}" 
-                                    BorderBrush="{Binding ColorBrush}" BorderThickness="1" 
+                            <Border Background="{DynamicResource AppBackgroundBrush}"
+                                    BorderBrush="{Binding ColorHex, Converter={StaticResource HexColorToBrushConverter}}" BorderThickness="1"
                                     CornerRadius="6" Padding="16,12" Margin="0,0,12,12" MinWidth="180">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Moneda}" FontWeight="SemiBold" FontSize="12" 
-                                               Foreground="{Binding ColorBrush}"/>
-                                    <TextBlock Text="{Binding SaldoFormatted}" FontWeight="Bold" FontSize="20" 
+                                    <TextBlock Text="{Binding Moneda}" FontWeight="SemiBold" FontSize="12"
+                                               Foreground="{Binding ColorHex, Converter={StaticResource HexColorToBrushConverter}}"/>
+                                    <TextBlock Text="{Binding SaldoFormatted}" FontWeight="Bold" FontSize="20"
                                                Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </Border>
@@ -67,7 +73,7 @@
                 <TextBlock Grid.Row="0" Text="Últimos Movimientos" FontWeight="SemiBold" FontSize="14" 
                            Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,12"/>
                 
-                <DataGrid Grid.Row="1" x:Name="dgMovimientos" AutoGenerateColumns="False"
+                <DataGrid Grid.Row="1" ItemsSource="{Binding Movimientos}" AutoGenerateColumns="False"
                           BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
                           GridLinesVisibility="Horizontal"
                           HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
@@ -81,7 +87,7 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding MontoFormatted}"
-                                               Foreground="{Binding MontoColor}"
+                                               Foreground="{Binding Monto, Converter={StaticResource GananciaSignoToBrushConverter}}"
                                                FontWeight="Bold"
                                                VerticalAlignment="Center"/>
                                 </DataTemplate>
@@ -89,8 +95,8 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
-                <TextBlock Grid.Row="1" x:Name="txtSinMovimientos" Text="No hay movimientos registrados en esta cuenta."
-                           Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="False"/>
+                <TextBlock Grid.Row="1" Text="No hay movimientos registrados en esta cuenta."
+                           Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding SinMovimientos}"/>
             </Grid>
         </Border>
 
