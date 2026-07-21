@@ -1,6 +1,8 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:icon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:vm="clr-namespace:SistemaCambio.ViewModels"
+        x:DataType="vm:LoginViewModel"
         x:Class="SistemaCambio.Views.LoginWindow"
         Title="Casa de Cambio - Iniciar Sesion"
         Width="480" Height="660"
@@ -77,7 +79,7 @@
                     <StackPanel Spacing="6">
                         <TextBlock Text="Usuario" Foreground="#CBD5E1" FontSize="13"/>
                         <Grid>
-                            <TextBox x:Name="txtUsuario"
+                            <TextBox Text="{Binding Username}"
                                      Padding="44,12,12,12"
                                      Height="44"
                                      Background="#0c151a"
@@ -100,7 +102,7 @@
                     <StackPanel Spacing="6">
                         <TextBlock Text="Contrasena" Foreground="#CBD5E1" FontSize="13"/>
                         <Grid>
-                            <TextBox x:Name="txtPassword"
+                            <TextBox Text="{Binding Password}"
                                      PasswordChar="●"
                                      Padding="44,12,12,12"
                                      Height="44"
@@ -122,21 +124,21 @@
                     </StackPanel>
 
                     <!-- Mensaje de error -->
-                    <TextBlock x:Name="txtError"
+                    <TextBlock Text="{Binding ErrorMessage}"
                                Foreground="#f85149" FontSize="12"
-                               IsVisible="False" TextWrapping="Wrap"
+                               IsVisible="{Binding TieneError}" TextWrapping="Wrap"
                                Margin="0,-4,0,0"/>
 
                     <!-- Botón de inicio de sesión -->
-                    <Button x:Name="btnLogin"
+                    <Button Command="{Binding LoginCommand}"
+                            IsEnabled="{Binding !IsLoading}"
                             Height="44" CornerRadius="10"
                             Background="#13a4ec" Foreground="White"
                             FontWeight="SemiBold" FontSize="14"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Center"
                             Margin="0,4,0,0"
-                            IsDefault="True"
-                            Click="BtnLogin_Click">
+                            IsDefault="True">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <TextBlock Text="Iniciar Sesion" VerticalAlignment="Center"/>
                             <icon:MaterialIcon Kind="ArrowRight" Width="18" Height="18"
@@ -145,7 +147,8 @@
                     </Button>
 
                     <!-- Estado / Loading -->
-                    <TextBlock x:Name="txtStatus" Text=""
+                    <TextBlock Text="Conectando..."
+                               IsVisible="{Binding IsLoading}"
                                Foreground="#94A3B8" FontSize="11"
                                HorizontalAlignment="Center"/>
 
