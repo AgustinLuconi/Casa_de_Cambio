@@ -6,7 +6,7 @@
         x:Class="SistemaCambio.Views.PosicionDiariaWindow"
         x:CompileBindings="False"
         Title="Posición Diaria"
-        Width="1280" MinWidth="1000" Height="640" MinHeight="420"
+        Width="1500" MinWidth="1200" Height="640" MinHeight="420"
         WindowStartupLocation="CenterOwner"
         CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">
