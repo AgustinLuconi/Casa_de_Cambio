@@ -48,36 +48,38 @@
                           HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
                           HeadersVisibility="Column">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="CÓDIGO" Binding="{Binding Codigo}" Width="70"/>
-                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Nombre}" Width="140"/>
-                        <DataGridTextColumn Header="T.PASE" Binding="{Binding TipoPase}" Width="70"/>
-                        <DataGridTextColumn Header="CAP. INICIAL" Binding="{Binding CapInicial, StringFormat='{}{0:N2}'}" Width="120"/>
-                        <DataGridTemplateColumn Header="COT. INICIAL" Width="110">
+                        <DataGridTextColumn Header="CÓDIGO" Binding="{Binding Codigo}" Width="Auto" MinWidth="70"/>
+                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Nombre}" Width="Auto" MinWidth="140"/>
+                        <DataGridTextColumn Header="T.PASE" Binding="{Binding TipoPase}" Width="Auto" MinWidth="70"/>
+                        <DataGridTextColumn Header="CAP. INICIAL" Binding="{Binding CapInicial, StringFormat='{}{0:N2}'}" Width="Auto" MinWidth="120"/>
+                        <DataGridTemplateColumn Header="COT. INICIAL" Width="130">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBox Text="{Binding CotInicialTexto, Mode=TwoWay}"
                                              Background="Transparent" BorderThickness="0"
                                              TextAlignment="Right" Padding="6,3"
                                              helpers:NumericInput.Enabled="True"
+                                             GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"
                                              Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="USD INICIAL" Binding="{Binding UsdInicialFormatted}" Width="110"/>
-                        <DataGridTextColumn Header="CAP. FINAL" Binding="{Binding CapFinal, StringFormat='{}{0:N2}'}" Width="120"/>
-                        <DataGridTemplateColumn Header="COT. FINAL" Width="110">
+                        <DataGridTextColumn Header="USD INICIAL" Binding="{Binding UsdInicialFormatted}" Width="Auto" MinWidth="110"/>
+                        <DataGridTextColumn Header="CAP. FINAL" Binding="{Binding CapFinal, StringFormat='{}{0:N2}'}" Width="Auto" MinWidth="120"/>
+                        <DataGridTemplateColumn Header="COT. FINAL" Width="130">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBox Text="{Binding CotFinalTexto, Mode=TwoWay}"
                                              Background="Transparent" BorderThickness="0"
                                              TextAlignment="Right" Padding="6,3"
                                              helpers:NumericInput.Enabled="True"
+                                             GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"
                                              Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="USD FINAL" Binding="{Binding UsdFinalFormatted}" Width="110"/>
-                        <DataGridTemplateColumn Header="GANANCIA" Width="120">
+                        <DataGridTextColumn Header="USD FINAL" Binding="{Binding UsdFinalFormatted}" Width="Auto" MinWidth="110"/>
+                        <DataGridTemplateColumn Header="GANANCIA" Width="130">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding GananciaFormatted}"
