@@ -115,7 +115,7 @@
             <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="10"
                         HorizontalAlignment="Right">
                 <Button Content="Aceptar" Classes="Primary" Width="110" Height="36"
-                        Command="{Binding AceptarCommand}" IsEnabled="{Binding PuedeAceptar}"
+                        Command="{Binding AceptarCommand}"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
                 <Button Content="Cancelar" Classes="Secondary" Width="110" Height="36"
                         Click="BtnCancelar_Click"

@@ -5,6 +5,7 @@ using SistemaCambio.ApiClient;
 using SistemaCambio.Services;
 using SistemaCambio.Services.Offline;
 using SistemaCambio.ViewModels;
+using SistemaCambio.Views.Helpers;
 
 namespace SistemaCambio.Views
 {
@@ -18,7 +19,7 @@ namespace SistemaCambio.Views
 
             var apiClient = App.Services.GetRequiredService<ICasaCambioApiClient>();
             var offlineService = App.Services.GetRequiredService<IOfflineOperacionService>();
-            var viewModel = new ArbitrajeViewModel(apiClient, offlineService);
+            var viewModel = new ArbitrajeViewModel(apiClient, offlineService, new WindowDialogService(this));
             DataContext = viewModel;
 
             viewModel.OperacionGuardada += (idCompra, idVenta, isOffline, mensaje) =>

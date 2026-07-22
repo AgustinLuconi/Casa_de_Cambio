@@ -19,6 +19,7 @@ namespace SistemaCambio.ViewModels
     {
         private readonly ICasaCambioApiClient _apiClient;
         private readonly IOfflineOperacionService _offlineService;
+        private readonly IDialogService _dialogService;
         private List<CuentaDto> _todasLasCuentas = new();
         private bool _recalculandoCompra;
         private bool _recalculandoVenta;
@@ -44,7 +45,6 @@ namespace SistemaCambio.ViewModels
         [ObservableProperty] private string _tipoOperacion = "CLIENTE";
         public List<string> TiposOperacion { get; } = new() { "CLIENTE", "CASA" };
 
-        [ObservableProperty] private bool _puedeAceptar;
         [ObservableProperty] private bool _mostrarError;
         [ObservableProperty] private string _mensajeError = "";
 
@@ -53,10 +53,11 @@ namespace SistemaCambio.ViewModels
         public event Action<int, int, bool, string>? OperacionGuardada;
         public event Action? SolicitarCierre;
 
-        public ArbitrajeViewModel(ICasaCambioApiClient apiClient, IOfflineOperacionService offlineService)
+        public ArbitrajeViewModel(ICasaCambioApiClient apiClient, IOfflineOperacionService offlineService, IDialogService dialogService)
         {
             _apiClient = apiClient;
             _offlineService = offlineService;
+            _dialogService = dialogService;
             AceptarCommand = new AsyncRelayCommand(AceptarAsync);
             _ = CargarDatosAsync();
         }
@@ -123,11 +124,9 @@ namespace SistemaCambio.ViewModels
 
         partial void OnMontoExtranjeroCompraTextoChanged(string value) => RecalcularCompra();
         partial void OnCotizacionCompraTextoChanged(string value) => RecalcularCompra();
-        partial void OnPesosCompraTextoChanged(string value) => ActualizarPuedeAceptar();
 
         partial void OnMontoExtranjeroVentaTextoChanged(string value) => RecalcularVenta();
         partial void OnCotizacionVentaTextoChanged(string value) => RecalcularVenta();
-        partial void OnPesosVentaTextoChanged(string value) => ActualizarPuedeAceptar();
 
         private void RecalcularCompra()
         {
@@ -151,22 +150,23 @@ namespace SistemaCambio.ViewModels
             _recalculandoVenta = false;
         }
 
-        private void ActualizarPuedeAceptar()
-        {
-            decimal pesosCompra = MontoHelper.Parsear(PesosCompraTexto);
-            decimal pesosVenta = MontoHelper.Parsear(PesosVentaTexto);
-            PuedeAceptar = pesosCompra > 0 && pesosVenta == pesosCompra;
-        }
-
         private async Task AceptarAsync()
         {
             MostrarError = false;
             MensajeError = "";
 
-            if (CuentaAcreditaCompra == null || CuentaDebitaVenta == null || MonedaCompra == null || MonedaVenta == null)
+            if (MonedaCompra == null || CuentaAcreditaCompra == null || MonedaVenta == null || CuentaDebitaVenta == null)
             {
-                MensajeError = "Complete todos los campos requeridos.";
-                MostrarError = true;
+                NotificationService.Warning("Selección incompleta", "Complete todos los campos requeridos.");
+                return;
+            }
+
+            decimal pesosCompra = MontoHelper.Parsear(PesosCompraTexto);
+            decimal pesosVenta = MontoHelper.Parsear(PesosVentaTexto);
+            if (pesosCompra <= 0 || pesosVenta != pesosCompra)
+            {
+                NotificationService.Warning("Montos no coinciden",
+                    "El monto en Pesos de la Compra debe ser igual al de la Venta para poder aceptar la operación.");
                 return;
             }
 
@@ -178,6 +178,16 @@ namespace SistemaCambio.ViewModels
                 MostrarError = true;
                 return;
             }
+
+            // Confirmación explícita: evita que un Enter accidental dispare la operación sin revisar
+            var confirmar = await _dialogService.ConfirmarAsync(
+                "Confirmar Compra/Venta",
+                $"Comprar {MontoExtranjeroCompraTexto} {MonedaCompra.Codigo} a {CotizacionCompraTexto}\n" +
+                $"Acredita en: {CuentaAcreditaCompra.NombreCuenta}\n\n" +
+                $"Vender {MontoExtranjeroVentaTexto} {MonedaVenta.Codigo} a {CotizacionVentaTexto}\n" +
+                $"Debita de: {CuentaDebitaVenta.NombreCuenta}\n\n¿Confirmar la operación?",
+                "Confirmar");
+            if (!confirmar) return;
 
             var request = new CrearArbitrajeRequest
             {
