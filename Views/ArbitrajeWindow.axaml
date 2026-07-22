@@ -40,22 +40,26 @@
                            Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
                 <Grid Grid.Row="3" Grid.Column="1" ColumnDefinitions="*, *" Margin="0,0,0,10">
                     <TextBox Grid.Column="0" x:Name="txtCotizacionCompra" Text="{Binding CotizacionCompraTexto}"
-                             TextAlignment="Right" Margin="0,0,8,0"/>
-                    <TextBox Grid.Column="1" Text="{Binding PesosCompraTexto}" IsReadOnly="True" TextAlignment="Right"
-                             Background="{DynamicResource SidebarBackgroundBrush}"/>
+                             TextAlignment="Right"/>
+                    <StackPanel Grid.Column="1" Spacing="2" Margin="8,0,0,0">
+                        <TextBlock Text="Pesos" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        <TextBox Text="{Binding PesosCompraTexto}" IsReadOnly="True" TextAlignment="Right"
+                                 Background="{DynamicResource SidebarBackgroundBrush}"/>
+                    </StackPanel>
                 </Grid>
 
                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Acredita en" VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <AutoCompleteBox Grid.Row="4" Grid.Column="1" x:Name="cmbCuentaCompra"
-                                  Watermark="Buscar cuenta..." MaxDropDownHeight="200"/>
+                <ComboBox Grid.Row="4" Grid.Column="1" x:Name="cmbCuentaCompra"
+                          ItemsSource="{Binding CuentasCompra}" SelectedItem="{Binding CuentaAcreditaCompra}"
+                          HorizontalAlignment="Stretch"/>
             </Grid>
         </Border>
 
         <!-- ── VENTA ── -->
         <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}"
                 BorderBrush="#E53935" BorderThickness="2" CornerRadius="8" Padding="16" Margin="0,0,0,12">
-            <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto">
+            <Grid ColumnDefinitions="110, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto">
                 <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Venta" FontSize="16" FontWeight="Bold"
                            Foreground="#E53935" Margin="0,0,0,10"/>
 
@@ -74,19 +78,19 @@
                            Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
                 <Grid Grid.Row="3" Grid.Column="1" ColumnDefinitions="*, *" Margin="0,0,0,10">
                     <TextBox Grid.Column="0" x:Name="txtCotizacionVenta" Text="{Binding CotizacionVentaTexto}"
-                             TextAlignment="Right" Margin="0,0,8,0"/>
-                    <TextBox Grid.Column="1" Text="{Binding PesosVentaTexto}" IsReadOnly="True" TextAlignment="Right"
-                             Background="{DynamicResource SidebarBackgroundBrush}"/>
+                             TextAlignment="Right"/>
+                    <StackPanel Grid.Column="1" Spacing="2" Margin="8,0,0,0">
+                        <TextBlock Text="Pesos" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        <TextBox Text="{Binding PesosVentaTexto}" IsReadOnly="True" TextAlignment="Right"
+                                 Background="{DynamicResource SidebarBackgroundBrush}"/>
+                    </StackPanel>
                 </Grid>
 
                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Debita de" VerticalAlignment="Center"
-                           Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
-                <AutoCompleteBox Grid.Row="4" Grid.Column="1" x:Name="cmbCuentaVenta"
-                                  Watermark="Buscar cuenta..." MaxDropDownHeight="200" Margin="0,0,0,10"/>
-
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="Observaciones" VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Observaciones}" Height="32"/>
+                <ComboBox Grid.Row="4" Grid.Column="1" x:Name="cmbCuentaVenta"
+                          ItemsSource="{Binding CuentasVenta}" SelectedItem="{Binding CuentaDebitaVenta}"
+                          HorizontalAlignment="Stretch"/>
             </Grid>
         </Border>
 
@@ -98,12 +102,18 @@
                        TextWrapping="Wrap" FontSize="12"/>
         </Border>
 
-        <Grid Grid.Row="3" ColumnDefinitions="110, *, Auto" RowDefinitions="Auto">
-            <TextBlock Grid.Column="0" Text="Tipo operación" VerticalAlignment="Center"
-                       Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <ComboBox Grid.Column="1" ItemsSource="{Binding TiposOperacion}" SelectedItem="{Binding TipoOperacion}"
-                      Width="160" HorizontalAlignment="Left"/>
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+        <Grid Grid.Row="3" ColumnDefinitions="110, *" RowDefinitions="Auto, Auto, Auto">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Tipo operación" VerticalAlignment="Center"
+                       Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
+            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding TiposOperacion}" SelectedItem="{Binding TipoOperacion}"
+                      Width="160" HorizontalAlignment="Left" Margin="0,0,0,10"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Observaciones" VerticalAlignment="Center"
+                       Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Observaciones}" Height="32" Margin="0,0,0,10"/>
+
+            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="10"
+                        HorizontalAlignment="Right">
                 <Button Content="Aceptar" Classes="Primary" Width="110" Height="36"
                         Command="{Binding AceptarCommand}" IsEnabled="{Binding PuedeAceptar}"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
