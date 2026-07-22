@@ -30,8 +30,10 @@ namespace SistemaCambio.ViewModels
 
         private async Task BuscarAsync()
         {
-            var desde = FechaDesde?.DateTime ?? DateTime.Today;
-            var hasta = FechaHasta?.DateTime ?? DateTime.Today;
+            // El servidor compara contra una columna timestamptz: las fechas DEBEN
+            // viajar como UTC, o Npgsql rechaza el Kind=Unspecified y no llega nada.
+            var desde = DateTime.SpecifyKind(FechaDesde?.DateTime ?? DateTime.Today, DateTimeKind.Utc);
+            var hasta = DateTime.SpecifyKind(FechaHasta?.DateTime ?? DateTime.Today, DateTimeKind.Utc);
             if (hasta.Date < desde.Date)
             {
                 NotificationService.Warning("Rango inválido", "La fecha 'Hasta' no puede ser anterior a 'Desde'.");
