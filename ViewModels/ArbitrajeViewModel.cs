@@ -84,16 +84,18 @@ namespace SistemaCambio.ViewModels
         partial void OnMonedaCompraChanged(MonedaDto? value)
         {
             if (value == null) { CuentasCompra = new(); CuentaAcreditaCompra = null; return; }
-            CuentasCompra = CuentaAutoComplete.ConstruirTags(_todasLasCuentas, value.Codigo);
-            CuentaAcreditaCompra = CuentaAutoComplete.PrimeraCajaEfectivo(_todasLasCuentas, value.Codigo, CuentasCompra);
+            var cuentasFiltradas = _todasLasCuentas.Where(c => CuentaFilter.PuedeOperarEnMoneda(c, value.Codigo)).ToList();
+            CuentasCompra = CuentaAutoComplete.ConstruirTags(cuentasFiltradas, value.Codigo);
+            CuentaAcreditaCompra = CuentaAutoComplete.PrimeraCajaEfectivo(cuentasFiltradas, value.Codigo, CuentasCompra);
             _ = CargarCotizacionCompraAsync(value.Codigo);
         }
 
         partial void OnMonedaVentaChanged(MonedaDto? value)
         {
             if (value == null) { CuentasVenta = new(); CuentaDebitaVenta = null; return; }
-            CuentasVenta = CuentaAutoComplete.ConstruirTags(_todasLasCuentas, value.Codigo);
-            CuentaDebitaVenta = CuentaAutoComplete.PrimeraCajaEfectivo(_todasLasCuentas, value.Codigo, CuentasVenta);
+            var cuentasFiltradas = _todasLasCuentas.Where(c => CuentaFilter.PuedeOperarEnMoneda(c, value.Codigo)).ToList();
+            CuentasVenta = CuentaAutoComplete.ConstruirTags(cuentasFiltradas, value.Codigo);
+            CuentaDebitaVenta = CuentaAutoComplete.PrimeraCajaEfectivo(cuentasFiltradas, value.Codigo, CuentasVenta);
             _ = CargarCotizacionVentaAsync(value.Codigo);
         }
 

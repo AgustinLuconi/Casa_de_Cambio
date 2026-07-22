@@ -34,13 +34,15 @@
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Mon. Extranjera" VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtMontoCompra" Text="{Binding MontoExtranjeroCompraTexto}"
-                         TextAlignment="Right" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                         TextAlignment="Right" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"
+                         GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Cotización" VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
                 <Grid Grid.Row="3" Grid.Column="1" ColumnDefinitions="*, *" Margin="0,0,0,10">
                     <TextBox Grid.Column="0" x:Name="txtCotizacionCompra" Text="{Binding CotizacionCompraTexto}"
-                             TextAlignment="Right"/>
+                             TextAlignment="Right"
+                             GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
                     <StackPanel Grid.Column="1" Spacing="2" Margin="8,0,0,0">
                         <TextBlock Text="Pesos" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                         <TextBox Text="{Binding PesosCompraTexto}" IsReadOnly="True" TextAlignment="Right"
@@ -72,13 +74,15 @@
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Mon. Extranjera" VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtMontoVenta" Text="{Binding MontoExtranjeroVentaTexto}"
-                         TextAlignment="Right" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                         TextAlignment="Right" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"
+                         GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Cotización" VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,10"/>
                 <Grid Grid.Row="3" Grid.Column="1" ColumnDefinitions="*, *" Margin="0,0,0,10">
                     <TextBox Grid.Column="0" x:Name="txtCotizacionVenta" Text="{Binding CotizacionVentaTexto}"
-                             TextAlignment="Right"/>
+                             TextAlignment="Right"
+                             GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
                     <StackPanel Grid.Column="1" Spacing="2" Margin="8,0,0,0">
                         <TextBlock Text="Pesos" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                         <TextBox Text="{Binding PesosVentaTexto}" IsReadOnly="True" TextAlignment="Right"
