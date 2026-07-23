@@ -29,9 +29,9 @@
                 CornerRadius="8" Padding="16,12" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <TextBlock Text="Desde" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <DatePicker x:Name="dpDesde" Width="180" SelectedDate="{Binding FechaDesde}"/>
+                <DatePicker x:Name="dpDesde" SelectedDate="{Binding FechaDesde}"/>
                 <TextBlock Text="Hasta" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" Margin="10,0,0,0"/>
-                <DatePicker x:Name="dpHasta" Width="180" SelectedDate="{Binding FechaHasta}"/>
+                <DatePicker x:Name="dpHasta" SelectedDate="{Binding FechaHasta}"/>
                 <Button Content="Buscar" Classes="Primary" Margin="10,0,0,0"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                         Command="{Binding BuscarCommand}"/>

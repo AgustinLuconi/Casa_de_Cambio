@@ -26,6 +26,8 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             DisableAvaloniaDataAnnotationValidation();

@@ -51,6 +51,30 @@ namespace SistemaCambio.Views
             }
         }
 
+        private async void BtnExportarOperacionesPdf_Click(object? sender, RoutedEventArgs e)
+        {
+            var pdf = _viewModel.GenerarPdfOperaciones();
+            if (pdf == null) return;
+            var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions { Title = "Guardar Reporte de Operaciones", SuggestedFileName = $"operaciones_{DateTime.Now:yyyyMMdd}.pdf", FileTypeChoices = new[] { new FilePickerFileType("PDF") { Patterns = new[] { "*.pdf" } } } });
+            if (file != null)
+            {
+                await using var stream = await file.OpenWriteAsync();
+                await stream.WriteAsync(pdf);
+            }
+        }
+
+        private async void BtnExportarSaldosPdf_Click(object? sender, RoutedEventArgs e)
+        {
+            var pdf = _viewModel.GenerarPdfSaldos();
+            if (pdf == null) return;
+            var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions { Title = "Guardar Reporte de Saldos", SuggestedFileName = $"saldos_{DateTime.Now:yyyyMMdd}.pdf", FileTypeChoices = new[] { new FilePickerFileType("PDF") { Patterns = new[] { "*.pdf" } } } });
+            if (file != null)
+            {
+                await using var stream = await file.OpenWriteAsync();
+                await stream.WriteAsync(pdf);
+            }
+        }
+
         private void BtnCerrar_Click(object? sender, RoutedEventArgs e) => Close();
     }
 }

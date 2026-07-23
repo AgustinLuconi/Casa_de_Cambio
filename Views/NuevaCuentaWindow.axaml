@@ -6,9 +6,9 @@
         x:Class="SistemaCambio.Views.NuevaCuentaWindow"
         x:CompileBindings="False"
         Title="Nueva Cuenta"
-        Width="640" Height="500"
+        Width="820" MinWidth="700" Height="640" MinHeight="520"
         WindowStartupLocation="CenterOwner"
-        CanResize="False"
+        CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">
 
     <Grid RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="20">
@@ -60,9 +60,9 @@
                           HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
                           ItemsSource="{Binding SaldosIniciales}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="80"/>
-                        <DataGridTextColumn Header="NOMBRE" Binding="{Binding Nombre}" Width="*"/>
-                        <DataGridTemplateColumn Header="SALDO INICIAL" Width="130">
+                        <DataGridTextColumn Header="MONEDA" Binding="{Binding Moneda}" Width="Auto" MinWidth="90"/>
+                        <DataGridTextColumn Header="NOMBRE" Binding="{Binding Nombre}" Width="*" MinWidth="160"/>
+                        <DataGridTemplateColumn Header="SALDO INICIAL" Width="160">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBox Text="{Binding Saldo, Mode=TwoWay}" Background="Transparent"
@@ -73,7 +73,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                         <!-- Solo visible para cuentas tipo Cliente (índice 3, ver code-behind) -->
-                        <DataGridTemplateColumn Header="LÍMITE ESPECÍFICO" Width="140">
+                        <DataGridTemplateColumn Header="LÍMITE ESPECÍFICO" Width="180">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBox Text="{Binding LimiteDeudaPersonalizado, Mode=TwoWay}" Background="Transparent"

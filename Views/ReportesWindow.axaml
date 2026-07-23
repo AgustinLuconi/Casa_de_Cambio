@@ -50,15 +50,16 @@
                             CornerRadius="8" Padding="16" Margin="0,10,0,16">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Text="Desde:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            <DatePicker x:Name="dpDesdeOp" Width="150" SelectedDate="{Binding FechaDesdeOp}"/>
+                            <DatePicker x:Name="dpDesdeOp" SelectedDate="{Binding FechaDesdeOp}"/>
                             <TextBlock Text="Hasta:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            <DatePicker x:Name="dpHastaOp" Width="150" SelectedDate="{Binding FechaHastaOp}"/>
+                            <DatePicker x:Name="dpHastaOp" SelectedDate="{Binding FechaHastaOp}"/>
                             <Button Content="Generar" Background="{DynamicResource AccentBrush}" Foreground="White"
                                     CornerRadius="6" Cursor="Hand"
                                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                     IsDefault="True"
                                     Command="{Binding GenerarOperacionesCommand}"/>
                             <Button Content="Exportar CSV" Classes="Secondary" Click="BtnExportarOperaciones_Click"/>
+                            <Button Content="Exportar PDF" Classes="Secondary" Click="BtnExportarOperacionesPdf_Click"/>
                         </StackPanel>
                     </Border>
                     
@@ -94,6 +95,7 @@
                                     IsDefault="True"
                                     Command="{Binding GenerarSaldosCommand}"/>
                             <Button Content="Exportar CSV" Classes="Secondary" Click="BtnExportarSaldos_Click"/>
+                            <Button Content="Exportar PDF" Classes="Secondary" Click="BtnExportarSaldosPdf_Click"/>
                         </StackPanel>
                     </Border>
                     

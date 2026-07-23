@@ -138,11 +138,19 @@
                     </DataGrid>
 
                     <!-- Footer del tab -->
-                    <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Margin="0,12,0,0">
+                    <Grid Grid.Row="2" ColumnDefinitions="*, Auto, Auto, Auto" Margin="0,12,0,0">
                         <TextBlock Grid.Column="0" x:Name="txtResultados" Text="{Binding TextoResultados}"
                                    Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                        <Button Grid.Column="1" Classes="Primary"
-                                Width="110" Height="36"
+                        <Button Grid.Column="1" Content="Exportar PDF" Classes="Secondary" Height="40"
+                                Margin="0,0,10,0"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                Click="BtnExportarMovimientosPdf_Click"/>
+                        <Button Grid.Column="2" Content="Exportar Excel" Classes="Secondary" Height="40"
+                                Margin="0,0,10,0"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                Click="BtnExportarMovimientosCsv_Click"/>
+                        <Button Grid.Column="3" Classes="Primary"
+                                Width="110" Height="40"
                                 IsDefault="True"
                                 Command="{Binding BuscarCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
@@ -158,21 +166,40 @@
             <TabItem Header="Operaciones">
                 <Grid Margin="10" RowDefinitions="Auto, *">
 
-                    <!-- Filtro de fechas -->
+                    <!-- Filtros -->
                     <Border Grid.Row="0" Background="{DynamicResource SidebarBackgroundBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="8" Padding="16" Margin="0,10,0,16">
-                        <StackPanel Orientation="Horizontal" Spacing="15">
-                            <TextBlock Text="Desde:" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            <DatePicker x:Name="dpDesdeOp" Width="150" SelectedDate="{Binding FechaDesdeOp}"/>
-                            <TextBlock Text="Hasta:" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            <DatePicker x:Name="dpHastaOp" Width="150" SelectedDate="{Binding FechaHastaOp}"/>
-                            <Button Content="Generar" Background="{DynamicResource AccentBrush}" Foreground="White"
-                                    CornerRadius="6" Cursor="Hand"
-                                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                    Command="{Binding GenerarCommand}"/>
+                        <StackPanel Spacing="10">
+                            <StackPanel Orientation="Horizontal" Spacing="15">
+                                <TextBlock Text="Desde:" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <DatePicker x:Name="dpDesdeOp" SelectedDate="{Binding FechaDesdeOp}"/>
+                                <TextBlock Text="Hasta:" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <DatePicker x:Name="dpHastaOp" SelectedDate="{Binding FechaHastaOp}"/>
+                                <Button Content="Generar" Background="{DynamicResource AccentBrush}" Foreground="White"
+                                        CornerRadius="6" Cursor="Hand"
+                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                        Command="{Binding GenerarCommand}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="15">
+                                <TextBlock Text="Tipo:" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <ComboBox Width="150" ItemsSource="{Binding TiposOperacionFiltro}"
+                                          SelectedItem="{Binding TipoOperacionSeleccionado}"/>
+                                <TextBlock Text="Cuenta:" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <ComboBox Width="170" ItemsSource="{Binding CuentasOpFiltro}"
+                                          SelectedItem="{Binding CuentaOpSeleccionada}"/>
+                                <TextBlock Text="Estado:" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <ComboBox Width="130" ItemsSource="{Binding EstadosFiltro}"
+                                          SelectedItem="{Binding EstadoSeleccionado}"/>
+                                <TextBlock Text="Código:" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBox Width="120" Watermark="ej. 00023" Text="{Binding CodigoOperacionBusqueda}"/>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 

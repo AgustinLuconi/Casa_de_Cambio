@@ -5,7 +5,7 @@
         x:Class="SistemaCambio.Views.DetalleCuentaWindow"
         x:CompileBindings="False"
         Title="Detalle de Cuenta"
-        Width="1000" Height="700"
+        Width="1100" MinWidth="960" Height="750" MinHeight="600"
         WindowStartupLocation="CenterOwner"
         CanResize="True"
         Background="{DynamicResource AppBackgroundBrush}">
@@ -66,14 +66,25 @@
         </Border>
 
         <!-- Últimos Movimientos -->
-        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" 
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" 
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="8" Padding="16">
-            <Grid RowDefinitions="Auto, *">
-                <TextBlock Grid.Row="0" Text="Últimos Movimientos" FontWeight="SemiBold" FontSize="14" 
+            <Grid RowDefinitions="Auto, Auto, *">
+                <TextBlock Grid.Row="0" Text="Movimientos" FontWeight="SemiBold" FontSize="14"
                            Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,12"/>
-                
-                <DataGrid Grid.Row="1" ItemsSource="{Binding Movimientos}" AutoGenerateColumns="False"
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,0,0,12">
+                    <TextBlock Text="Desde" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <DatePicker SelectedDate="{Binding FechaDesde}"/>
+                    <TextBlock Text="Hasta" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <DatePicker SelectedDate="{Binding FechaHasta}"/>
+                    <Button Content="Filtrar" Classes="Primary" Command="{Binding FiltrarCommand}"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                    <Button Content="Limpiar Filtro" Classes="Secondary" Command="{Binding LimpiarFiltroCommand}"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                </StackPanel>
+
+                <DataGrid Grid.Row="2" ItemsSource="{Binding Movimientos}" AutoGenerateColumns="False"
                           BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
                           GridLinesVisibility="Horizontal"
                           HorizontalGridLinesBrush="{DynamicResource BorderBrush}"
@@ -95,14 +106,20 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
-                <TextBlock Grid.Row="1" Text="No hay movimientos registrados en esta cuenta."
+                <TextBlock Grid.Row="2" Text="No hay movimientos registrados en esta cuenta."
                            Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding SinMovimientos}"/>
             </Grid>
         </Border>
 
         <!-- Footer -->
-        <Grid Grid.Row="3" Margin="0,20,0,0">
-            <Button HorizontalAlignment="Right" Content="Cerrar" Classes="Secondary" Width="100" Height="36"
+        <Grid Grid.Row="3" Margin="0,20,0,0" ColumnDefinitions="Auto, Auto, *">
+            <Button Grid.Column="0" Content="Exportar PDF" Classes="Secondary" Height="40"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                    Margin="0,0,10,0" Click="BtnExportarPdf_Click"/>
+            <Button Grid.Column="1" Content="Exportar Excel" Classes="Secondary" Height="40"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                    Click="BtnExportarCsv_Click"/>
+            <Button Grid.Column="2" HorizontalAlignment="Right" Content="Cerrar" Classes="Secondary" Width="100" Height="40"
                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                     Click="BtnCerrar_Click"/>
         </Grid>
